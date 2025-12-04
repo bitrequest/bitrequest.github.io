@@ -2,6 +2,7 @@ $(document).ready(function() {
     // ** Core Dialog Management: **
     wake_panel();
     //set_dialog_timeout
+    //clear_dialog_timeout
     //show_paymentdialog
     //main_input_focus
 
@@ -156,16 +157,22 @@ function wake_panel() {
 function set_dialog_timeout() {
     // close request dialog after 3 minutes
     if (!glob_const.paymentpopup.hasClass("live")) return
-    clearTimeout(glob_let.request_timer);
+    clear_dialog_timeout();
     glob_let.request_timer = setTimeout(function() {
         cpd_pollcheck();
     }, 180000, function() {
-        clearTimeout(glob_let.request_timer);
+        clear_dialog_timeout();
     });
     glob_const.paymentdialogbox.removeClass("timer");
     setTimeout(function() {
         glob_const.paymentdialogbox.addClass("timer");
     }, 500);
+}
+
+// Clear request dialog timer
+function clear_dialog_timeout() {
+    clearTimeout(glob_let.request_timer);
+    glob_let.request_timer = 0;
 }
 
 // Activates payment dialog with scroll position preservation and blur effects
@@ -1677,9 +1684,10 @@ function get_payment(ccrateeuro, ccapi) {
         main_input_focus();
     }
     if (save_request !== "nosocket") {
-        close_socket();
-        init_socket(helper.selected_socket, request.address);
-        set_dialog_timeout();
+        close_socket().then(() => {
+            init_socket(helper.selected_socket, request.address);
+            set_dialog_timeout();
+        });
     }
     if (!request.monitored) {
         notify(tl("notmonitored"), 500000, "yes");
@@ -2546,8 +2554,9 @@ function switch_address() {
             glob_const.paymentdialogbox.attr("data-pending", is_pending && request.monitored ? "ispending" : "");
             request.address = new_address;
             glob_let.sa_timer = now_utc();
-            force_close_socket();
-            init_socket(selected_socket, new_address);
+            force_close_socket().then(() => {
+                init_socket(selected_socket, new_address);
+            });
         }
     });
 }
@@ -2615,21 +2624,23 @@ function pick_address_from_dialog() {
                 currency = url_params.uoa,
                 amount = url_params.amount,
                 current_address = url_params.address;
-            close_socket(current_address);
-            init_socket(helper.selected_socket, picked_address);
-            const data_param = url_params.d,
-                has_data = data_param && data_param.length > 5,
-                new_data_param = has_data ? "&d=" + data_param : "",
-                start_url = page ? "?p=" + page + "&payment=" : "?payment=",
-                href = start_url + payment + "&uoa=" + currency + "&amount=" + amount + "&address=" + picked_address + new_data_param,
-                cc_value = $("#paymentdialogbox .ccpool").attr("data-value");
-            $("#paymentaddress").text(picked_address);
-            $("#labelbttn").text(picked_label);
-            request.address = picked_address;
-            generate_payment_qr(payment, picked_address, cc_value);
-            update_request_url(href);
-            glob_const.paymentdialogbox.attr("data-pending", "");
-            canceldialog();
+            close_socket(current_address).then(() => {
+                init_socket(helper.selected_socket, picked_address);
+                const data_param = url_params.d,
+                    has_data = data_param && data_param.length > 5,
+                    new_data_param = has_data ? "&d=" + data_param : "",
+                    start_url = page ? "?p=" + page + "&payment=" : "?payment=",
+                    href = start_url + payment + "&uoa=" + currency + "&amount=" + amount + "&address=" + picked_address + new_data_param,
+                    cc_value = $("#paymentdialogbox .ccpool").attr("data-value");
+                $("#paymentaddress").text(picked_address);
+                $("#labelbttn").text(picked_label);
+                request.address = picked_address;
+                generate_payment_qr(payment, picked_address, cc_value);
+                update_request_url(href);
+                glob_const.paymentdialogbox.attr("data-pending", "");
+                canceldialog();
+            });
+
         }
     });
 }

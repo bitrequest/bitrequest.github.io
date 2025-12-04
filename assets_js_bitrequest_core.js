@@ -2426,7 +2426,7 @@ function reset_paymentdialog() {
         clearTimeout(dialog_timeout);
     }, 600);
     closeloader();
-    clearTimeout(glob_let.request_timer);
+    clear_dialog_timeout();
     stop_monitors();
     closenotify();
     allow_screen_sleep();
@@ -2450,7 +2450,7 @@ function reset_paymentdialog() {
 function force_close_socket(socket_id) {
     console.log("force close");
     stop_monitors(socket_id);
-    close_socket(socket_id);
+    return close_socket(socket_id); // Return the promise
 }
 
 // Initializes share dialog cancellation handler

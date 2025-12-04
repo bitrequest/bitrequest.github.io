@@ -1142,10 +1142,11 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
             }
             if (pass) {
                 test_socket.close();
-                glob_let.sockets["ws_submit"] = null;
-                close_socket("ws_submit");
-                input_section.addClass("live").removeClass("offline");
-                pre_save_rpc_settings(currency_name, node_config, true);
+                close_socket("ws_submit").then(() => {
+                    glob_let.sockets["ws_submit"] = null;
+                    input_section.addClass("live").removeClass("offline");
+                    pre_save_rpc_settings(currency_name, node_config, true);
+                });
                 return
             }
             popnotify("error", error_message);
@@ -1155,11 +1156,11 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
             closeloader();
         };
         test_socket.onerror = function(event) {
-            input_section.addClass("offline").removeClass("live");
-            popnotify("error", error_message);
-            test_socket.close();
-            glob_let.sockets["ws_submit"] = null;
-            close_socket("ws_submit");
+            close_socket("ws_submit").then(() => {
+                input_section.addClass("offline").removeClass("live");
+                popnotify("error", error_message);
+                test_socket.close();
+            });
         };
         setTimeout(function() {
             close_socket();

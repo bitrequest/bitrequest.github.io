@@ -406,8 +406,9 @@ function process_scan_results(rd, api_data, rdo, tx_details, l2) {
                 glob_const.paymentpopup.addClass("active");
                 closeloader();
             }
-            force_close_socket();
-            start_transaction_monitor(tx_details, api_data);
+            force_close_socket().then(() => {
+                start_transaction_monitor(tx_details, api_data);
+            });
             return
         }
         if (src === "tx_polling" || src === "l2_polling") {

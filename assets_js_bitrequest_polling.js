@@ -25,7 +25,6 @@
 
 //validate_confirmations
 //stop_monitors
-//stop_background_monitors
 //clear_recent_requests
 
 // Initiates transaction monitoring and sets UI state for payment processing
@@ -171,7 +170,7 @@ function start_address_monitor(time_out, api_dat, retry) {
                 check_address_transactions(rdo, api_data);
             } catch (err) {
                 console.error("error", err);
-                stop_background_monitors(addr_id);
+                stop_monitors(addr_id);
             }
         }, poll_interval);
         return
@@ -246,7 +245,7 @@ function poll_xmr(api_data, address, vk, retry) {
             xmr_get_latest_block_hash(api_data, vk, spk);
         } catch (err) {
             console.error("error", err);
-            stop_background_monitors(address);
+            stop_monitors(address);
         }
     }, 12000); // poll every 12 seconds, be gentle on the host
 }
@@ -701,7 +700,7 @@ function validate_confirmations(tx_data, direct, ln) {
     if (crypto_symbol) {
         let new_status = "pending";
         closeloader();
-        clearTimeout(glob_let.request_timer);
+        clear_dialog_timeout();
         if (tx_data && tx_data.ccval) {
             const payment = request.payment,
                 payment_dialog = $("#paymentdialogbox"),
@@ -819,11 +818,11 @@ function validate_confirmations(tx_data, direct, ln) {
 }
 
 // Terminates all active polling intervals or a specific polling instance
-function stop_monitors(socket_id) {
-    if (socket_id) { // close this interval
-        if (glob_let.pinging[socket_id]) {
-            clearInterval(glob_let.pinging[socket_id]);
-            delete glob_let.pinging[socket_id]
+function stop_monitors(ping_id) {
+    if (ping_id) { // close this interval
+        if (glob_let.pinging[ping_id]) {
+            clearInterval(glob_let.pinging[ping_id]);
+            delete glob_let.pinging[ping_id]
         }
         return
     }
@@ -832,13 +831,6 @@ function stop_monitors(socket_id) {
             clearInterval(value);
         });
         glob_let.pinging = {};
-    }
-}
-
-// Terminates all active polling intervals when background throttles
-function stop_background_monitors(socket_id) {
-    if (!visible_tab()) { // check if app is in background
-        stop_monitors(socket_id);
     }
 }
 

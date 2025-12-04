@@ -240,7 +240,9 @@ const br_bipobj = br_get_local("bpdat", true),
             "blocks": []
         },
         "wakelock": false,
-        "ws_timer": 0
+        "ws_timer": 0,
+        "in_background": false,
+        "background_timeout": 0
     }
 
 // Global helpers
@@ -902,20 +904,26 @@ function get_aws_icon_url(wallet_name, clas = "wallet_icon", ext = "png") {
 // Fires when app comes back to foreground
 function visibility_change() {
     document.addEventListener("visibilitychange", () => {
+        const is_request = (is_openrequest() === true);
         if (visible_tab()) { // to foreground
-            if (is_openrequest() === true) {
-                if (request) {
-                    const glob_sockets = glob_let.sockets,
-                        glob_pinging = glob_let.pinging;
-                    if (empty_obj(glob_sockets) && empty_obj(glob_pinging)) {
-                        set_dialog_timeout();
-                        foreground_reconnect(); // assets_js_bitrequest_sockets.js
-                        return
-                    }
+            if (glob_let.in_background) {
+                if (is_request) {
+                    foreground_reconnect();
+                    return
                 }
+                glob_let.in_background = false;
             }
+            return
         }
-        // to background
+        br_set_session("bg_time", now_utc());
+        glob_let.in_background = true;
+        if (is_request) {
+            glob_let.background_timeout = setTimeout(() => {
+                force_close_socket().then(() => {
+                    clear_dialog_timeout();
+                });
+            }, 3500);
+        }
     });
 }
 

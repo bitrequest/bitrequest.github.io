@@ -1,4 +1,5 @@
 // ** Core WebSocket Initialization & Management: **
+//foreground_reconnect
 //init_socket
 //force_poll
 //socket_info
@@ -6,7 +7,6 @@
 //handle_socket_fails
 //handle_socket_close
 //reconnect_websocket
-//foreground_reconnect
 //try_next_socket
 
 // ** Lightning Network & NFC Handling: **
@@ -41,6 +41,36 @@
 //poll_nimiq_network
 
 // ** Core WebSocket Initialization & Management: **
+
+// Reconnects if websocket got lost in background
+function foreground_reconnect() {
+    if (!request) return
+    const get_bg_time = br_get_session("bg_time", true);
+    if (get_bg_time) {
+        const bg_time = now_utc() - get_bg_time;
+        if (bg_time > 3000) {
+            const api_data = q_obj(helper, "api_info.data");
+            if (api_data) {
+                const wallet_address = request.address;
+                if (wallet_address) {
+                    set_dialog_timeout();
+                    force_close_socket().then(() => {
+                        init_socket(api_data, wallet_address, true, true);
+                        setTimeout(() => { // wait 1s to re-open connections
+                            glob_let.in_background = false;
+                        }, 1000);
+                    });
+                    return
+                }
+            }
+            socket_info();
+            force_close_socket();
+            return
+        }
+        clearTimeout(glob_let.background_timeout);
+        glob_let.background_timeout = 0;
+    }
+}
 
 // Establishes WebSocket connections for cryptocurrency payment monitoring based on payment type and node configuration
 function init_socket(socket_node, wallet_address, retry, foreground) {
@@ -203,7 +233,12 @@ function force_poll(payment_type, foreground) {
 
 // Updates UI elements to reflect WebSocket connection status and handles L1/L2 state transitions
 function socket_info(socket_node, is_connected, is_polling) {
-    if (!is_openrequest()) {
+    if (!is_openrequest()) return
+    const payment_address = $("#paymentaddress");
+    if (!socket_node) {
+        payment_address.removeClass("live");
+        glob_const.paymentpopup.removeClass("live");
+        notify(tl("websocketoffline"), 500000, "yes");
         return
     }
     if (socket_node.network) {
@@ -219,8 +254,7 @@ function socket_info(socket_node, is_connected, is_polling) {
     const node_identifier = node_url || node_name,
         status_icon = is_connected ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
         connection_type = is_polling ? "polling" : "websocket",
-        status_text = connection_type + ": " + node_identifier + status_icon,
-        payment_address = $("#paymentaddress");
+        status_text = connection_type + ": " + node_identifier + status_icon;
     $("#current_socket").html(status_text);
     if (is_connected) {
         console.log("Connected: " + node_identifier);
@@ -235,7 +269,6 @@ function socket_info(socket_node, is_connected, is_polling) {
     }
     if (glob_const.paymentdialogbox.hasClass("switching")) return // prevents offline modus when switching addresses
     if (glob_const.paymentdialogbox.hasClass("transacting")) return
-    if (!is_openrequest()) return
     payment_address.removeClass("live");
     if (helper) {
         helper.l1_status = false;
@@ -248,15 +281,37 @@ function socket_info(socket_node, is_connected, is_polling) {
 
 // Terminates specific or all active WebSocket connections and cleans up socket registry
 function close_socket(socket_id) {
+    const close_promises = [];
     if (socket_id) { // close this socket
         if (glob_let.sockets[socket_id]) {
-            glob_let.sockets[socket_id].close();
+            const promise = new Promise((resolve) => {
+                const socket = glob_let.sockets[socket_id];
+                // If already closed or closing, resolve immediately
+                if (socket.readyState === WebSocket.CLOSED ||
+                    socket.readyState === WebSocket.CLOSING) {
+                    resolve();
+                } else {
+                    socket.onclose = () => resolve();
+                    socket.close();
+                }
+            });
+
+            close_promises.push(promise);
             delete glob_let.sockets[socket_id];
         }
     } else { // close all sockets
         $.each(glob_let.sockets, function(key, socket) {
             if (socket) {
-                socket.close();
+                const promise = new Promise((resolve) => {
+                    if (socket.readyState === WebSocket.CLOSED ||
+                        socket.readyState === WebSocket.CLOSING) {
+                        resolve();
+                    } else {
+                        socket.onclose = () => resolve();
+                        socket.close();
+                    }
+                });
+                close_promises.push(promise);
             }
         });
         glob_let.sockets = {};
@@ -264,6 +319,13 @@ function close_socket(socket_id) {
     if (glob_let.pinging[socket_id]) { // remove pinging globals
         delete glob_let.pinging[socket_id];
     }
+    return Promise.all(close_promises);
+}
+
+// Forces WebSocket connection closure
+function force_close_socket(socket_id) {
+    stop_monitors(socket_id);
+    return close_socket(socket_id); // Return the promise
 }
 
 // Manages WebSocket failures by attempting reconnection through fallback nodes with L1/L2 network handling
@@ -278,44 +340,46 @@ function handle_socket_fails(socket_node, wallet_address, socket_id, is_layer2) 
             }
         }
         const ws_id = socket_id || wallet_address;
-        force_close_socket(ws_id);
-        const fallback_node = try_next_socket(socket_node, is_layer2);
-        if (fallback_node) {
-            if (is_layer2) {
-                const token_contracts = fetch_localstorage_contracts(request.payment);
-                if (token_contracts && socket_id) {
-                    stop_monitors(socket_id);
-                    setup_layer2_monitoring(is_layer2, fallback_node, wallet_address, token_contracts.contracts, true);
+        force_close_socket(ws_id).then(() => {
+            const fallback_node = try_next_socket(socket_node, is_layer2);
+            if (fallback_node) {
+                if (is_layer2) {
+                    const token_contracts = fetch_localstorage_contracts(request.payment);
+                    if (token_contracts && socket_id) {
+                        stop_monitors(socket_id);
+                        setup_layer2_monitoring(is_layer2, fallback_node, wallet_address, token_contracts.contracts, true);
+                    }
+                    return
                 }
+                init_socket(fallback_node, wallet_address, true);
                 return
             }
-            init_socket(fallback_node, wallet_address, true);
-            return
-        }
-        if (is_layer2) {
-            // No poll fallback for L2
-        } else {
-            const coin_config = get_coinsettings(request.payment),
-                has_poll_fallback = q_obj(coin_config, "websockets.poll_fallback");
-            if (has_poll_fallback) {
-                init_socket({
-                    "name": "poll_fallback",
-                    "display": false
-                }, wallet_address, true);
-                return
+            if (is_layer2) {
+                // No poll fallback for L2
+            } else {
+                const coin_config = get_coinsettings(request.payment),
+                    has_poll_fallback = q_obj(coin_config, "websockets.poll_fallback");
+                if (has_poll_fallback) {
+                    init_socket({
+                        "name": "poll_fallback",
+                        "display": false
+                    }, wallet_address, true);
+                    return
+                }
             }
-        }
-        socket_info(socket_node, false);
-        console.error("Socket error:", "unable to connect to " + socket_node.name);
+            socket_info(socket_node, false);
+            console.error("Socket error:", "unable to connect to " + socket_node.name);
+        });
     }
 }
 
 // Updates connection state and resets WebSocket timer on connection closure
 function handle_socket_close(socket_node, socket_id) {
-    socket_info(socket_node, false);
-    close_socket(socket_id);
-    console.log("Disconnected from " + socket_node.url);
-    glob_let.ws_timer = 0;
+    close_socket(socket_id).then(() => {
+        socket_info(socket_node, false);
+        console.log("Disconnected from " + socket_node.url);
+        glob_let.ws_timer = 0;
+    });
 }
 
 // Implements delayed reconnection logic for Kaspa WebSocket with rate limiting and state validation
@@ -333,20 +397,6 @@ function reconnect_websocket(recon_data) {
     }, 2000, function() {
         clearTimeout(retry_timeout);
     });
-}
-
-// Reconnects if websocket got lost in background (Only apply for mobile devices)
-function foreground_reconnect() {
-    if (!glob_const.supportsTouch) return
-    if (!request.eth_l2s.length && helper.l1_status === true) return
-    const api_data = q_obj(helper, "api_info.data");
-    if (api_data) {
-        const wallet_address = request.address;
-        if (wallet_address) {
-            force_close_socket();
-            init_socket(api_data, wallet_address, true, true);
-        }
-    }
 }
 
 // Selects next available WebSocket endpoint from configuration with overflow protection and duplicate attempt prevention
@@ -602,13 +652,14 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                                                 }
                                                                 if (callback_response.status === "OK") {
                                                                     stop_monitors(payment_id);
-                                                                    close_socket(payment_id);
-                                                                    stop_nfc_scan();
-                                                                    update_boltcard(true);
-                                                                    lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id, true);
-                                                                    glob_let.pinging[invoice_result.hash] = setInterval(function() {
-                                                                        lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id);
-                                                                    }, 3000);
+                                                                    force_close_socket(payment_id).then(() => {
+                                                                        stop_nfc_scan();
+                                                                        update_boltcard(true);
+                                                                        lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id, true);
+                                                                        glob_let.pinging[invoice_result.hash] = setInterval(function() {
+                                                                            lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id);
+                                                                        }, 3000);
+                                                                    });
                                                                     return
                                                                 }
                                                             }).fail(function(xhr, stat, err) {
@@ -717,6 +768,7 @@ function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode)
                 if (response.status == "pending" && response.bolt11) {
                     stop_monitors(payment_id);
                     set_dialog_timeout();
+                    lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, response, payment_id, node_id);
                     glob_let.pinging[response.hash] = setInterval(function() {
                         lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, response, payment_id, node_id);
                     }, 5000);
@@ -838,16 +890,16 @@ function blockcypher_websocket(socket_node, wallet_address) {
         if (tx_data.event === "pong") return
         const tx_hash = tx_data.hash;
         if (!tx_hash) return
-        close_socket();
-        const setconfirmations = request.set_confirmations || 0,
-            tx_details = blockcypher_poll_data(tx_data, setconfirmations, request.currencysymbol, wallet_address);
-        if (tx_details.double_spend) {
-            const alert_content = "<h2 class='icon-warning'>Double spend detected</h2>";
-            popdialog(alert_content, "canceldialog");
-            return
-        }
-        close_socket();
-        start_transaction_monitor(tx_details);
+        close_socket().then(() => {
+            const setconfirmations = request.set_confirmations || 0,
+                tx_details = blockcypher_poll_data(tx_data, setconfirmations, request.currencysymbol, wallet_address);
+            if (tx_details.double_spend) {
+                const alert_content = "<h2 class='icon-warning'>Double spend detected</h2>";
+                popdialog(alert_content, "canceldialog");
+                return
+            }
+            start_transaction_monitor(tx_details);
+        });
     };
     socket.onclose = function(e) {
         handle_socket_close(socket_node, wallet_address);
@@ -886,8 +938,9 @@ function blockchain_btc_socket(socket_node, wallet_address) {
             const setconfirmations = request.set_confirmations || 0,
                 tx_details = blockchain_ws_data(tx_data, setconfirmations, request.currencysymbol, wallet_address);
             if (tx_details) {
-                close_socket();
-                start_transaction_monitor(tx_details);
+                close_socket().then(() => {
+                    start_transaction_monitor(tx_details);
+                });
             }
         } catch (error) {
             console.error("Error parsing WebSocket message:", error);
@@ -932,8 +985,9 @@ function blockchain_bch_socket(socket_node, wallet_address) {
                 setconfirmations = request.set_confirmations || 0,
                 tx_details = blockchain_ws_data(tx_data, setconfirmations, request.currencysymbol, wallet_address, legacy_format);
             if (tx_details) {
-                close_socket();
-                start_transaction_monitor(tx_details);
+                close_socket().then(() => {
+                    start_transaction_monitor(tx_details);
+                });
             }
         } catch (error) {
             console.error("Error parsing WebSocket message:", error);
@@ -979,8 +1033,9 @@ function mempoolspace_btc_socket(socket_node, wallet_address) {
                     const setconfirmations = request.set_confirmations || 0,
                         tx_details = mempoolspace_ws_data(tx_data, setconfirmations, request.currencysymbol, wallet_address);
                     if (tx_details) {
-                        close_socket();
-                        start_transaction_monitor(tx_details);
+                        close_socket().then(() => {
+                            start_transaction_monitor(tx_details);
+                        });
                     }
                 }
             }
@@ -1099,8 +1154,9 @@ function alchemy_eth_websocket(socket_node, wallet_address) {
             if (tx_data && tx_data.hash && str_match(tx_data.to, wallet_address)) {
                 const setconfirmations = request.set_confirmations || 0,
                     tx_details = infura_block_data(tx_data, setconfirmations, request.currencysymbol);
-                close_socket();
-                start_transaction_monitor(tx_details);
+                close_socket().then(() => {
+                    start_transaction_monitor(tx_details);
+                });
             }
         } catch (error) {
             console.error("Error parsing WebSocket message:", error);
@@ -1156,11 +1212,12 @@ function web3_eth_websocket(socket_node, wallet_address) {
                         $.each(transactions, function(i, tx) {
                             if (str_match(tx.to, wallet_address) === true) {
                                 const tx_details = infura_block_data(tx, setconfirmations, request.currencysymbol, block_data.timestamp);
-                                close_socket();
-                                start_transaction_monitor(tx_details);
-                                if (network_type) {
-                                    initialize_network_status(socket_node, "paid");
-                                }
+                                close_socket().then(() => {
+                                    start_transaction_monitor(tx_details);
+                                    if (network_type) {
+                                        initialize_network_status(socket_node, "paid");
+                                    }
+                                });
                                 return
                             }
                         });
@@ -1228,11 +1285,12 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
                         "ccsymbol": request.currencysymbol,
                         "eth_layer2": network_type
                     };
-                close_socket();
-                start_transaction_monitor(tx_details);
-                if (network_type) {
-                    initialize_network_status(socket_node, "paid");
-                }
+                close_socket().then(() => {
+                    start_transaction_monitor(tx_details);
+                    if (network_type) {
+                        initialize_network_status(socket_node, "paid");
+                    }
+                });
             }
         } catch (error) {
             console.error("Error parsing WebSocket message:", error);
@@ -1294,8 +1352,9 @@ function nano_socket(socket_node, wallet_address) {
                     tx_time = tx_details.transactiontime,
                     time_delta = Math.abs(tx_time - current_utc);
                 if (time_delta < 60000) { // filter transactions longer then a minute ago
-                    close_socket();
-                    start_transaction_monitor(tx_details);
+                    close_socket().then(() => {
+                        start_transaction_monitor(tx_details);
+                    });
                 }
             }
         } catch (error) {
