@@ -1109,7 +1109,9 @@ function monero_lws_node_access(host, view_key) {
 
 // Look up incoming transactions using monero_lws RPC
 function monero_lws_get_address_txs(rd, api_data, rdo, viewkey, lws_host) {
-    const api_url = (lws_host === lws_proxy) ? br_proxy + "/monero-lws/" : lws_host + "/get_address_txs",
+    const local_lws = (lws_host === lws_proxy),
+        url_base = local_lws ? br_proxy : lws_host,
+        api_url = local_lws ? url_base + "/monero-lws/" : url_base + "/get_address_txs",
         wallet_address = viewkey.account || rd.address,
         request_payload = {
             "address": wallet_address,
@@ -1166,7 +1168,7 @@ function monero_lws_get_address_txs(rd, api_data, rdo, viewkey, lws_host) {
         }, rd, api_data, rdo);
     }).always(function() {
         update_api_source(rdo, {
-            "name": "monero-lws"
+            "name": url_base
         });
     });
 }

@@ -1599,7 +1599,7 @@ function validate_lnurl_connection(lightning_node) {
             if (request.isrequest) {
                 if (helper.lnd_only) {
                     topnotify(error_message);
-                    notify(tl("notmonitored"), 500000, "yes");
+                    br_offline(true);
                 }
             } else {
                 notify(error_message);

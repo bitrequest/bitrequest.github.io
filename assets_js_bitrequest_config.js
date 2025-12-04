@@ -1609,7 +1609,6 @@ glob_config = {
     ],
     "erc20_dat": {
         "data": {
-            "monitored": true,
             "urlscheme": function(payment, address, amount, iszero) {
                 const amnt = (iszero === true) ? "" : "&uint256=" + amount + "e" + request.decimals,
                     token_contract = request.token_l2_contract || request.token_contract,

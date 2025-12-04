@@ -344,6 +344,7 @@ let request = null,
 //all_proxies
 //filter_object_array
 //fetch_aws
+//br_offline
 
 // ** Data Access & Query Functions: **
 //is_openrequest
@@ -1504,6 +1505,14 @@ function filter_object_array(array, key, val) {
 function fetch_aws(filename, bckt) {
     const bucket_url = bckt || glob_const.aws_bucket;
     return bucket_url + filename;
+}
+
+// Offline notification
+function br_offline(nf) {
+    glob_const.paymentpopup.removeClass("live");
+    if (nf) {
+        notify(tl("notmonitored"), 500000, "yes");
+    }
 }
 
 // ** Data Access & Query Functions: **

@@ -208,7 +208,7 @@ function init_xmr_polling(api_dat, retry) {
         }
     }
     request.monitored = false;
-    notify(tl("notmonitored"), 500000, "yes");
+    br_offline();
     return
 }
 
@@ -690,7 +690,7 @@ function handle_xmr_rpc_fails(api_data) {
     }
     socket_info(api_data, false);
     request.monitored = false;
-    notify(tl("notmonitored"), 500000, "yes");
+    br_offline(true);
     console.error("Socket error:", "unable to connect to " + api_data.url);
 }
 

@@ -75,11 +75,12 @@ function foreground_reconnect() {
 // Establishes WebSocket connections for cryptocurrency payment monitoring based on payment type and node configuration
 function init_socket(socket_node, wallet_address, retry, foreground) {
     if (glob_let.offline) {
+        br_offline();
         notify(tl("youareoffline") + ". " + tl("notmonitored"));
         return
     }
     if (!wallet_address) {
-        notify(tl("notmonitored"), 500000, "yes");
+        br_offline(true);
         return
     }
     glob_let.rpc_attempts = {};
@@ -273,7 +274,7 @@ function socket_info(socket_node, is_connected, is_polling) {
     if (helper) {
         helper.l1_status = false;
         if (helper.l2_status === false) {
-            glob_const.paymentpopup.removeClass("live");
+            br_offline();
             notify(tl("websocketoffline"), 500000, "yes");
         }
     }
@@ -838,7 +839,7 @@ function lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_data, pay
 // Handles connection failures during Lightning Network payment status polling
 function lnd_poll_data_fail(payment_id) {
     stop_monitors(payment_id);
-    notify(tl("notmonitored"), 500000, "yes");
+    br_offline(true);
 }
 
 // Update boltcard status

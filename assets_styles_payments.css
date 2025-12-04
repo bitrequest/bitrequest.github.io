@@ -445,7 +445,7 @@
 
 /* QR code and related elements */
 #main_qrwrap {
-    opacity: 0.2;
+    opacity: 0.3;
     transition: opacity 500ms linear;
 }
 

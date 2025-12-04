@@ -1048,7 +1048,7 @@ function lnd_put(proxy_url, proxy_key, payload, is_lnurl) {
             if (request.isrequest) {
                 if (helper.lnd_only) {
                     topnotify(error_message);
-                    notify(tl("notmonitored"));
+                    br_offline(true);
                 }
             } else {
                 notify(error_message);
@@ -1688,9 +1688,6 @@ function get_payment(ccrateeuro, ccapi) {
             init_socket(helper.selected_socket, request.address);
             set_dialog_timeout();
         });
-    }
-    if (!request.monitored) {
-        notify(tl("notmonitored"), 500000, "yes");
     }
     // close loading screen when in iframe
     if (glob_const.inframe) {
