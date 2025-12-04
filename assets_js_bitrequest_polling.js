@@ -21,7 +21,6 @@
 //render_incoming_xmr
 //filter_incoming_transactions
 //poll_monero_rpc
-//xmr_post_scan
 //handle_xmr_rpc_fails
 
 //validate_confirmations
@@ -680,32 +679,6 @@ function poll_monero_rpc(rd, api_data, rdo) {
     }).always(function() {
         update_api_source(rdo, api_data);
     });
-}
-
-// Custom function for XMR post scan. Scanning last block in case tx was not found in mempool
-function xmr_post_scan(api_data) {
-    if (api_data.name !== "xmr_node") {
-        cancel_post_scan();
-        return
-    }
-    const address = request.address;
-    stop_monitors(address);
-    const viewkey = q_obj(request, "viewkey.vk");
-    if (viewkey) {
-        glob_let.post_scan = true;
-        if (glob_const.inframe) {
-            loader(true);
-            set_loader_text(tl("lookuppayment", {
-                "currency": "monero",
-                "blockexplorer": api_data.url
-            }));
-        } else {
-            hide_paymentdialog();
-        }
-        connect_xmr_node(api_data, address, viewkey, "post_scan");
-        return
-    }
-    cancel_post_scan();
 }
 
 // Manages XMR mempool polling failures by attempting reconnection through fallback nodes

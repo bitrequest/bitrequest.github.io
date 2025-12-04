@@ -1234,7 +1234,7 @@ function payrequest() {
 }
 
 // Closes payment dialog with optional post-scan actions
-function close_paymentdialog(post_scan, xmr) {
+function close_paymentdialog(post_scan) {
     if (post_scan) {
         const api_data = q_obj(helper, "api_info.data");
         if (api_data) {
@@ -1264,10 +1264,6 @@ function continue_cpd() {
 
 // Initializes post-scan transaction verification
 function post_scan_init(api_data) {
-    if (request.payment === "monero") { // custom post scan for xmr
-        xmr_post_scan(api_data); // assets_js_bitrequest_polling.js
-        return
-    }
     if (is_scanning()) return
     glob_let.rpc_attempts = {};
     glob_let.post_scan = true;
@@ -1314,14 +1310,13 @@ function cancel_post_scan() {
 function set_recent_requests() {
     if (request) {
         const currency = request.payment,
-            wallet_address = request.address,
             stored_requests = br_get_local("recent_requests", true),
             requests_array = get_default_object(stored_requests, true),
             payment_data = {
-                "currency": currency,
+                currency,
                 "cmcid": request.cmcid,
                 "ccsymbol": request.currencysymbol,
-                "address": wallet_address,
+                "address": request.address,
                 "erc20": request.erc20,
                 "rqtime": request.rq_init
             };
@@ -2384,21 +2379,19 @@ function unfocus_inputs() {
 
 // Validates polling conditions before closing payment dialog
 function cpd_pollcheck() {
-    if (q_obj(request, "received") !== true) {
-        const request_timer = request.rq_timer,
-            request_time = now_utc() - request_timer;
-        if (request_time > glob_const.post_scan_timeout) {
-            if (request.payment === "monero") { // always do a post scan for monero
-                close_paymentdialog(true);
+    if (request) {
+        if (q_obj(request, "received") !== true) {
+            const request_timer = request.rq_timer,
+                request_time = now_utc() - request_timer;
+            if (request_time > glob_const.post_scan_timeout) {
+                if (empty_obj(glob_let.sockets)) { // No post_scan when polling
+                    close_paymentdialog();
+                    return
+                }
+                const post_scan = (request.address === "lnurl") ? false : true;
+                close_paymentdialog(post_scan);
                 return
             }
-            if (empty_obj(glob_let.sockets)) { // No post_scan when polling
-                close_paymentdialog();
-                return
-            }
-            const post_scan = (request.address === "lnurl") ? false : true;
-            close_paymentdialog(post_scan);
-            return
         }
     }
     close_paymentdialog();
