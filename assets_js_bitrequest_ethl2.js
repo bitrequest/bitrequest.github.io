@@ -950,7 +950,7 @@ function switch_l2() {
             cc_value = $("#paymentdialogbox .ccpool").attr("data-value");
         all_l2s.removeClass("dim").not(all_this).addClass("dim");
         if ((chain_contract === request.token_l2_contract) && (chain_id === request.chainid)) {
-            this_node.addClass("dim");
+            all_this.addClass("dim");
             request.token_l2_contract = false;
             request.chainid = false;
         } else {
