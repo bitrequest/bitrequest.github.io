@@ -2044,24 +2044,22 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
                     }
                     return
                 }
-                if (api_result) {
-                    const tx_arr = api_result.tx_hash ? [api_result] : api_result; // convert to array
-                    if (has_tx(tx_arr)) {
-                        $.each(tx_arr, function(key, tx) {
-                            const parsed_tx = electrum_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, script_pub_key, latest_block);
-                            if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
-                                matched_tx = parsed_tx;
-                                if (source === "requests") {
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                    }
-                                } else {
-                                    return false
+                const tx_arr = api_result.tx_hash ? [api_result] : api_result; // convert to array
+                if (has_tx(tx_arr)) {
+                    $.each(tx_arr, function(key, tx) {
+                        const parsed_tx = electrum_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, script_pub_key, latest_block);
+                        if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
+                            matched_tx = parsed_tx;
+                            if (source === "requests") {
+                                const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                if (tx_item) {
+                                    tx_list.append(tx_item.data(parsed_tx));
                                 }
+                            } else {
+                                return false
                             }
-                        });
-                    }
+                        }
+                    });
                 }
                 process_scan_results(rd, api_data, rdo, matched_tx);
                 return
@@ -2729,7 +2727,11 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, lates
 function electrum_scan_data(data, setconfirmations, ccsymbol, script_pub, latest_block, tx_hash) {
     const outputs = data.outputs,
         height = data.height || 0,
-        transactiontime = normalize_timestamp(data.timestamp) - 3000,
+        timestamp = data.timestamp,
+        now = now_utc(),
+        now_correction = parseInt(now / 1000) - 8640,
+        time_correction = timestamp < now_correction ? now_utc() : timestamp, // correct weird timestamp in mempool with current timestamp
+        transactiontime = normalize_timestamp(time_correction) - 3000,
         confirmations = latest_block ? get_block_confirmations(height, latest_block) : height;
     let outputsum = 0;
     if (outputs) {
