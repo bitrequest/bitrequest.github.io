@@ -2730,7 +2730,7 @@ function electrum_scan_data(data, setconfirmations, ccsymbol, script_pub, latest
         timestamp = data.timestamp,
         now = now_utc(),
         now_correction = parseInt(now / 1000) - 8640,
-        time_correction = timestamp < now_correction ? now_utc() : timestamp, // correct weird timestamp in mempool with current timestamp
+        time_correction = timestamp < now_correction ? now : timestamp, // correct weird timestamp in mempool with current timestamp
         transactiontime = normalize_timestamp(time_correction) - 3000,
         confirmations = latest_block ? get_block_confirmations(height, latest_block) : height;
     let outputsum = 0;

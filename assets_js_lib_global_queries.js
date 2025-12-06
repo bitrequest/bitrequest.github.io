@@ -301,6 +301,7 @@ let request = null,
 //objectkey_from_array
 //value_in_array
 //find_object_index
+//get_next
 //add_unique_items
 //remove_array_items
 //merge_by_key
@@ -785,6 +786,12 @@ function find_object_index(array, key, url) {
     });
 }
 
+// Finds the next value in an array if exists
+function get_next(arr, value) {
+    const index = arr.indexOf(value);
+    return (index !== -1 && index < arr.length - 1) ? arr[index + 1] : false;
+}
+
 // Merge arrays without duplicates
 function add_unique_items(target_array, source_array) {
     const existing_set = new Set(target_array),
@@ -1024,7 +1031,6 @@ function random_array_item(arr) {
         return arr[Math.floor(Math.random() * arr.length)];
     }
     return false
-
 }
 
 // Initializes API keys from encoded storage or triggers fresh key generation

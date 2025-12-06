@@ -2560,14 +2560,23 @@ function switch_address() {
 
 // Locates next valid address for currency payments
 function new_addresli(currency, address) {
-    const valid_addresses = filter_addressli(currency, "checked", true),
-        labeled_addresses = valid_addresses.filter(function() { // only pick addresses with label
+    const valid_addresses = filter_addressli(currency, "checked", true);
+    if (valid_addresses) {
+        const labeled_addresses = valid_addresses.filter(function() { // only pick addresses with label
             return $(this).data("label").length > 0;
-        }),
-        current_address_item = filter_addressli(currency, "address", address),
-        next_address_item = current_address_item.next(".adli[data-checked='true']"),
-        first_address_item = labeled_addresses.not(".adli[data-address='" + address + "']").first();
-    return first_address_item.length === 0 ? false : (next_address_item.length ? next_address_item : first_address_item);
+        });
+        if (labeled_addresses && labeled_addresses.length > 1) {
+            const address_array = dom_to_array(labeled_addresses, "address");
+            if (address_array) {
+                const get_next_address = get_next(address_array, address),
+                    next_address = get_next_address || address_array[0];
+                if (next_address) {
+                    return filter_addressli(currency, "address", next_address);
+                }
+            }
+        }
+    }
+    return false
 }
 
 // Handles double-click events for copying address data
