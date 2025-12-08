@@ -776,6 +776,7 @@
     padding: 0.4em 1.3em 0.4em 0.3em;
     text-transform: capitalize;
     font-weight: 400;
+    opacity:0.5;
 }
 
 .networks ul li.nwl2:after {
@@ -793,12 +794,21 @@
 
 #paymentdialogbox:not(.transacting) .networks ul li.nwl2.offline {
     text-decoration-line: line-through;
+    opacity:1;
     color: #afafaf;
 }
 
+#paymentdialogbox:not(.transacting) .networks ul li.nwl2.offline:after {
+    color: #ff0000;
+}
+
+.networks ul li.nwl2.nw_select {
+   opacity:1;
+}
+
 .networks ul li.nwl2.dim {
-    text-decoration-line: line-through;
-    opacity:0.5;
+   opacity:0.5;
+   text-decoration-line: line-through;
 }
 
 .networks ul li.nwl2.dim:after {

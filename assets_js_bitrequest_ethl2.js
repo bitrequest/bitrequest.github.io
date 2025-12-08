@@ -868,6 +868,8 @@ function initialize_network_status(sn, stat) {
 // Updates Layer 2 network status display
 function update_network_status(sn, stat) {
     const networks = $("#paymentdialogbox .networks"),
+        nw_chain = request.chainid,
+        dim_class = nw_chain ? "" : " dim",
         network = sn.network,
         l2_object = glob_let.l2s,
         status = stat ? "online" : "offline",
@@ -891,8 +893,9 @@ function update_network_status(sn, stat) {
             nw_name = l2,
             chainid = all_l2s[l2],
             l2_contract = all_contracts ? all_contracts[l2] : false,
-            l2c_str = l2_contract || "nocontract";
-        nw_li += "<li class='nwl2" + stt + anim + "' title='" + title + "' data-chainid='" + chainid + "' data-contract='" + l2_contract + "'>" + nw_name + "</li>";
+            l2c_str = l2_contract || "nocontract",
+            select_class = (nw_chain === chainid) ? " nw_select" : "";
+        nw_li += "<li class='nwl2" + stt + anim + select_class + dim_class + "' title='" + title + "' data-chainid='" + chainid + "' data-contract='" + l2_contract + "'>" + nw_name + "</li>";
         if (st === "offline") {
             offline_count++
         }
@@ -948,12 +951,14 @@ function switch_l2() {
             all_l2s = $(".nwl2"),
             all_this = $(".nwl2[data-chainid='" + chain_id + "']"),
             cc_value = $("#paymentdialogbox .ccpool").attr("data-value");
-        all_l2s.removeClass("dim").not(all_this).addClass("dim");
+        all_l2s.removeClass("nw_select dim");
+        all_this.addClass("nw_select");
         if ((chain_contract === request.token_l2_contract) && (chain_id === request.chainid)) {
             all_this.addClass("dim");
             request.token_l2_contract = false;
             request.chainid = false;
         } else {
+            all_this.removeClass("dim");
             request.token_l2_contract = chain_contract;
             request.chainid = chain_id;
         }
