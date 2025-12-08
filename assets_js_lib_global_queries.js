@@ -134,7 +134,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "sec_kas_wss": "wss://api-v2-do.kas.fyi",
         "stored_currencies": br_get_local("currencies", true),
         "supportsTouch": ("ontouchstart" in window || navigator.msMaxTouchPoints) ? true : false,
-        "test_address": {
+        "test_address": { // bip39 (All addresses / xpubs in this app are test addresses derived from the following testphrase, taken from https://github.com/bitcoinbook/bitcoinbook/blob/f8b883dcd4e3d1b9adf40fed59b7e898fbd9241f/ch05.asciidoc)
             "bitcoin": "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5",
             "bitcoin-cash": "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22",
             "dogecoin": "DKvWg8UhQSycj1J8QVxeBDkRpbjDkw3DiW",

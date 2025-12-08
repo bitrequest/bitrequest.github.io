@@ -573,8 +573,8 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
                                 "params": {
                                     "method": "POST",
                                     "data": {
-                                        address,
-                                        view_key,
+                                        "address": test_address, // use dummy XMR address, wait with creating an account until sharing a request. This way Point of Sale only request don't require LWS
+                                        "view_key": glob_const.test_address.xmrvk,
                                         "create_account": true,
                                         "generated_locally": false
                                     },
