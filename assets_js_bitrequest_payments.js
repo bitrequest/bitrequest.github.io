@@ -463,6 +463,11 @@ function poll_animate() {
 
 // Initializes the payment process and validates request parameters
 function load_request(pass) {
+    const url_params = get_urlparameters(),
+        payment = url_params.payment;
+    if (!payment) {
+        return
+    }
     if (glob_let.post_scan) { // wait till post_scan is finished
         play_audio("funk");
         return
@@ -481,7 +486,6 @@ function load_request(pass) {
     loader();
     glob_let.symbolcache = br_get_local("symbols", true);
     if (glob_let.symbolcache) {
-        const url_params = get_urlparameters();
         if (url_params.xss) { //xss detection
             const content = "<h2 class='icon-warning'>" + glob_const.xss_alert + "</h2>";
             popdialog(content, "canceldialog");
@@ -493,8 +497,7 @@ function load_request(pass) {
             edit_contactform(true);
             return
         }
-        const payment_currency = url_params.payment,
-            coin_data = get_coin_config(payment_currency);
+        const coin_data = get_coin_config(payment);
         if (coin_data) {
             const is_erc20 = coin_data.erc20 === true,
                 request_start_time = now_utc(),
@@ -504,7 +507,7 @@ function load_request(pass) {
                     "received": false,
                     "rq_init": request_start_time,
                     "rq_timer": request_start_time,
-                    "payment": payment_currency,
+                    payment,
                     "coindata": coin_data,
                     "erc20": is_erc20,
                     "eth_l2s": [],
@@ -526,7 +529,7 @@ function load_request(pass) {
                 const token_contract = coin_data.contract;
                 if (token_contract) {
                     request.token_contract = token_contract;
-                    get_tokeninfo(payment_currency, token_contract);
+                    get_tokeninfo(payment, token_contract);
                     return
                 }
                 const content = "<h2 class='icon-blocked'>" + tl("nofetchtokeninfo") + "</h2>";
@@ -534,7 +537,7 @@ function load_request(pass) {
                 closeloader();
                 return
             }
-            if (payment_currency === "ethereum") {
+            if (payment === "ethereum") {
                 get_l2_contracts("ethereum");
                 return
             }
@@ -542,7 +545,7 @@ function load_request(pass) {
             return
         }
         const content = "<h2 class='icon-blocked'>" + tl("currencynotsupported", {
-            "currency": payment_currency
+            "currency": payment
         }) + "</h2>";
         popdialog(content, "canceldialog");
         closeloader();

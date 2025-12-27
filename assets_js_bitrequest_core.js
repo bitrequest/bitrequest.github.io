@@ -194,8 +194,7 @@ function get_erc20tokens() {
             get_erc20tokens();
             return
         }
-        const error_msg = "<h2 class='icon-bin'>" + tl("apicallfailed") + "</h2><p class='doselect'>" + tl("nofetchtokeninfo") + "</p>";
-        popdialog(error_msg, "canceldialog");
+        store_coindata_fallback();
     }).always(function() {
         set_functions();
     });

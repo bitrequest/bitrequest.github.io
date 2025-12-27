@@ -500,7 +500,7 @@ function sync_drive_data(auth_state) {
         api_proxy(request_data).done(function(response) {
             // Success handling if needed  
         }).fail(function(xhr, status, error) {
-            if (textStatus === "error") {
+            if (status === "error") {
                 const error_response = xhr;
                 if (error_response) {
                     const error_json = error_response.responseJSON;

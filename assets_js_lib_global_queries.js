@@ -912,18 +912,40 @@ function get_aws_icon_url(wallet_name, clas = "wallet_icon", ext = "png") {
 // Fires when app comes back to foreground
 function visibility_change() {
     document.addEventListener("visibilitychange", () => {
-        const is_request = (is_openrequest() === true);
+        const is_request = (is_openrequest() === true),
+            glob_search = glob_const.w_loc.search;
         if (visible_tab()) { // to foreground
             if (glob_let.in_background) {
-                if (is_request) {
-                    foreground_reconnect();
-                    return
-                }
                 glob_let.in_background = false;
+                const get_bg_dat = br_get_session("bg_time", true);
+                if (get_bg_dat) {
+                    const search = get_bg_dat.search,
+                        search_change = search !== glob_search;
+                    if (is_request) {
+                        if (search_change) {
+                            cancel_paymentdialog();
+                            setTimeout(function() {
+                                loadurl();
+                            }, 1000);
+                            return
+                        }
+                        const saved_bg_time = get_bg_dat.time;
+                        if (saved_bg_time) {
+                            foreground_reconnect(saved_bg_time);
+                        }
+                        return
+                    }
+                    if (search_change) {
+                        loadurl();
+                    }
+                }
             }
             return
         }
-        br_set_session("bg_time", now_utc());
+        br_set_session("bg_time", JSON.stringify({
+            "time": now_utc(),
+            "search": glob_search
+        }));
         glob_let.in_background = true;
         if (is_request) {
             glob_let.background_timeout = setTimeout(() => {

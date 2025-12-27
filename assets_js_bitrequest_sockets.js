@@ -43,33 +43,30 @@
 // ** Core WebSocket Initialization & Management: **
 
 // Reconnects if websocket got lost in background
-function foreground_reconnect() {
+function foreground_reconnect(saved_bg_time) {
     if (!request) return
-    const get_bg_time = br_get_session("bg_time", true);
-    if (get_bg_time) {
-        const bg_time = now_utc() - get_bg_time;
-        if (bg_time > 3000) {
-            const api_data = q_obj(helper, "api_info.data");
-            if (api_data) {
-                const wallet_address = request.address;
-                if (wallet_address) {
-                    set_dialog_timeout();
-                    force_close_socket().then(() => {
-                        init_socket(api_data, wallet_address, true, true);
-                        setTimeout(() => { // wait 1s to re-open connections
-                            glob_let.in_background = false;
-                        }, 1000);
-                    });
-                    return
-                }
+    const bg_time = now_utc() - saved_bg_time;
+    if (bg_time > 3000) {
+        const api_data = q_obj(helper, "api_info.data");
+        if (api_data) {
+            const wallet_address = request.address;
+            if (wallet_address) {
+                set_dialog_timeout();
+                force_close_socket().then(() => {
+                    init_socket(api_data, wallet_address, true, true);
+                    setTimeout(() => { // wait 1s to re-open connections
+                        glob_let.in_background = false;
+                    }, 1000);
+                });
+                return
             }
-            socket_info();
-            force_close_socket();
-            return
         }
-        clearTimeout(glob_let.background_timeout);
-        glob_let.background_timeout = 0;
+        socket_info();
+        force_close_socket();
+        return
     }
+    clearTimeout(glob_let.background_timeout);
+    glob_let.background_timeout = 0;
 }
 
 // Establishes WebSocket connections for cryptocurrency payment monitoring based on payment type and node configuration
