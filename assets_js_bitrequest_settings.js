@@ -1135,11 +1135,6 @@ function generate_backup_filename() {
 // Processes backup file download with iOS detection and confirmation dialog 
 function submit_backup() {
     $(document).on("click", "#triggerdownload", function(e) {
-        if (glob_const.body.hasClass("ios")) {
-            e.preventDefault();
-            notify(tl("noiosbu"));
-            return
-        }
         const node = $(this),
             href = node.attr("href"),
             title = node.attr("title"),
@@ -1915,11 +1910,6 @@ function csvexport_trigger() {
 // Processes CSV file download with iOS compatibility check and user confirmation
 function submit_csvexport() {
     $(document).on("click", "#trigger_csvexport", function(e) {
-        if (glob_const.body.hasClass("ios")) {
-            e.preventDefault();
-            notify(tl("noiosbu"));
-            return
-        }
         const btn = $(this),
             csv = complile_csv(),
             dataurl = "data:text/csv;charset=utf-16le;base64," + csv;
@@ -2206,11 +2196,6 @@ function check_csvexport(csv) {
 // Handles CSV download with platform checks and user notifications
 function submit_csvdownload() {
     $(document).on("click", "#trigger_csvdownload", function(e) {
-        if (glob_const.body.hasClass("ios")) {
-            e.preventDefault();
-            notify(tl("noiosbu"));
-            return
-        }
         const btn = $(this),
             href = btn.attr("href"),
             title = btn.attr("title"),
