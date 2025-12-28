@@ -1914,11 +1914,10 @@ glob_config = {
         {
             "id": "url_shorten_settings",
             "heading": "Url shortener",
-            "selected": "firebase",
+            "selected": "bitly",
             "icon": "icon-link",
             "us_active": "active",
-            "bitly_at": null,
-            "fbapikey": null
+            "bitly_at": null
         },
         {
             "id": "cmcapisettings",
@@ -1955,7 +1954,6 @@ glob_config = {
             "etherscan": null,
             "ethplorer": null,
             "exchangeratesapi": null,
-            "firebase": null,
             "fixer": null,
             "infura": null
         },
@@ -2115,13 +2113,6 @@ glob_config = {
             "key_param": null,
             "api_key": null,
             "sign_up": "https://bitly.com/a/sign_up/"
-        },
-        {
-            "name": "firebase",
-            "base_url": "https://firebasedynamiclinks.googleapis.com/v1/",
-            "key_param": "key=",
-            "api_key": null,
-            "sign_up": "https://firebase.google.com/"
         },
         {
             "name": "monero_lws",

@@ -8,7 +8,6 @@ $keys = array(
 	"ethplorer" => "",
 	"blockcypher" => "",
 	"bitly" => "",
-	"firebase" => "",
 	"blockchair" => "",
 	"currencylayer" => "",
 	"infura" => "",
@@ -25,7 +24,6 @@ $keys = array(
 	ethplorer: https://ethplorer.io/wallet/
 	blockcypher: https://accounts.blockcypher.com/
 	bitly: https://bitly.com/a/sign_up/
-	firebase: https://firebase.google.com/
 	blockchair: https://blockchair.com/api
 	currencylayer: https://currencylayer.com/product
 	infura: https://infura.io/register

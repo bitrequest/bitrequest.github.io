@@ -2215,22 +2215,20 @@ function submit_csvdownload() {
 
 // ** URL Shortener: **
 
-// Displays URL shortener configuration dialog with Firebase and Bitly options
+// Displays URL shortener configuration dialog with Bitly and Custom options
 function urlshortener() {
     $(document).on("click", "#url_shorten_settings", function() {
         const settings = $("#url_shorten_settings"),
             data = settings.data(),
             source = data.selected,
-            val = source == "inactive" ? "firebase" : source,
+            val = source == "inactive" ? "bitly" : source,
             fb_key = data.fbapikey || "",
             bitly_token = data.bitly_at || "",
             active = data.us_active,
             is_active = active === "active",
             form_class = is_active ? "" : " hide",
-            fb_class = val === "firebase" ? "" : " hide",
             bitly_class = val === "bitly" ? "" : " hide",
-            header_icon = val === "firebase" ? "icon-firebase" :
-            val === "bitly" ? "icon-bitly" : "",
+            header_icon = val === "bitly" ? "icon-bitly" : "",
             ddat = [{
                     "div": {
                         "id": "toggle_urlshortener",
@@ -2267,22 +2265,10 @@ function urlshortener() {
                                         {
                                             "div": {
                                                 "class": "options",
-                                                "content": "<span data-pe='none'>firebase</span><span data-pe='none'>bitly</span><span data-pe='none'>" + d_proxy() + "</span>"
+                                                "content": "<span data-pe='none'>bitly</span><span data-pe='none'>" + d_proxy() + "</span>"
                                             }
                                         }
                                     ]
-                                }
-                            },
-                            {
-                                "input": {
-                                    "class": "firebase_api_input" + fb_class,
-                                    "attr": {
-                                        "type": "text",
-                                        "value": fb_key,
-                                        "placeholder": "Firebase " + tl("apikey"),
-                                        "data-apikey": fb_key,
-                                        "data-checkchange": fb_key
-                                    }
                                 }
                             },
                             {
@@ -2361,19 +2347,12 @@ function pick_urlshortener_select() {
         const select = $(this),
             val = select.text(),
             form = select.closest(".popform"),
-            fb_input = form.find("input.firebase_api_input"),
             bitly_input = form.find("input.bitly_api_input"),
             header = $("#usformbox h3");
-        if (val === "firebase") {
-            fb_input.removeClass("hide");
-            bitly_input.addClass("hide");
-            header.attr("class", "icon-firebase");
-        } else if (val === "bitly") {
-            fb_input.addClass("hide");
+        if (val === "bitly") {
             bitly_input.removeClass("hide");
             header.attr("class", "icon-bitly");
         } else {
-            fb_input.addClass("hide");
             bitly_input.addClass("hide");
             header.attr("class", "");
         }
@@ -2389,16 +2368,12 @@ function submit_urlshortener_select() {
             input = form.find("input:first"),
             val = input.val();
         if (inj(val)) return
-        const fb_input = form.find("input.firebase_api_input"),
-            bitly_input = form.find("input.bitly_api_input"),
-            fb_val = fb_input.val(),
+        const bitly_input = form.find("input.bitly_api_input"),
             bitly_val = bitly_input.val();
-        if (inj(fb_val)) return
         if (inj(bitly_val)) return
-        const fb_check = fb_input.attr("data-checkchange"),
-            bitly_check = bitly_input.attr("data-checkchange"),
+        const bitly_check = bitly_input.attr("data-checkchange"),
             toggle = $("#toggle_urlshortener .switchpanel");
-        if (val === curapi && fb_check === fb_val && bitly_check === bitly_val && !toggle.hasClass("us_changed")) {
+        if (val === curapi && bitly_check === bitly_val && !toggle.hasClass("us_changed")) {
             canceldialog();
             return
         }
@@ -2412,17 +2387,7 @@ function submit_urlshortener_select() {
             }, title);
         }
         if (is_active) {
-            const cur_fb = fb_input.attr("data-apikey"),
-                cur_bitly = bitly_input.attr("data-apikey");
-            if (fb_val !== cur_fb) {
-                if (fb_check === fb_val) {
-                    popnotify("error", tl("validateapikey"));
-                    return
-                }
-                fb_input.attr("data-checkchange", fb_val);
-                validate_api_key("firebase", fb_val, true)
-                return
-            }
+            const cur_bitly = bitly_input.attr("data-apikey");
             if (bitly_val !== cur_bitly) {
                 if (bitly_check === bitly_val) {
                     popnotify("error", tl("validateapikey"));
@@ -2968,7 +2933,6 @@ function apikeys() {
                 "etherscan": data.etherscan || "",
                 "ethplorer": data.ethplorer || "",
                 "exchangerates": data.exchangeratesapi || "",
-                "firebase": data.firebase || "",
                 "fixer": data.fixer || "",
                 "infura": data.infura || ""
             },
@@ -2996,8 +2960,6 @@ function apikeys() {
                    <input type='text' value='" + keys.ethplorer + "' placeholder='Ethplorer " + keyph + "' data-ref='ethplorer' data-checkchange='" + keys.ethplorer + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Exchangeratesapi</h3>\
                    <input type='text' value='" + keys.exchangerates + "' placeholder='Exchangeratesapi " + keyph + "' data-ref='exchangeratesapi' data-checkchange='" + keys.exchangerates + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
-                   <h3>Firebase</h3>\
-                   <input type='text' value='" + keys.firebase + "' placeholder='Firebase " + keyph + "' data-ref='firebase' data-checkchange='" + keys.firebase + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Fixer</h3>\
                    <input type='text' value='" + keys.fixer + "' placeholder='Fixer " + keyph + "' data-ref='fixer' data-checkchange='" + keys.fixer + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Infura</h3>\
@@ -3086,10 +3048,6 @@ function validate_api_key(ref, keyval, last_input) {
             "keylength": 6,
             "payload": "v1/latest?access_key="
         },
-        "firebase": {
-            "keylength": 20,
-            "payload": "shortLinks?key="
-        },
         "fixer": {
             "keylength": 20,
             "payload": "symbols?access_key="
@@ -3139,17 +3097,12 @@ function json_check_apikey(keylength, ref, payload, keyval, last_input) {
         }
         const api_data = get_api_data(ref),
             base_url = api_data.base_url,
-            method = (ref === "firebase" || ref === "bitly") ? "POST" : "GET",
+            method = (ref === "bitly") ? "POST" : "GET",
             params = {
                 "method": method,
                 "cache": true
             };
         let search = payload + keyval;
-        if (ref === "firebase") {
-            params.data = {
-                "longDynamicLink": glob_const.firebase_shortlink + "?link=" + glob_const.approot + "?p=request"
-            };
-        }
         if (ref === "bitly") {
             search = payload;
             params.headers = {
@@ -3320,22 +3273,17 @@ function complement_apisettings(thisref, thisvalue) {
     keys[thisref] = thisvalue;
     set_setting("apikeys", keys);
     const settings = {
-        bitly: {
+        "bitly": {
             "url_shorten_settings": {
                 "bitly_at": thisvalue
             }
         },
-        firebase: {
-            "url_shorten_settings": {
-                "fbapikey": thisvalue
-            }
-        },
-        coinmarketcap: {
+        "coinmarketcap": {
             "cmcapisettings": {
                 "cmcapikey": thisvalue
             }
         },
-        fixer: {
+        "fixer": {
             "fiatapisettings": {
                 "fxapikey": thisvalue
             }

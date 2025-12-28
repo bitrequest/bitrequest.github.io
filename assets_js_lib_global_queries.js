@@ -35,7 +35,6 @@ const br_bipobj = br_get_local("bpdat", true),
     displayed_proxies = filter_object_array(br_proxy_list, "display", true),
     br_hosted_proxy = random_array_item(displayed_proxies), // load balance proxies
     tor_proxies = filter_object_array(br_proxy_list, "tor", true),
-    br_firebase_dynamic_link_domain = "bitrequest.page.link",
     br_androidpackagename = "io.bitrequest.app",
     br_useragent = navigator.userAgent || navigator.vendor || window.opera,
     br_lower_useragent = br_useragent.toLowerCase(),
@@ -78,8 +77,6 @@ const br_bipobj = br_get_local("bpdat", true),
             "base": 8453
         },
         "exp_referrer": br_exp_referrer,
-        "firebase_dynamic_link_domain": br_firebase_dynamic_link_domain,
-        "firebase_shortlink": "https://" + br_firebase_dynamic_link_domain + "/",
         "has_bigint": hasbigint(),
         "has_ndef": br_has_ndef,
         "hosted_proxy": br_hosted_proxy,
@@ -921,6 +918,9 @@ function visibility_change() {
                 if (get_bg_dat) {
                     const search = get_bg_dat.search,
                         search_change = search !== glob_search;
+                    console.log(glob_search);
+                    console.log(search);
+                    console.log(search_change);
                     if (is_request) {
                         if (search_change) {
                             cancel_paymentdialog();

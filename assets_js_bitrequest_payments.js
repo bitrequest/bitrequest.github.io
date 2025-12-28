@@ -109,7 +109,6 @@ $(document).ready(function() {
     //lightning_mode
     //share
     //shorten_url
-    //firebase_shorten
     //bitly_shorten
     //custom_shorten
     //get_saved_shorturl
@@ -2818,10 +2817,6 @@ function shorten_url(shared_title, shared_url, site_thumb, unguessable, url_hash
                 return
             }
         }
-        if (url_service === "firebase") {
-            firebase_shorten(shared_url, shared_title, site_thumb, unguessable, url_hash);
-            return
-        }
         if (url_service === "bitly") {
             bitly_shorten(shared_url, shared_title, url_hash);
             return
@@ -2832,62 +2827,6 @@ function shorten_url(shared_title, shared_url, site_thumb, unguessable, url_hash
         }
     }
     share_request(shared_url, shared_title);
-}
-
-// Handles Firebase Dynamic Links URL shortening
-function firebase_shorten(shared_url, shared_title, site_thumb, unguessable, url_hash) {
-    const security = unguessable ? "UNGUESSABLE" : "SHORT";
-    api_proxy({
-        "api": "firebase",
-        "search": "shortLinks",
-        "params": {
-            "method": "POST",
-            "cache": false,
-            "data": {
-                "dynamicLinkInfo": {
-                    "domainUriPrefix": glob_const.firebase_dynamic_link_domain,
-                    "link": shared_url,
-                    "androidInfo": {
-                        "androidPackageName": glob_const.androidpackagename
-                    },
-                    "iosInfo": {
-                        "iosBundleId": glob_const.androidpackagename,
-                        "iosAppStoreId": "1484815377"
-                    },
-                    "navigationInfo": {
-                        "enableForcedRedirect": "1"
-                    },
-                    "socialMetaTagInfo": {
-                        "socialTitle": "Bitrequest",
-                        "socialDescription": tl("payoff"),
-                        "socialImageLink": site_thumb
-                    }
-                },
-                "suffix": {
-                    "option": security
-                }
-            }
-        }
-    }).done(function(response) {
-        const data = br_result(response).result;
-        if (data) {
-            if (data.error) {
-                custom_shorten(false, shared_url, shared_title, site_thumb, url_hash);
-                return
-            }
-            const short_url = data.shortLink;
-            if (short_url) {
-                share_request(short_url, shared_title);
-                if (url_hash) {
-                    br_set_session("firebase_shorturl_" + url_hash, short_url);
-                }
-                return
-            }
-        }
-        custom_shorten(false, shared_url, shared_title, site_thumb, url_hash);
-    }).fail(function() {
-        custom_shorten(false, shared_url, shared_title, site_thumb, url_hash);
-    });
 }
 
 // Processes Bitly API URL shortening
