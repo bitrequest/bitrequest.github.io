@@ -910,18 +910,14 @@ function get_aws_icon_url(wallet_name, clas = "wallet_icon", ext = "png") {
 function visibility_change() {
     document.addEventListener("visibilitychange", () => {
         const is_request = (is_openrequest() === true),
-            glob_search = window?.location?.search;
+            glob_search = glob_const.w_loc.search;
         if (visible_tab()) { // to foreground
             if (glob_let.in_background) {
                 glob_let.in_background = false;
                 const get_bg_dat = br_get_session("bg_time", true);
                 if (get_bg_dat) {
                     const search = get_bg_dat.search,
-                        search_change = search !== glob_search;
-                    console.log(glob_search);
-                    console.log(search);
-                    console.log("change");
-                    console.log(search_change);
+                        search_change = search !== glob_search; // currently not fully working
                     if (is_request) {
                         if (search_change) {
                             cancel_paymentdialog();
