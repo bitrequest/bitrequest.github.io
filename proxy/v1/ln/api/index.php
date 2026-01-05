@@ -543,10 +543,10 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 		}
 		
 		if ($imp === "core-lightning") {
-			return [
+			return array_merge($result, [
 				"bolt11" => $dat["bolt11"],
 				"hash" => $dat["payment_hash"]
-			];
+			]);
 		}
 	
 		if ($imp === "lnbits") {
@@ -594,7 +594,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 			];
 			$headers[] = "Content-Type: application/json";
 			$headers[] = "Rune: " . $key;
-			$invoices = curl_get($rpcurl, null, $headers);
+			$invoices = curl_get($rpcurl, "{}", $headers);
 			$result = json_decode($invoices, true);
 			
 			// Check if we got an array of invoices or a single invoice
@@ -662,14 +662,14 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 		}
 		
 		if ($imp === "core-lightning") {
-			$rpcurl = $host . "/v1/invoice";
+			$rpcurl = $host . "/v1/listinvoices";
 			$headers = [
 				"tls_wildcard" => true
 			];
 			$headers[] = "Content-Type: application/json";
-			$headers[] = "payment_hash: " . $hash;
 			$headers[] = "Rune: " . $key;
-			$inv = curl_get($rpcurl, null, $headers);
+			$data = json_encode(["payment_hash" => $hash]);
+			$inv = curl_get($rpcurl, $data, $headers);
 			$result = json_decode($inv, true);
 			
 			// Check for valid response with r_hash
