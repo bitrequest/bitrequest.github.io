@@ -153,7 +153,7 @@ function render_lightning_interface(replace) {
             "<div class='inputwrap'><input class='invoice_macaroon' type='text' value='' placeholder='Invoice macaroon' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
             "</div>" +
             "<div class='lndcd cs_core-lightning'>" +
-            "<div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
+            "<div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host' autocomplete='off' autocapitalize='off' spellcheck='false'/><div class='qrscanner' data-currency='lnd' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>" +
             "<div class='inputwrap'><input class='invoice_macaroon' type='text' value='' placeholder='Invoice rune' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
             "</div>" +
             "<div class='lndcd cs_lnbits'>" +
