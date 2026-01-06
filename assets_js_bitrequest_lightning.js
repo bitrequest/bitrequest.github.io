@@ -153,7 +153,7 @@ function render_lightning_interface(replace) {
             "<div class='inputwrap'><input class='invoice_macaroon' type='text' value='' placeholder='Invoice macaroon' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
             "</div>" +
             "<div class='lndcd cs_core-lightning'>" +
-            "<div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host' autocomplete='off' autocapitalize='off' spellcheck='false'/><div class='qrscanner' data-currency='lnd' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>" +
+            "<div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host' autocomplete='off' autocapitalize='off' spellcheck='false'/><div class='qrscanner' data-currency='core-lightning' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>" +
             "<div class='inputwrap'><input class='invoice_macaroon' type='text' value='' placeholder='Invoice rune' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
             "</div>" +
             "<div class='lndcd cs_lnbits'>" +
@@ -1724,14 +1724,12 @@ function check_lnbits_status(lightning_node) {
 // Populates Lightning node credential fields based on implementation type
 function set_ln_fields(implementation, rest_host, node_key) {
     if (implementation && rest_host && node_key) {
-        if (implementation === "lnd") {
-            const node_host_input = $("#lnd_credentials .cs_" + implementation + " .lnd_host"),
-                node_key_input = $("#lnd_credentials .cs_" + implementation + " .invoice_macaroon");
-            if (node_host_input.length && node_key_input.length) {
-                node_host_input.val(rest_host);
-                node_key_input.val(node_key);
-                return true
-            }
+        const node_host_input = $("#lnd_credentials .cs_" + implementation + " .lnd_host"),
+            node_key_input = $("#lnd_credentials .cs_" + implementation + " .invoice_macaroon");
+        if (node_host_input.length && node_key_input.length) {
+            node_host_input.val(rest_host);
+            node_key_input.val(node_key);
+            return true
         }
     }
     return false

@@ -1609,9 +1609,9 @@ function handle_ln_connect(result, payment) {
     const params_url = renderlnconnect(result);
     if (params_url) {
         const rest_url = params_url.resturl,
-            macaroon = params_url.macaroon;
+            macaroon = params_url.macaroon || params_url.rune;
         if (rest_url && macaroon) {
-            const decoded_mac = b64urldecode(macaroon);
+            const decoded_mac = (payment === "core-lightning") ? macaroon : b64urldecode(macaroon);
             if (decoded_mac) {
                 const set_success = set_ln_fields(payment, rest_url, decoded_mac);
                 if (set_success) {
