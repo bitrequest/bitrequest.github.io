@@ -71,6 +71,7 @@
 //hmacsha_bits 
 //hash160
 //sha_sub
+//keccak_256
 
 // ** Key & Address Generation: **
 //privkey_wif
@@ -82,6 +83,7 @@
 //to_checksum_address
 
 // ** Bitcoin Cash Specific: **
+//cashaddr (encode, decode)
 //pub_to_cashaddr
 //bch_legacy
 //bch_cashaddr
@@ -944,6 +946,146 @@ function sha_sub(val, lim) {
     return hmacsha(val, "sha256").slice(0, lim);
 }
 
+// Keccak-256 hash function (used for Ethereum addresses)
+// Based on js-sha3 by Chen, Yi-Cyuan
+function keccak_256(input) {
+    const rc = [
+        1, 0, 32898, 0, 32906, 2147483648, 2147516416, 2147483648,
+        32907, 0, 2147483649, 0, 2147516545, 2147483648, 32777, 2147483648,
+        138, 0, 136, 0, 2147516425, 0, 2147483658, 0,
+        2147516555, 0, 139, 2147483648, 32905, 2147483648, 32771, 2147483648,
+        32770, 2147483648, 128, 2147483648, 32778, 0, 2147483658, 2147483648,
+        2147516545, 2147483648, 32896, 2147483648, 2147483649, 0, 2147516424, 2147483648
+    ];
+
+    function keccak_f(s) {
+        let c = [],
+            b = [],
+            h, l;
+        for (let n = 0; n < 48; n += 2) {
+            // Theta
+            for (let x = 0; x < 10; x++) {
+                c[x] = s[x] ^ s[x + 10] ^ s[x + 20] ^ s[x + 30] ^ s[x + 40];
+            }
+            for (let x = 0; x < 10; x += 2) {
+                h = c[(x + 8) % 10] ^ (c[(x + 2) % 10] << 1 | c[(x + 3) % 10] >>> 31);
+                l = c[(x + 9) % 10] ^ (c[(x + 3) % 10] << 1 | c[(x + 2) % 10] >>> 31);
+                for (let y = 0; y < 50; y += 10) {
+                    s[x + y] ^= h;
+                    s[x + y + 1] ^= l;
+                }
+            }
+            // Rho + Pi
+            b[0] = s[0];
+            b[1] = s[1];
+            b[32] = s[11] << 4 | s[10] >>> 28;
+            b[33] = s[10] << 4 | s[11] >>> 28;
+            b[14] = s[20] << 3 | s[21] >>> 29;
+            b[15] = s[21] << 3 | s[20] >>> 29;
+            b[46] = s[31] << 9 | s[30] >>> 23;
+            b[47] = s[30] << 9 | s[31] >>> 23;
+            b[28] = s[40] << 18 | s[41] >>> 14;
+            b[29] = s[41] << 18 | s[40] >>> 14;
+            b[20] = s[2] << 1 | s[3] >>> 31;
+            b[21] = s[3] << 1 | s[2] >>> 31;
+            b[2] = s[13] << 12 | s[12] >>> 20;
+            b[3] = s[12] << 12 | s[13] >>> 20;
+            b[34] = s[22] << 10 | s[23] >>> 22;
+            b[35] = s[23] << 10 | s[22] >>> 22;
+            b[16] = s[33] << 13 | s[32] >>> 19;
+            b[17] = s[32] << 13 | s[33] >>> 19;
+            b[48] = s[42] << 2 | s[43] >>> 30;
+            b[49] = s[43] << 2 | s[42] >>> 30;
+            b[40] = s[5] << 30 | s[4] >>> 2;
+            b[41] = s[4] << 30 | s[5] >>> 2;
+            b[22] = s[14] << 6 | s[15] >>> 26;
+            b[23] = s[15] << 6 | s[14] >>> 26;
+            b[4] = s[25] << 11 | s[24] >>> 21;
+            b[5] = s[24] << 11 | s[25] >>> 21;
+            b[36] = s[34] << 15 | s[35] >>> 17;
+            b[37] = s[35] << 15 | s[34] >>> 17;
+            b[18] = s[45] << 29 | s[44] >>> 3;
+            b[19] = s[44] << 29 | s[45] >>> 3;
+            b[10] = s[6] << 28 | s[7] >>> 4;
+            b[11] = s[7] << 28 | s[6] >>> 4;
+            b[42] = s[17] << 23 | s[16] >>> 9;
+            b[43] = s[16] << 23 | s[17] >>> 9;
+            b[24] = s[26] << 25 | s[27] >>> 7;
+            b[25] = s[27] << 25 | s[26] >>> 7;
+            b[6] = s[36] << 21 | s[37] >>> 11;
+            b[7] = s[37] << 21 | s[36] >>> 11;
+            b[38] = s[47] << 24 | s[46] >>> 8;
+            b[39] = s[46] << 24 | s[47] >>> 8;
+            b[30] = s[8] << 27 | s[9] >>> 5;
+            b[31] = s[9] << 27 | s[8] >>> 5;
+            b[12] = s[18] << 20 | s[19] >>> 12;
+            b[13] = s[19] << 20 | s[18] >>> 12;
+            b[44] = s[29] << 7 | s[28] >>> 25;
+            b[45] = s[28] << 7 | s[29] >>> 25;
+            b[26] = s[38] << 8 | s[39] >>> 24;
+            b[27] = s[39] << 8 | s[38] >>> 24;
+            b[8] = s[48] << 14 | s[49] >>> 18;
+            b[9] = s[49] << 14 | s[48] >>> 18;
+            // Chi
+            for (let y = 0; y < 50; y += 10) {
+                for (let x = 0; x < 10; x += 2) {
+                    s[y + x] = b[y + x] ^ (~b[y + (x + 2) % 10] & b[y + (x + 4) % 10]);
+                    s[y + x + 1] = b[y + x + 1] ^ (~b[y + (x + 3) % 10] & b[y + (x + 5) % 10]);
+                }
+            }
+            // Iota
+            s[0] ^= rc[n];
+            s[1] ^= rc[n + 1];
+        }
+    }
+
+    // Convert input to bytes
+    let bytes;
+    if (typeof input === "string") {
+        bytes = new Uint8Array(input.length);
+        for (let i = 0; i < input.length; i++) bytes[i] = input.charCodeAt(i);
+    } else if (input instanceof Uint8Array) {
+        bytes = input;
+    } else if (Array.isArray(input)) {
+        bytes = new Uint8Array(input);
+    } else {
+        throw new Error("Invalid input type for keccak256");
+    }
+
+    const rate = 136,
+        block_count = 34,
+        s = new Array(50).fill(0),
+        blocks = new Array(35).fill(0);
+    let i = 0;
+
+    // Absorb
+    for (let pos = 0; pos < bytes.length; pos++) {
+        blocks[i >> 2] |= bytes[pos] << ((i & 3) << 3);
+        if (++i >= rate) {
+            for (let j = 0; j < block_count; j++) {
+                s[j] ^= blocks[j];
+                blocks[j] = 0;
+            }
+            keccak_f(s);
+            i = 0;
+        }
+    }
+
+    // Pad and final block
+    blocks[i >> 2] |= 1 << ((i & 3) << 3);
+    blocks[block_count - 1] |= 0x80000000;
+    for (let j = 0; j < block_count; j++) s[j] ^= blocks[j];
+    keccak_f(s);
+
+    // Squeeze
+    let hex = "";
+    for (let i = 0; i < 32; i++) {
+        const byte = (s[i >> 2] >> ((i & 3) << 3)) & 0xff;
+        hex += (byte >> 4).toString(16) + (byte & 0xf).toString(16);
+    }
+    return hex;
+}
+
 // ** Key & Address Generation: **
 
 // Encodes private key to Wallet Import Format (WIF) with optional compression
@@ -990,12 +1132,175 @@ function to_checksum_address(e) {
         return
     }
     e = e.toLowerCase().replace(/^0x/i, "");
-    for (var t = keccak256(e).replace(/^0x/i, ""), r = "0x", n = 0; n < e.length; n++)
+    for (var t = keccak_256(e).replace(/^0x/i, ""), r = "0x", n = 0; n < e.length; n++)
         7 < parseInt(t[n], 16) ? r += e[n].toUpperCase() : r += e[n];
     return r;
 }
 
 // ** Bitcoin Cash Specific: **
+
+// CashAddr encoding/decoding for Bitcoin Cash addresses
+// Based on cashaddrjs, using native BigInt
+const cashaddr = (function() {
+    const CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+    const CHARSET_MAP = {};
+    for (let i = 0; i < CHARSET.length; i++) {
+        CHARSET_MAP[CHARSET[i]] = i;
+    }
+
+    function polymod(values) {
+        const GENERATORS = [
+            0x98f2bc8e61n, 0x79b76d99e2n, 0xf33e5fb3c4n,
+            0xae2eabe2a8n, 0x1e4f43e470n
+        ];
+        let chk = 1n;
+        for (let i = 0; i < values.length; i++) {
+            const top = chk >> 35n;
+            chk = ((chk & 0x07ffffffffn) << 5n) ^ BigInt(values[i]);
+            for (let j = 0; j < 5; j++) {
+                if ((top >> BigInt(j)) & 1n) {
+                    chk ^= GENERATORS[j];
+                }
+            }
+        }
+        return chk ^ 1n;
+    }
+
+    function prefixToArray(prefix) {
+        const result = new Uint8Array(prefix.length + 1);
+        for (let i = 0; i < prefix.length; i++) {
+            result[i] = prefix.charCodeAt(i) & 31;
+        }
+        result[prefix.length] = 0;
+        return result;
+    }
+
+    function convertBits(data, fromBits, toBits, pad) {
+        let acc = 0,
+            bits = 0;
+        const result = [],
+            maxv = (1 << toBits) - 1;
+        for (let i = 0; i < data.length; i++) {
+            const value = data[i];
+            acc = (acc << fromBits) | value;
+            bits += fromBits;
+            while (bits >= toBits) {
+                bits -= toBits;
+                result.push((acc >> bits) & maxv);
+            }
+        }
+        if (pad) {
+            if (bits > 0) result.push((acc << (toBits - bits)) & maxv);
+        } else if (bits >= fromBits || ((acc << (toBits - bits)) & maxv)) {
+            throw new Error('Invalid padding');
+        }
+        return new Uint8Array(result);
+    }
+
+    function createChecksum(prefix, payload) {
+        const prefixArray = prefixToArray(prefix);
+        const combined = new Uint8Array(prefixArray.length + payload.length + 8);
+        combined.set(prefixArray);
+        combined.set(payload, prefixArray.length);
+        const mod = polymod(combined);
+        const checksum = new Uint8Array(8);
+        for (let i = 0; i < 8; i++) {
+            checksum[7 - i] = Number((mod >> BigInt(i * 5)) & 31n);
+        }
+        return checksum;
+    }
+
+    function verifyChecksum(prefix, payload) {
+        const prefixArray = prefixToArray(prefix);
+        const combined = new Uint8Array(prefixArray.length + payload.length);
+        combined.set(prefixArray);
+        combined.set(payload, prefixArray.length);
+        return polymod(combined) === 0n;
+    }
+
+    function getHashSize(versionByte) {
+        return [160, 192, 224, 256, 320, 384, 448, 512][versionByte & 7];
+    }
+
+    function getType(versionByte) {
+        const typeValue = versionByte & 120;
+        if (typeValue === 0) return 'P2PKH';
+        if (typeValue === 8) return 'P2SH';
+        throw new Error('Invalid address type');
+    }
+
+    return {
+        encode: function(prefix, type, hash) {
+            let versionByte = (type === 'P2PKH') ? 0 : (type === 'P2SH') ? 8 : null;
+            if (versionByte === null) throw new Error('Invalid type: ' + type);
+
+            const hashBits = hash.length * 8;
+            const sizeMap = {
+                160: 0,
+                192: 1,
+                224: 2,
+                256: 3,
+                320: 4,
+                384: 5,
+                448: 6,
+                512: 7
+            };
+            if (!(hashBits in sizeMap)) throw new Error('Invalid hash size');
+            versionByte |= sizeMap[hashBits];
+
+            const versionAndHash = new Uint8Array(hash.length + 1);
+            versionAndHash[0] = versionByte;
+            versionAndHash.set(hash, 1);
+
+            const payload = convertBits(versionAndHash, 8, 5, true);
+            const checksum = createChecksum(prefix, payload);
+            const combined = new Uint8Array(payload.length + checksum.length);
+            combined.set(payload);
+            combined.set(checksum, payload.length);
+
+            let result = prefix + ':';
+            for (let i = 0; i < combined.length; i++) {
+                result += CHARSET[combined[i]];
+            }
+            return result;
+        },
+
+        decode: function(address) {
+            const lower = address.toLowerCase();
+            if (address !== lower && address !== address.toUpperCase()) {
+                throw new Error('Mixed case address');
+            }
+            const parts = lower.split(':');
+            if (parts.length !== 2) throw new Error('Missing prefix');
+
+            const prefix = parts[0];
+            const payloadStr = parts[1];
+            const payload = new Uint8Array(payloadStr.length);
+            for (let i = 0; i < payloadStr.length; i++) {
+                const char = payloadStr[i];
+                if (!(char in CHARSET_MAP)) throw new Error('Invalid character: ' + char);
+                payload[i] = CHARSET_MAP[char];
+            }
+
+            if (!verifyChecksum(prefix, payload)) throw new Error('Invalid checksum');
+
+            const data = payload.slice(0, -8);
+            const converted = convertBits(data, 5, 8, false);
+            const versionByte = converted[0];
+            const hash = converted.slice(1);
+
+            if (hash.length * 8 !== getHashSize(versionByte)) {
+                throw new Error('Invalid hash size');
+            }
+
+            return {
+                prefix: prefix,
+                type: getType(versionByte),
+                hash: hash
+            };
+        }
+    };
+})();
 
 // Converts a legacy Bitcoin Cash address to CashAddr format
 function pub_to_cashaddr(legacy) {
@@ -1015,7 +1320,6 @@ function bch_legacy(cadr) {
             unbuf = buf2hex(conc);
         return b58check_encode(unbuf);
     } catch (e) {
-        //console.error(e.name, e.message);
         return cadr
     }
 }
@@ -1252,3 +1556,153 @@ function convert5to8(data) {
     }
     return acc;
 }
+
+/**
+ * CryptoUtils - Standalone cryptocurrency utilities library
+ * 
+ * STANDALONE USAGE (outside Bitrequest):
+ * ----------------------------------------
+ * <script src="assets_js_lib_sjcl.js"></script>
+ * <script src="assets_js_lib_crypto_utils.js"></script>
+ * <script>
+ *   // Use via namespace:
+ *   const bytes = CryptoUtils.hex_to_bytes("deadbeef");
+ *   const addr = CryptoUtils.pub_to_address_bech32("bc", pubkey);
+ *   
+ *   // Or use globals directly (backwards compatible):
+ *   const bytes = hex_to_bytes("deadbeef");
+ * </script>
+ * 
+ * FEATURES:
+ * - Base58 / Base58Check encoding
+ * - Bech32 / Bech32m encoding
+ * - Secp256k1 elliptic curve operations
+ * - SHA256, RIPEMD160, Hash160
+ * - Bitcoin/Litecoin address generation
+ * - Bitcoin Cash CashAddr support
+ * - Ethereum address generation
+ * - BIP39 mnemonic utilities
+ * - AES encryption/decryption
+ * - LNURL decoding
+ * 
+ * @license AGPL-3.0
+ * @see https://github.com/bitrequest/bitrequest.github.io
+ */
+
+const CryptoUtils = {
+    // Library info
+    VERSION: "1.0.0",
+
+    // Curve parameters
+    secp: secp,
+    CURVE: CURVE,
+
+    // === Core Helpers ===
+    uint_8array,
+    buffer,
+    unbuffer,
+    buf2hex,
+    is_hex,
+    str_pad,
+    dec_to_hex,
+    hex_to_dec,
+    hex_to_number_string,
+    hex_to_int,
+    pad_binary,
+    pad64,
+    concat_bytes,
+    encode_varint,
+
+    // === SJCL Bit Operations ===
+    to_bits,
+    hex_to_bits,
+    from_bits,
+    bit_length,
+    concat_array,
+
+    // === String Utilities ===
+    clean_string,
+    normalize_string,
+    split_words,
+    join_words,
+
+    // === Base Conversion ===
+    binary_string_to_word_array,
+    byte_array_to_word_array,
+    byte_array_to_binary_string,
+    hex_string_to_binary_string,
+    mnemonic_to_binary_string,
+
+    // === Base58 ===
+    b58enc,
+    b58enc_uint_array,
+    b58dec,
+    b58dec_uint_array,
+    b58check_encode,
+    b58check_decode,
+
+    // === Bech32 ===
+    to_words,
+    from_words,
+    convert,
+    polymod,
+    hrp_expand,
+    verify_checksum,
+    verify_checksum_with_type,
+    create_checksum,
+    bech32_encode,
+    bech32_decode,
+    bech32_dec_array,
+    lnurl_decodeb32,
+
+    // === Byte/Hex Conversion ===
+    hex_to_bytes,
+    bytes_to_hex,
+    hex_to_number,
+    bytes_to_number,
+
+    // === Elliptic Curve (secp256k1) ===
+    mod,
+    weierstrass,
+    egcd,
+    invert,
+    pow_mod,
+    xpow_mod,
+    sqrt_mod,
+
+    // === Key Operations ===
+    normalize_privatekey,
+    get_publickey,
+    priv_to_pub,
+    privkey_wif,
+    expand_pub,
+
+    // === Hashing ===
+    hmacsha,
+    hmac_bits,
+    hmacsha_bits,
+    sha_sub,
+    keccak_256,
+    hash160,
+    nimiq_hash,
+
+    // === Address Generation ===
+    pub_to_address,
+    pub_to_address_bech32,
+    hash160_to_address,
+    pub_to_eth_address,
+    to_checksum_address,
+
+    // === Bitcoin Cash ===
+    pub_to_cashaddr,
+    bch_cashaddr,
+    bch_legacy,
+
+    // === Encryption ===
+    aes_enc,
+    aes_dec,
+
+    // === Validation ===
+    address_to_scripthash,
+    convert5to8
+};

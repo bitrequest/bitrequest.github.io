@@ -91,7 +91,7 @@ function checkphp() {
                 if (currency_symbols.USD) {
                     br_set_local("symbols", currency_symbols, true);
                 } else {
-                    const api_error = data.error || "Unable to get API data";
+                    const api_error = api_result.error || "Unable to get API data";
                     fail_dialogs("fixer", {
                         "error": api_error
                     });
@@ -405,7 +405,6 @@ function finish_functions() {
     //cancel_paymentdialog
     //hide_paymentdialog
     //reset_paymentdialog
-    //force_close_socket
     cancel_sharedialog_trigger();
     //cancel_sharedialog
 
@@ -597,7 +596,7 @@ function set_locales() {
 
 // Sets selected stylesheer
 function set_theme() {
-    var filename = $("#themesettings").data("selected");
+    const filename = $("#themesettings").data("selected");
     if (filename) {
         if (filename === "default.css") {
             return
@@ -2443,13 +2442,6 @@ function reset_paymentdialog() {
     }, 500, function() {
         clearTimeout(socket_timeout);
     });
-}
-
-// Forces WebSocket connection closure
-function force_close_socket(socket_id) {
-    console.log("force close");
-    stop_monitors(socket_id);
-    return close_socket(socket_id); // Return the promise
 }
 
 // Initializes share dialog cancellation handler

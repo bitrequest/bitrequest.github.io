@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>XmrUtils - Monero Utilities Test Suite</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+            line-height: 1.6;
+        }
+        h1 { color: #ff6600; margin-bottom: 5px; }
+        h2 { color: #ff6600; border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 30px; }
+        h3 { color: #888; margin: 0 0 20px 0; font-weight: normal; }
+        .test-section {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .test-section h4 {
+            margin: 0 0 15px 0;
+            color: #fff;
+            font-size: 16px;
+        }
+        .test-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        input, textarea, select {
+            background: #0f0f23;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        input { flex: 1; min-width: 200px; }
+        textarea { width: 100%; min-height: 80px; resize: vertical; }
+        button {
+            background: #ff6600;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        button:hover { background: #cc5200; }
+        .output {
+            background: #0f0f23;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+        .success { color: #00ff88; }
+        .error { color: #ff4444; }
+        .info { color: #ff6600; }
+        .warn { color: #ffaa00; }
+        .muted { color: #888; }
+        #test-results {
+            background: #0f0f23;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .test-pass { color: #00ff88; }
+        .test-fail { color: #ff4444; }
+        .test-count {
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+        a { color: #ff6600; }
+        .note {
+            background: #3d2814;
+            border-left: 3px solid #ff6600;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        .warning {
+            background: #3d1414;
+            border-left: 3px solid #ff4444;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔶 XmrUtils</h1>
+    <h3>Standalone Monero Cryptocurrency Utilities v<span id="version"></span></h3>
+    
+    <div class="note">
+        <strong>Dependencies:</strong> <a href="https://github.com/bitrequest/bitrequest.github.io/blob/master/assets_js_lib_sjcl.js">sjcl.js</a> → <a href="https://github.com/bitrequest/bitrequest.github.io/blob/master/assets_js_lib_crypto_utils.js">crypto_utils.js</a> → <a href="https://github.com/bitrequest/bitrequest.github.io/blob/master/assets_js_lib_xmr_utils.js">xmr_utils.js</a><br>
+        <strong>Test phrase:</strong> <a href="https://github.com/bitcoinbook/bitcoinbook/blob/f8b883dcd4e3d1b9adf40fed59b7e898fbd9241f/ch05.asciidoc">army van defense carry jealous true garbage claim echo media make crunch</a><br>
+        <strong>Repository:</strong> <a href="https://github.com/bitrequest/bitrequest.github.io" target="_blank">github.com/bitrequest/bitrequest.github.io</a>
+    </div>
+
+    <div class="warning">
+        <strong>⚠️ Security Notice:</strong> Never use test keys with real funds. These examples use well-known test vectors only.
+    </div>
+
+    <!-- Automated Tests -->
+    <h2>🧪 Automated Unit Tests</h2>
+    <button onclick="runAllTests()">Run All Tests</button>
+    <div id="test-results"></div>
+
+    <!-- Interactive Tools -->
+    <h2>🛠️ Interactive Tools</h2>
+
+    <!-- Key Derivation -->
+    <div class="test-section">
+        <h4>Secret Spend Key → Full Wallet Keys</h4>
+        <div class="test-row">
+            <input type="text" id="ssk-input" placeholder="32-byte hex secret spend key or Address" value="">
+            <button onclick="testDeriveKeys()">Derive Keys</button>
+        </div>
+        <div class="note">Test vector: Derived from BIP39 mnemonic</div>
+        <div class="output" id="derive-output"></div>
+    </div>
+
+    <!-- Address Validation -->
+    <div class="test-section">
+        <h4>Monero Address → View Key Extraction</h4>
+        <div class="test-row">
+            <input type="text" id="addr-input" placeholder="Monero address" value="">
+            <button onclick="testAddressInfo()">Extract Info</button>
+        </div>
+        <div class="output" id="addr-output"></div>
+    </div>
+
+    <!-- Subaddress Generation -->
+    <div class="test-section">
+        <h4>Generate Subaddresses</h4>
+        <div class="test-row">
+            <input type="text" id="subaddr-ssk" placeholder="Secret spend key" value="">
+            <input type="number" id="subaddr-index" placeholder="Index" value="0" style="max-width: 100px;">
+            <button onclick="testSubaddress()">Generate</button>
+        </div>
+        <div class="note">Index 0 = main address, Index 1+ = subaddresses</div>
+        <div class="output" id="subaddr-output"></div>
+    </div>
+
+    <!-- Secret Spend Key Generation -->
+    <div class="test-section">
+        <h4>Generate Random Secret Spend Key</h4>
+        <div class="test-row">
+            <button onclick="testGenerateKey()">Generate New Key</button>
+        </div>
+        <div class="output" id="keygen-output"></div>
+    </div>
+
+    <!-- Mnemonic Seed -->
+    <div class="test-section">
+        <h4>Secret Spend Key ↔ Mnemonic Words</h4>
+        <div class="test-row">
+            <input type="text" id="mnemonic-ssk" placeholder="Secret spend key (hex)" value="">
+            <button onclick="testMnemonicFromKey()">Key → Mnemonic</button>
+        </div>
+        <div class="output" id="mnemonic-output"></div>
+    </div>
+
+    <!-- Payment ID -->
+    <div class="test-section">
+        <h4>Payment ID Generation & Validation</h4>
+        <div class="test-row">
+            <input type="text" id="pid-input" placeholder="Payment ID (leave empty to generate)" value="">
+            <button onclick="testPaymentId()">Generate/Validate</button>
+        </div>
+        <div class="note">Generates a random 16-character encrypted payment ID if empty</div>
+        <div class="output" id="pid-output"></div>
+    </div>
+
+    <!-- Base58 Encoding -->
+    <div class="test-section">
+        <h4>Monero Base58 Encoding</h4>
+        <div class="test-row">
+            <input type="text" id="b58-input" placeholder="Hex input (or Text)" value="">
+            <button onclick="testBase58()">Encode</button>
+        </div>
+        <div class="note">Monero uses a variant of Base58 with 8-byte blocks</div>
+        <div class="output" id="b58-output"></div>
+    </div>
+
+    <!-- Fasthash (Keccak) -->
+    <div class="test-section">
+        <h4>Fasthash (Keccak-256)</h4>
+        <div class="test-row">
+            <input type="text" id="fasthash-input" placeholder="Hex input (or Text)" value="">
+            <button onclick="testFasthash()">Hash</button>
+        </div>
+        <div class="output" id="fasthash-output"></div>
+    </div>
+
+    <!-- Scalar Reduction -->
+    <div class="test-section">
+        <h4>Scalar Reduction (sc_reduce32)</h4>
+        <div class="test-row">
+            <input type="text" id="scalar-input" placeholder="32-byte hex value" value="ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff">
+            <button onclick="testScalarReduce()">Reduce</button>
+        </div>
+        <div class="note">Reduces a 32-byte value modulo the curve order l</div>
+        <div class="output" id="scalar-output"></div>
+    </div>
+
+    <!-- Point Operations -->
+    <div class="test-section">
+        <h4>Elliptic Curve Point Operations (Ed25519)</h4>
+        <div class="test-row">
+            <input type="text" id="point-scalar" placeholder="Scalar (hex)" value="0100000000000000000000000000000000000000000000000000000000000000">
+            <button onclick="testPointMultiply()">Scalar × G</button>
+        </div>
+        <div class="note">Multiplies the Ed25519 base point G by the scalar</div>
+        <div class="output" id="point-output"></div>
+    </div>
+
+    <!-- CRC32 -->
+    <div class="test-section">
+        <h4>CRC-32 (for mnemonic checksum)</h4>
+        <div class="test-row">
+            <input type="text" id="crc-input" placeholder="Text input" value="test">
+            <button onclick="testCrc32()">Calculate CRC</button>
+        </div>
+        <div class="output" id="crc-output"></div>
+    </div>
+
+    <!-- Byte/Number Utilities -->
+    <div class="test-section">
+        <h4>Byte/Number Utilities</h4>
+        <div class="test-row">
+            <input type="text" id="util-input" placeholder="Hex or number" value="deadbeef">
+            <select id="util-type">
+                <option value="bytes_to_number_le">bytes_to_number_le (hex → number)</option>
+                <option value="xmr_number_to_hex">xmr_number_to_hex (number → hex)</option>
+                <option value="uint64_to_8be">uint64_to_8be (number → 8 bytes BE)</option>
+            </select>
+            <button onclick="testUtility()">Convert</button>
+        </div>
+        <div class="output" id="util-output"></div>
+    </div>
+
+    <!-- Dependencies -->
+    <script src="assets_js_lib_sjcl.js"></script>
+    <script src="assets_js_lib_crypto_utils.js"></script>
+    <script>
+        // Global alias for keccak_256 (required by xmr_utils.js)
+        const keccak_256 = CryptoUtils.keccak_256,
+            hex_to_bytes = CryptoUtils.hex_to_bytes,
+            bytes_to_hex = CryptoUtils.bytes_to_hex;
+    </script>
+    <script src="assets_js_lib_xmr_utils.js"></script>
+    
+    <script>
+        // Show version
+        document.getElementById("version").textContent = XmrUtils.VERSION;
+
+        // ============================================================
+        // HELPER FOR MONERO BASE58 DECODING (Since not exposed in XmrUtils)
+        // ============================================================
+        const local_monero_utils = (function() {
+            const alphabet_str = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
+                  alphabet = [];
+                  
+            for (let i = 0; i < alphabet_str.length; i++) {
+                alphabet.push(alphabet_str.charCodeAt(i));
+            }
+            
+            const encoded_block_sizes = [0, 2, 3, 5, 6, 7, 9, 10, 11],
+                  full_block_size = 8,
+                  full_encoded_block_size = 11,
+                  uint64_max = 2n ** 64n,
+                  alphabet_size = BigInt(alphabet.length);
+
+            function decode_block(data, buf, index) {
+                if (data.length < 1 || data.length > full_encoded_block_size) throw "Invalid block length";
+                
+                const res_size = encoded_block_sizes.indexOf(data.length);
+                if (res_size <= 0) throw "Invalid block size";
+                
+                let res_num = 0n, 
+                    order = 1n;
+                    
+                for (let i = data.length - 1; i >= 0; i--) {
+                    const digit = alphabet.indexOf(data[i]);
+                    if (digit < 0) throw "Invalid symbol";
+                    const product = (order * BigInt(digit)) + res_num;
+                    if (product > uint64_max) throw "Overflow";
+                    res_num = product;
+                    order = order * alphabet_size;
+                }
+                // XmrUtils.uint64_to_8be is available globally
+                buf.set(XmrUtils.uint64_to_8be(res_num, res_size), index);
+                return buf;
+            }
+
+            return {
+                decode_address: function(encStr) {
+                    const enc = XmrUtils.str_to_bin(encStr),
+                          full_block_count = Math.floor(enc.length / full_encoded_block_size),
+                          last_block_size = enc.length % full_encoded_block_size,
+                          last_block_decoded_size = encoded_block_sizes.indexOf(last_block_size);
+                          
+                    if (last_block_decoded_size < 0) throw "Invalid encoded length";
+                    
+                    const data_size = full_block_count * full_block_size + last_block_decoded_size;
+                    let data = new Uint8Array(data_size);
+                    
+                    for (let i = 0; i < full_block_count; i++) {
+                        data = decode_block(enc.subarray(i * full_encoded_block_size, i * full_encoded_block_size + full_encoded_block_size), data, i * full_block_size);
+                    }
+                    if (last_block_size > 0) {
+                        data = decode_block(enc.subarray(full_block_count * full_encoded_block_size, full_block_count * full_encoded_block_size + last_block_size), data, full_block_count * full_block_size);
+                    }
+                    return bytes_to_hex(data);
+                }
+            };
+        })();
+
+        // ============================================================
+        // AUTOMATED UNIT TESTS
+        // ============================================================
+        
+        const tests = [];
+        let passed = 0,
+            failed = 0;
+
+        function test(name, fn) {
+            tests.push({ name, fn });
+        }
+
+        function assertEqual(actual, expected, message) {
+            if (actual !== expected) {
+                throw new Error(message + "\nExpected: " + expected + "\nActual: " + actual);
+            }
+        }
+
+        function assertTrue(condition, message) {
+            if (!condition) {
+                throw new Error(message || "Assertion failed");
+            }
+        }
+
+        // === Byte/Number Utilities Tests ===
+
+        test("str_to_bin: convert string to bytes", () => {
+            const result = XmrUtils.str_to_bin("abc");
+            assertEqual(result.length, 3, "Should be 3 bytes");
+            assertEqual(result[0], 97, "a = 97");
+        });
+
+        test("bytes_to_number_le: little-endian conversion", () => {
+            const bytes = new Uint8Array([0x01, 0x00, 0x00, 0x00]),
+                  result = XmrUtils.bytes_to_number_le(bytes);
+            assertEqual(result, 1n, "LE 01000000 = 1");
+        });
+
+        test("bytes_to_number_le: multi-byte value", () => {
+            const bytes = new Uint8Array([0xff, 0x00, 0x00, 0x00]),
+                  result = XmrUtils.bytes_to_number_le(bytes);
+            assertEqual(result, 255n, "LE ff000000 = 255");
+        });
+
+        test("uint64_to_8be: convert BigInt to big-endian bytes", () => {
+            const result = XmrUtils.uint64_to_8be(1n, 8);
+            assertEqual(result.length, 8, "Should be 8 bytes");
+            assertEqual(result[7], 1, "Last byte is 1");
+            assertEqual(result[0], 0, "First bytes are 0");
+        });
+
+        test("uint32_hex: convert to little-endian hex", () => {
+            const result = XmrUtils.uint32_hex(255);
+            assertEqual(result, "ff000000", "255 in LE hex");
+            assertEqual(result.length, 8, "Should be 8 chars");
+        });
+
+        test("xmr_number_to_hex: pad to even length", () => {
+            const result = XmrUtils.xmr_number_to_hex(1n);
+            assertEqual(result, "01", "1 -> 01");
+            const result2 = XmrUtils.xmr_number_to_hex(255n);
+            assertEqual(result2, "ff", "255 -> ff");
+            const result3 = XmrUtils.xmr_number_to_hex(256n);
+            assertEqual(result3, "0100", "256 -> 0100");
+        });
+
+        // === Scalar Operations Tests ===
+
+        test("sc_reduce32: reduce identity", () => {
+            const input = "0100000000000000000000000000000000000000000000000000000000000000",
+                  result = XmrUtils.sc_reduce32(input);
+            assertTrue(result instanceof Uint8Array, "Should return Uint8Array");
+            assertEqual(result.length, 32, "Should be 32 bytes");
+            assertEqual(result[0], 1, "First byte is 1 (LE)");
+        });
+
+        test("sc_reduce32: reduce large value", () => {
+            const input = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                  result = XmrUtils.sc_reduce32(input);
+            assertTrue(result instanceof Uint8Array, "Should return Uint8Array");
+            assertEqual(result.length, 32, "Should be 32 bytes");
+        });
+
+        test("sc_reduce32: deterministic", () => {
+            const input = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+                  result1 = bytes_to_hex(XmrUtils.sc_reduce32(input)),
+                  result2 = bytes_to_hex(XmrUtils.sc_reduce32(input));
+            assertEqual(result1, result2, "Should be deterministic");
+        });
+
+        // === Hashing Tests ===
+
+        test("fasthash: Keccak-256 (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const result = XmrUtils.fasthash("deadbeef");
+            assertEqual(result.length, 64, "Should be 32 bytes hex");
+        });
+
+        test("fasthash: deterministic (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const hash1 = XmrUtils.fasthash("deadbeef"),
+                  hash2 = XmrUtils.fasthash("deadbeef");
+            assertEqual(hash1, hash2, "Same input, same output");
+        });
+
+        test("fasthash: different inputs (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const hash1 = XmrUtils.fasthash("01"),
+                  hash2 = XmrUtils.fasthash("02");
+            assertTrue(hash1 !== hash2, "Different inputs, different outputs");
+        });
+
+        test("crc_32: checksum calculation", () => {
+            const result = XmrUtils.crc_32("test");
+            assertTrue(typeof result === "number", "Should return number");
+        });
+
+        test("crc_32: deterministic", () => {
+            const result1 = XmrUtils.crc_32("hello"),
+                  result2 = XmrUtils.crc_32("hello");
+            assertEqual(result1, result2, "Should be deterministic");
+        });
+
+        // === Key Operations Tests ===
+
+        test("xmr_get_publickey: derive public from private", () => {
+            const privkey = "0100000000000000000000000000000000000000000000000000000000000000",
+                  pubkey = XmrUtils.xmr_get_publickey(privkey);
+            assertEqual(pubkey.length, 64, "Should be 32 bytes hex");
+        });
+
+        test("xmr_getpubs: derive full key set (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = new Uint8Array(32); ssk.fill(1);
+            const keys = XmrUtils.xmr_getpubs(ssk, 0);
+            assertTrue(keys.hasOwnProperty("psk"), "Should have public spend key");
+            assertTrue(keys.hasOwnProperty("pvk"), "Should have public view key");
+            assertTrue(keys.hasOwnProperty("svk"), "Should have secret view key");
+        });
+
+        test("xmr_getpubs: subaddress derivation (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = new Uint8Array(32); ssk.fill(1);
+            const main = XmrUtils.xmr_getpubs(ssk, 0),
+                  sub1 = XmrUtils.xmr_getpubs(ssk, 1);
+            assertTrue(main.psk !== sub1.psk, "Subaddress has different spend key");
+        });
+
+        // === Address Operations Tests ===
+
+        test("pub_keys_to_address: generate standard address (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = new Uint8Array(32); ssk.fill(1);
+            const keys = XmrUtils.xmr_getpubs(ssk, 0),
+                  address = XmrUtils.pub_keys_to_address(keys.psk, keys.pvk, 0);
+            assertTrue(address.startsWith("4"), "Main address starts with 4");
+            assertTrue(address.length === 95 || address.length === 106, "Valid address length");
+        });
+
+        test("pub_keys_to_address: subaddress format (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = new Uint8Array(32); ssk.fill(1);
+            const keys = XmrUtils.xmr_getpubs(ssk, 1),
+                  address = XmrUtils.pub_keys_to_address(keys.psk, keys.pvk, 1);
+            assertTrue(address.startsWith("8"), "Subaddress starts with 8");
+        });
+
+        test("base58_encode: Monero encoding", () => {
+            const result = XmrUtils.base58_encode(hex_to_bytes("12deadbeef"));
+            assertTrue(result.length > 0, "Should produce output");
+        });
+
+        test("get_spend_pubkey_from_address: extract (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = new Uint8Array(32); ssk.fill(1);
+            const keys = XmrUtils.xmr_getpubs(ssk, 0),
+                  address = XmrUtils.pub_keys_to_address(keys.psk, keys.pvk, 0),
+                  extracted = XmrUtils.get_spend_pubkey_from_address(address);
+            assertEqual(extracted, keys.psk, "Should extract correct spend pubkey");
+        });
+
+        // === Payment ID Tests ===
+
+        test("xmr_pid: generate payment ID", () => {
+            const pid = XmrUtils.xmr_pid();
+            assertEqual(pid.length, 16, "Encrypted PID is 16 chars");
+            assertTrue(/^[0-9a-f]+$/.test(pid), "Should be hex");
+        });
+
+        test("xmr_pid: random each time", () => {
+            const pid1 = XmrUtils.xmr_pid(),
+                  pid2 = XmrUtils.xmr_pid();
+            assertTrue(pid1 !== pid2, "Should be random");
+        });
+
+        test("check_pid: validate format", () => {
+            const validShort = "abcd1234abcd1234",
+                  result = XmrUtils.check_pid(validShort);
+            assertTrue(result !== false, "Valid short PID should pass");
+        });
+
+        test("check_pid: reject invalid", () => {
+            const invalid = "xyz",
+                  result = XmrUtils.check_pid(invalid);
+            assertEqual(result, false, "Invalid PID should fail");
+        });
+
+        // === Mnemonic Tests ===
+
+        test("secret_spend_key_to_words: convert to mnemonic", () => {
+            const sskHex = "b3d515f5ca66c1228d62e6c0d8b3bb92e52c8fbdc05e2f23ed0b2c262a9e8903",
+                  sskBytes = hex_to_bytes(sskHex),
+                  words = XmrUtils.secret_spend_key_to_words(sskBytes),
+                  wordArray = words.split(" ");
+            assertTrue(typeof words === "string", "Should return string");
+            assertEqual(wordArray.length, 25, "Should be 25 words");
+        });
+
+        test("secret_spend_key_to_words: deterministic", () => {
+            const sskHex = "b3d515f5ca66c1228d62e6c0d8b3bb92e52c8fbdc05e2f23ed0b2c262a9e8903",
+                  sskBytes = hex_to_bytes(sskHex),
+                  words1 = XmrUtils.secret_spend_key_to_words(sskBytes),
+                  words2 = XmrUtils.secret_spend_key_to_words(sskBytes);
+            assertEqual(words1, words2, "Should be deterministic");
+        });
+
+        test("mn_random: generate random entropy", () => {
+            const entropy = XmrUtils.mn_random(256);
+            assertEqual(entropy.length, 64, "256 bits = 64 hex chars");
+        });
+
+        // === Elliptic Curve Tests ===
+
+        test("xmod: modular arithmetic", () => {
+            const P = XmrUtils.xmr_CURVE.P;
+            assertEqual(XmrUtils.xmod(10n, 3n), 1n, "10 mod 3 = 1");
+            assertEqual(XmrUtils.xmod(-1n, P), P - 1n, "Negative mod");
+        });
+
+        test("xmr_invert: modular inverse", () => {
+            const P = XmrUtils.xmr_CURVE.P,
+                  a = 12345n,
+                  inv = XmrUtils.xmr_invert(a, P);
+            assertEqual(XmrUtils.xmod(a * inv, P), 1n, "a * inv(a) = 1");
+        });
+
+        test("point_multiply: scalar multiplication", () => {
+            const scalar = "0100000000000000000000000000000000000000000000000000000000000000",
+                  result = XmrUtils.point_multiply(scalar);
+            assertTrue(result !== undefined && result !== null, "Should return point");
+            assertTrue(typeof result.toHex === "function" || result.x !== undefined, "Should be a point");
+        });
+
+        test("xmr_getpoint: parse point from hex", () => {
+            const basePoint = "5866666666666666666666666666666666666666666666666666666666666666",
+                  point = XmrUtils.xmr_getpoint(basePoint);
+            assertTrue(point.hasOwnProperty("x"), "Should have x coordinate");
+            assertTrue(point.hasOwnProperty("y"), "Should have y coordinate");
+        });
+
+        // Run all tests
+        function runAllTests() {
+            const resultsDiv = document.getElementById("test-results");
+            resultsDiv.innerHTML = "<span class='info'>Running tests...</span>";
+            passed = 0;
+            failed = 0;
+
+            setTimeout(() => {
+                let output = "";
+                
+                for (const t of tests) {
+                    try {
+                        t.fn();
+                        output += "<span class='test-pass'>✓ " + t.name + "</span>\n";
+                        passed++;
+                    } catch (e) {
+                        output += "<span class='test-fail'>✗ " + t.name + "\n  " + e.message + "</span>\n";
+                        failed++;
+                    }
+                }
+
+                const summary = "<div class='test-count'>Tests: <span class='test-pass'>" + passed + " passed</span>, <span class='" + (failed ? "test-fail" : "") + "'>" + failed + " failed</span> of " + tests.length + " total</div>";
+                resultsDiv.innerHTML = summary + output;
+            }, 10);
+        }
+
+        // ============================================================
+        // INTERACTIVE TOOLS
+        // ============================================================
+
+        // Helper to handle text-to-hex input automatically
+        function auto_hex_convert(input) {
+            if (!input) return { hex: "", msg: "" };
+            
+            let hexCandidate = input;
+            
+            // Check for 0x prefix and strip it
+            if (input.toLowerCase().startsWith("0x")) {
+                hexCandidate = input.slice(2);
+            }
+
+            // Check if remaining string contains non-hex chars (regex ignores case)
+            if (/[^0-9a-fA-F]/.test(hexCandidate)) {
+                // Contains non-hex chars, treat as text
+                const bytes = XmrUtils.str_to_bin(input),
+                      hex = bytes_to_hex(bytes);
+                return { 
+                    hex: hex, 
+                    msg: "<span class='warn'>⚠️ Text input detected.</span> Converted to Hex: <span class='info'>" + hex + "</span>\n\n" 
+                };
+            }
+            
+            // It is valid hex, ensure even length
+            if (input.length % 2 !== 0) {
+                 return { 
+                    hex: "0" + input, 
+                    msg: "<span class='warn'>⚠️ Odd hex length.</span> Padded with leading zero.\n\n" 
+                };
+            }
+            
+            return { hex: input, msg: "" };
+        }
+
+        function testGenerateKey() {
+            const output = document.getElementById("keygen-output");
+            try {
+                const entropy = XmrUtils.mn_random(256),
+                      reducedBytes = XmrUtils.sc_reduce32(entropy),
+                      reduced = bytes_to_hex(reducedBytes),
+                      words = XmrUtils.secret_spend_key_to_words(reducedBytes);
+                
+                output.innerHTML = "<span class='info'>Random Entropy:</span>\n" + entropy + "\n\n<span class='info'>Secret Spend Key (reduced):</span>\n" + reduced + "\n\n<span class='info'>Mnemonic Seed (25 words):</span>\n" + words + "\n\n<span class='warn'>⚠️ This is a real key - never use with real funds unless you backup the seed!</span>";
+            } catch (e) {
+                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+            }
+        }
+
+        function testDeriveKeys() {
+            const inputVal = document.getElementById("ssk-input").value.replace(/\s/g, ""),
+                  output = document.getElementById("derive-output");
+            
+            // Clear outputs of other tools to avoid confusion
+            document.getElementById("addr-output").innerHTML = "";
+            document.getElementById("subaddr-output").innerHTML = "";
+            document.getElementById("mnemonic-output").innerHTML = "";
+            document.getElementById("scalar-output").innerHTML = "";
+            document.getElementById("point-output").innerHTML = "";
+            document.getElementById("fasthash-output").innerHTML = "";
+            document.getElementById("b58-output").innerHTML = "";
+            document.getElementById("util-output").innerHTML = "";
+
+            try {
+                if (typeof keccak_256 === "undefined") {
+                    output.innerHTML = "<span class='warn'>⚠️ CryptoUtils.keccak_256 is not available.</span>\n\n<span class='muted'>keccak_256 should be available via CryptoUtils.keccak_256.</span>";
+                    return;
+                }
+
+                // Check if user entered an address instead of a key
+                if (inputVal.length > 90 && (inputVal.startsWith("4") || inputVal.startsWith("8"))) {
+                     output.innerHTML = "<span class='error'>Error: You have entered a Public Address.</span>\n\n<span class='warn'>It is mathematically impossible to derive Private Keys (Spend/View) from a Public Address.</span>\n\n<span class='muted'>An address is derived FROM private keys, not the other way around. To obtain your full wallet keys, you must provide your 32-byte Secret Spend Key (or Mnemonic Seed).</span>";
+                     return;
+                }
+
+                if (inputVal.length !== 64) {
+                    output.innerHTML = "<span class='error'>Error: Invalid input length. Expected 32-byte hex string (64 characters) for Secret Spend Key.</span>";
+                    return;
+                }
+
+                const keys = XmrUtils.xmr_getpubs(hex_to_bytes(inputVal), 0),
+                      address = XmrUtils.pub_keys_to_address(keys.psk, keys.pvk, 0);
+                
+                // Update inputs of all tools that consume SSK
+                const sskFields = ["subaddr-ssk", "mnemonic-ssk", "scalar-input", "point-scalar", "fasthash-input", "util-input"];
+                sskFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.value = inputVal;
+                });
+
+                // Update Address Validation input
+                const addrEl = document.getElementById("addr-input");
+                if (addrEl) addrEl.value = address;
+                
+                // Update Base58 input with the decoded payload of the new address
+                try {
+                     const b58Payload = XmrUtils.base58_decode(address);
+                     const b58El = document.getElementById("b58-input");
+                     if(b58El) b58El.value = b58Payload;
+                } catch(e) {}
+                
+                output.innerHTML = "<span class='info'>Secret Spend Key:</span>\n" + inputVal + "\n\n<span class='info'>Secret View Key:</span>\n" + keys.svk + "\n\n<span class='info'>Public Spend Key:</span>\n" + keys.psk + "\n\n<span class='info'>Public View Key:</span>\n" + keys.pvk + "\n\n<span class='info'>Main Address:</span>\n" + address;
+            } catch (e) {
+                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+            }
+        }
+
+        function testSubaddress() {
+            const ssk = document.getElementById("subaddr-ssk").value.replace(/\s/g, ""),
+                  index = parseInt(document.getElementById("subaddr-index").value) || 0,
+                  output = document.getElementById("subaddr-output");
+            try {
+                if (typeof keccak_256 === "undefined") {
+                    output.innerHTML = "<span class='warn'>⚠️ CryptoUtils.keccak_256 is not available.</span>\n\n<span class='muted'>keccak_256 should be available via CryptoUtils.keccak_256.</span>";
+                    return;
+                }
+                const keys = XmrUtils.xmr_getpubs(hex_to_bytes(ssk), index),
+                      address = XmrUtils.pub_keys_to_address(keys.psk, keys.pvk, index),
+                      addrType = index === 0 ? "Main Address" : "Subaddress (index " + index + ")";
+                
+                output.innerHTML = "<span class='info'>" + addrType + ":</span>\n" + address + "\n\n<span class='info'>Public Spend Key:</span>\n" + keys.psk + "\n\n<span class='info'>Public View Key:</span>\n" + keys.pvk + "\n\n<span class='muted'>Index 0 = main address (starts with 4)\nIndex 1+ = subaddresses (start with 8)</span>";
+            } catch (e) {
+                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+            }
+        }
+
+        function testAddressInfo() {
+            const address = document.getElementById("addr-input").value.trim(),
+                  output = document.getElementById("addr-output");
+            try {
+                let addrType = "Unknown";
+                if (address.startsWith("4")) addrType = "Standard Address";
+                else if (address.startsWith("8")) addrType = "Subaddress";
+                else if (address.startsWith("A")) addrType = "Integrated Address";
+                
+                let spendPubkey = "N/A",
+                    viewKey = "N/A";
+                
+                try {
+                    // Use the newly exposed base58_decode from XmrUtils library
+                    const decodedHex = XmrUtils.base58_decode(address);
+                    
+                    // Byte structure: [Network: Varies][Spend: 32 bytes][View: 32 bytes][Checksum: 4 bytes]
+                    // Hex structure: [Net: Varies][Spend: 64 chars][View: 64 chars][Checksum: 8 chars]
+                    
+                    // Slice assuming standard 1-byte network prefix.
+                    spendPubkey = decodedHex.slice(2, 66);
+                    viewKey = decodedHex.slice(66, 130);
+                    
+                } catch (e) {
+                    console.warn("Key extraction failed: " + e);
+                    spendPubkey = "Invalid Address";
+                    viewKey = "Invalid Address";
+                }
+                
+                output.innerHTML = "<span class='info'>Address:</span>\n" + address + 
+                                   "\n\n<span class='info'>Type:</span> " + addrType + 
+                                   "\n<span class='info'>Length:</span> " + address.length + " characters" +
+                                   "\n\n<span class='info'>Public Spend Key:</span>\n" + spendPubkey + 
+                                   "\n\n<span class='info'>Public View Key:</span>\n" + viewKey +
+                                   "\n\n<span class='warn'>Secret Spend Key:</span>\nImpossible to derive from address (Private)\n\n<span class='warn'>Secret View Key:</span>\nImpossible to derive from address (Private)";
+            } catch (e) {
+                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+            }
+        }
+
+        function testPaymentId() {
+            let pid = document.getElementById("pid-input").value.replace(/\s/g, ""),
+                output = document.getElementById("pid-output");
+            try {
+                if (!pid) {
+                    pid = XmrUtils.xmr_pid();
+                    document.getElementById("pid-input").value = pid;
+                    output.innerHTML = "<span class='info'>Generated Payment ID:</span>\n" + pid + "\n\n<span class='info'>Type:</span> Encrypted (8 bytes)\n<span class='info'>Length:</span> " + pid.length + " characters\n<span class='success'>✓ Valid payment ID format</span>";
+                } else {
+                    const valid = XmrUtils.check_pid(pid);
+                    if (valid) {
+                        let pidType = pid.length === 16 ? "Encrypted (8 bytes)" : "Long (32 bytes)";
+                        output.innerHTML = "<span class='info'>Payment ID:</span>\n" + pid + "\n\n<span class='info'>Type:</span> " + pidType + "\n<span class='info'>Length:</span> " + pid.length + " characters\n<span class='success'>✓ Valid payment ID format</span>";
+                    } else {
+                        output.innerHTML = "<span class='info'>Payment ID:</span>\n" + pid + "\n\n<span class='error'>✗ Invalid payment ID format</span>\n\n<span class='muted'>Valid formats:\n- 16 hex chars (encrypted/short)\n- 64 hex chars (long/unencrypted)</span>";
+                    }
+                }
+            } catch (e) {
+                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+            }
+        }
+
+        function testMnemonicFromKey() {
+            const ssk = document.getElementById("mnemonic-ssk").value.replace(/\s/g, ""),
+                  output = document.getElementById("mnemonic-output");
+            try {
+                // secret_spend_key_to_words expects Uint8Array input
+                const sskBytes = hex_to_bytes(ssk),
+                      words = XmrUtils.secret_spend_key_to_words(sskBytes),
+                      wordArray = words.split(" ");
+                
+                output.innerHTML = "<span class='info'>Secret Spend Key:</span>\n" + ssk + "\n\n<span class='info'>Mnemonic Seed (25 words):</span>\n" + words + "\n\n<span class='info'>Word count:</span> " + wordArray.length + "\n\n<span class='muted'>The 25th word is a checksum word</span>";
+            } catch (e) {
+                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+            }
+        }
+
+        function testScalarReduce() {
+            const input = document.getElementById("scalar-input").value.replace(/\s/g, ""),
+                  output = document.getElementById("scalar-output");
+            try {
+                const reduced = XmrUtils.sc_reduce32(input),
+                      reducedHex = bytes_to_hex(reduced);
+                
+                output.innerHTML = "<span class='info'>Input (32 bytes, hex):</span>\n" + input + "\n\n<span class='info'>Reduced (mod l, little-endian):</span>\n" + reducedHex + "\n\n<span class='muted'>l = 2^252 + 27742317777372353535851937790883648493\n(Ed25519 curve order)</span>";
+            } catch (e) {
+                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+            }
+        }
+
+        function testPointMultiply() {
+            const scalar = document.getElementById("point-scalar").value.replace(/\s/g, ""),
+                  output = document.getElementById("point-output");
+            try {
+                const result = XmrUtils.point_multiply(scalar);
+                let resultHex = "N/A",
+                    xCoord = "N/A",
+                    yCoord = "N/A";
+                
+                if (result && typeof result.toHex === "function") {
+                    resultHex = result.toHex();
+                }
+                if (result && result.x !== undefined) {
+                    xCoord = result.x.toString(16);
+                    yCoord = result.y.toString(16);
+                }
+                
+                output.innerHTML = "<span class='info'>Scalar:</span>\n" + scalar + "\n\n<span class='info'>Result Point:</span>\n" + resultHex + "\n\n<span class='info'>X coordinate:</span>\n" + xCoord + "\n\n<span class='info'>Y coordinate:</span>\n" + yCoord;
+            } catch (e) {
+                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+            }
+        }
+
+        function testFasthash() {
+            const rawInput = document.getElementById("fasthash-input").value, // Get raw to check text
+                  output = document.getElementById("fasthash-output");
+            
+            try {
+                if (typeof keccak_256 === "undefined") {
+                    output.innerHTML = "<span class='warn'>⚠️ CryptoUtils.keccak_256 is not available.</span>\n\n<span class='muted'>keccak_256 should be available via CryptoUtils.keccak_256.</span>";
+                    return;
+                }
+                
+                // Auto convert text to hex if needed
+                const conversion = auto_hex_convert(rawInput),
+                      input = conversion.hex,
+                      hash = XmrUtils.fasthash(input);
+                
+                output.innerHTML = conversion.msg + 
+                                   "<span class='info'>Input (hex):</span>\n" + (input || "(empty)") + 
+                                   "\n\n<span class='info'>Input length:</span> " + input.length / 2 + " bytes" + 
+                                   "\n\n<span class='info'>Keccak-256 Hash:</span>\n" + hash;
+            } catch (e) {
+                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+            }
+        }
+
+        function testCrc32() {
+            const input = document.getElementById("crc-input").value,
+                  output = document.getElementById("crc-output");
+            try {
+                const crc = XmrUtils.crc_32(input),
+                      crcHex = (crc >>> 0).toString(16).padStart(8, "0");
+                
+                output.innerHTML = "<span class='info'>Input:</span> \"" + input + "\"\n<span class='info'>CRC-32:</span> " + (crc >>> 0) + "\n<span class='info'>CRC-32 (hex):</span> 0x" + crcHex;
+            } catch (e) {
+                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+            }
+        }
+
+        function testBase58() {
+            const rawInput = document.getElementById("b58-input").value,
+                  output = document.getElementById("b58-output");
+            try {
+                // Auto convert text to hex if needed
+                const conversion = auto_hex_convert(rawInput),
+                      input = conversion.hex,
+                      bytes = hex_to_bytes(input),
+                      encoded = XmrUtils.base58_encode(bytes);
+                
+                output.innerHTML = conversion.msg + 
+                                   "<span class='info'>Input (hex):</span> " + input + 
+                                   "\n<span class='info'>Input length:</span> " + bytes.length + " bytes" + 
+                                   "\n<span class='info'>Base58 (Monero):</span> " + encoded + 
+                                   "\n\n<span class='muted'>Monero Base58 processes in 8-byte blocks</span>";
+            } catch (e) {
+                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+            }
+        }
+
+        function testUtility() {
+            const input = document.getElementById("util-input").value.replace(/\s/g, ""),
+                  type = document.getElementById("util-type").value,
+                  output = document.getElementById("util-output");
+            try {
+                let result, explanation;
+                
+                // Helper to parse BigInt (handles hex strings without 0x prefix)
+                const safeBigInt = (val) => {
+                    try {
+                        return BigInt(val);
+                    } catch (e) {
+                        if (/^[0-9a-fA-F]+$/.test(val)) {
+                            return BigInt("0x" + val);
+                        }
+                        throw e;
+                    }
+                };
+
+                switch(type) {
+                    case "bytes_to_number_le":
+                        const bytes = hex_to_bytes(input);
+                        result = XmrUtils.bytes_to_number_le(bytes);
+                        explanation = "Hex " + input + " (little-endian) = " + result;
+                        break;
+                    case "xmr_number_to_hex":
+                        const num = safeBigInt(input);
+                        result = XmrUtils.xmr_number_to_hex(num);
+                        explanation = "Number " + input + " = " + result + " (padded to even length)";
+                        break;
+                    case "uint64_to_8be":
+                        const n = safeBigInt(input),
+                              beBytes = XmrUtils.uint64_to_8be(n, 8);
+                        result = bytes_to_hex(beBytes);
+                        explanation = "Number " + input + " as 8-byte big-endian";
+                        break;
+                }
+                
+                output.innerHTML = "<span class='info'>Operation:</span> " + type + "\n<span class='info'>Input:</span> " + input + "\n<span class='info'>Result:</span> " + result + "\n\n<span class='muted'>" + explanation + "</span>";
+            } catch (e) {
+                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+            }
+        }
+
+        // Initialize and Run tests on load
+        window.onload = function() {
+            // Mock missing dependencies from main app context
+            if (typeof window.filter_addressli === "undefined") {
+                window.filter_addressli = function() { return { length: 0, data: function() { return {}; } }; };
+            }
+            if (typeof window.cs_node === "undefined") {
+                window.cs_node = function() { return { selected: false }; };
+            }
+
+            // Set dummy key from mnemonic
+            // Mnemonic: 'army van defense carry jealous true garbage claim echo media make crunch'
+            // User requested explicit SSK replacement:
+            const sskHex = "007d984c3df532fdd86cd83bf42482a5c2e180a51ae1d0096e13048fba1fa108";
+            
+            // Goal 2: Derive all other constants inputs from the 'secret spend key' constant
+            const ids = ["ssk-input", "subaddr-ssk", "mnemonic-ssk", "scalar-input", "point-scalar", "fasthash-input", "util-input"];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.value = sskHex;
+            });
+            
+            // Derive address from the hardcoded sskHex for address tools
+            try {
+                // Derive keys from the hardcoded sskHex
+                const keys = XmrUtils.xmr_getpubs(hex_to_bytes(sskHex), 0);
+                // Generate the standard address (index 0)
+                const derivedAddr = XmrUtils.pub_keys_to_address(keys.psk, keys.pvk, 0);
+                
+                const elAddr = document.getElementById("addr-input");
+                if (elAddr) elAddr.value = derivedAddr;
+
+                // Decode Address to get Base58 payload for b58-input
+                const addressPayloadHex = XmrUtils.base58_decode(derivedAddr);
+                const elB58 = document.getElementById("b58-input");
+                if (elB58) elB58.value = addressPayloadHex;
+
+            } catch (e) {
+                console.error("Failed to derive initial address:", e);
+            }
+
+            console.log("Test keys initialized.");
+            runAllTests();
+        };
+    </script>
+</body>
+</html>

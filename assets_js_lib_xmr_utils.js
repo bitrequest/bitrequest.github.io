@@ -188,19 +188,6 @@ function xmod(a, b = xmr_CURVE.P) {
     return res >= 0n ? res : b + res;
 }
 
-// Computes modular exponentiation using square-and-multiply algorithm with optional modulus P
-function xpow_mod(a, power, m = xmr_CURVE.P) {
-    let res = 1n;
-    while (power > 0n) {
-        if (power & 1n) {
-            res = xmod(res * a, m);
-        }
-        power >>= 1n;
-        a = xmod(a * a, m);
-    }
-    return res;
-}
-
 // Computes modular multiplicative inverse using Extended Euclidean Algorithm with optional curve modulus
 function xmr_invert(number, modulo = xmr_CURVE.P) {
     if (number === 0n || modulo <= 0n) {
@@ -647,7 +634,7 @@ function xmr_getpubs(ssk, index) {
 
 // Computes and returns a Keccak-256 hash of input hexadecimal data
 function fasthash(hex) {
-    return keccak256(hex_to_bytes(hex));
+    return keccak_256(hex_to_bytes(hex));
 }
 
 // ** Base58 Encoding: **
@@ -951,3 +938,95 @@ function decode_rct_amount(rct, output_idx, shared_secret_hex) {
     }
     return bytes_to_number_le(decrypted_bytes);
 }
+
+/**
+ * XmrUtils - Standalone Monero cryptocurrency utilities
+ * 
+ * STANDALONE USAGE (outside Bitrequest):
+ * ----------------------------------------
+ * <script src="assets_js_lib_sjcl.js"></script>
+ * <script src="assets_js_lib_crypto_utils.js"></script>
+ * <script src="assets_js_lib_xmr_utils.js"></script>
+ * <script>
+ *   // Derive Monero keys from BIP39 seed
+ *   const keys = XmrUtils.xmr_getpubs(secret_spend_key, 0);
+ *   
+ *   // Decode RCT amount from transaction
+ *   const amount = XmrUtils.decode_rct_amount(encrypted, shared_secret);
+ *   
+ *   // Parse transaction for payment detection
+ *   const tx = XmrUtils.parse_xmr_tx_hex(raw_tx_hex);
+ * </script>
+ * 
+ * FEATURES:
+ * - Monero key derivation (spend key, view key, subaddresses)
+ * - Address generation and validation
+ * - Transaction parsing and payment detection
+ * - RingCT amount decryption
+ * - Payment ID handling
+ * - Mnemonic seed conversion
+ * 
+ * DEPENDENCIES:
+ * - assets_js_lib_sjcl.js
+ * - assets_js_lib_crypto_utils.js (for hex_to_bytes, bytes_to_hex, keccak_256, etc.)
+ * 
+ * @license AGPL-3.0
+ * @see https://github.com/bitrequest/bitrequest.github.io
+ */
+
+const XmrUtils = {
+    // Library info
+    VERSION: "1.0.0",
+
+    // Curve parameters
+    xmr_CURVE: xmr_CURVE,
+
+    // === Byte/Number Utilities ===
+    str_to_bin,
+    uint64_to_8be,
+    bytes_to_number_le,
+    uint32_hex,
+    xmr_number_to_hex,
+
+    // === Elliptic Curve Operations ===
+    xmod,
+    xpow_mod,
+    xmr_invert,
+    xmr_invert_batch,
+    xmr_getpoint,
+    point_multiply,
+    point_to_monero_hex,
+
+    // === Key Operations ===
+    xmr_get_publickey,
+    get_ssk,
+    sc_reduce32,
+    xmr_getpubs,
+
+    // === Mnemonic ===
+    mn_random,
+    secret_spend_key_to_words,
+
+    // === Address Operations ===
+    pub_keys_to_address,
+    get_vk,
+    vk_obj,
+    share_vk,
+    get_spend_pubkey_from_address,
+    base58_encode,
+    base58_decode: cn_base_58.decode,
+
+    // === Hashing ===
+    fasthash,
+    crc_32,
+    make_crc_table,
+
+    // === Payment ID ===
+    xmr_pid,
+    check_pid,
+
+    // === Transaction Parsing ===
+    parse_xmr_tx_hex,
+    extract_xmr_payment_id,
+    decode_rct_amount
+};

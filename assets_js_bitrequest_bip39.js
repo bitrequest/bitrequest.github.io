@@ -1,4 +1,8 @@
 // bip39 (All addresses / xpubs in this app are test addresses derived from the following testphrase, taken from https://github.com/bitcoinbook/bitcoinbook/blob/f8b883dcd4e3d1b9adf40fed59b7e898fbd9241f/ch05.asciidoc)
+// 
+// DEPENDENCY: This file requires assets_js_lib_bip39_utils.js for core BIP39/BIP32 functions
+// Load order: sjcl.js → crypto_utils.js → bip39_utils.js → bip39.js
+//
 const bip39_const = {
     "test_phrase": "army van defense carry jealous true garbage claim echo media make crunch", // random phrase used for test derive
     "expected_seed": "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
@@ -41,7 +45,8 @@ $(document).ready(function() {
     // ** BIP39 Test Functions: **
     //test_derivation
     //bech32_check
-    //cashaddr_check 
+    //cashaddr_check
+    //fasthash_check
     //nano_check
     //xmr_check
     //xpub_check
@@ -183,6 +188,10 @@ function test_bip39() {
             "coin": "bitcoin-cash"
         },
         {
+            "check": fasthash_check,
+            "coin": "ethereum"
+        },
+        {
             "check": nano_check,
             "coin": "nano"
         },
@@ -320,6 +329,18 @@ function cashaddr_check() {
         const legacy_address = "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
             cash_address = pub_to_cashaddr(legacy_address);
         return glob_const.test_address["bitcoin-cash"] === cash_address;
+    } catch (e) {
+        console.error(e.name, e.message);
+        return false
+    }
+}
+
+// Validates keccak256 conversion
+function fasthash_check() {
+    try {
+        const test_pubkey = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
+            eth_address = pub_to_eth_address(test_pubkey);
+        return glob_const.test_address.ethereum === eth_address;
     } catch (e) {
         console.error(e.name, e.message);
         return false
@@ -819,33 +840,14 @@ function get_mnemonic_phrase() {
     return clean_string($("#bip39phrase").text());
 }
 
-// Validates BIP39 mnemonic using SHA256 hash comparison
+// Validates BIP39 mnemonic using SHA256 hash comparison (delegated to library)
 function validate_mnemonic(mnemonic) {
-    const binary_str = mnemonic_to_binary_string(mnemonic);
-    if (binary_str === null) {
-        return false
-    }
-    const str_len = binary_str.length,
-        data_bits = binary_str.substring(0, str_len / 33 * 32),
-        hash_bits = binary_str.substring(str_len - str_len / 33, str_len),
-        data_array = binary_string_to_word_array(data_bits),
-        hash_result = sjcl.hash.sha256.hash(data_array),
-        hash_hex = from_bits(hash_result),
-        hash_binary = pad_binary(hex_string_to_binary_string(hash_hex), 256),
-        calc_hash = hash_binary.substring(0, str_len / 33);
-    return hash_bits === calc_hash;
+    return Bip39Utils.validate_mnemonic(mnemonic);
 }
 
-// Returns first word from input array not found in BIP39 wordlist
+// Returns first word from input array not found in BIP39 wordlist (delegated to library)
 function find_invalid_word(word_list) {
-    let invalid_word;
-    $.each(word_list, function(i, word) {
-        if (wordlist.indexOf(word) === -1) {
-            invalid_word = word;
-            return
-        }
-    });
-    return invalid_word;
+    return Bip39Utils.find_invalid_word(word_list);
 }
 
 // Creates UI elements for verifying selected words from seed phrase
@@ -867,13 +869,9 @@ function verify_phrase(word_list, word_count) {
     });
 }
 
-// Implements Fisher-Yates shuffle algorithm for array randomization
+// Implements Fisher-Yates shuffle algorithm for array randomization (delegated to library)
 function shuffle_array(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const rand_index = Math.floor(Math.random() * (i + 1));
-        [array[i], array[rand_index]] = [array[rand_index], array[i]];
-    }
-    return array;
+    return Bip39Utils.shuffle_array(array);
 }
 
 // Handles word verification input and triggers appropriate callbacks
@@ -1106,8 +1104,10 @@ function pin_to_encryption_key(pin, seed_id) {
 }
 
 // ** Key Derivation Core: **
+// Note: Core BIP39/BIP32 functions are now provided by assets_js_lib_bip39_utils.js
+// These wrapper functions maintain backward compatibility
 
-// Constructor for HMAC SHA-512 encryptor
+// Constructor for HMAC SHA-512 encryptor (delegated to library)
 function hmac_encrypt(key) {
     const hmac = new sjcl.misc.hmac(key, sjcl.hash.sha512);
     this.encrypt = function() {
@@ -1115,144 +1115,42 @@ function hmac_encrypt(key) {
     };
 }
 
-// Converts mnemonic to seed using PBKDF2
+// Converts mnemonic to seed using PBKDF2 (delegated to library)
 function mnemonic_to_seed(mnemonic, passphrase) {
-    const seed_params = parse_seed(mnemonic, passphrase);
-    return from_bits(sjcl.misc.pbkdf2(seed_params.mnemonic, seed_params.passphrase, 2048, 512, hmac_encrypt));
+    return Bip39Utils.mnemonic_to_seed(mnemonic, passphrase);
 }
 
-// Normalizes mnemonic and passphrase for seed generation
+// Normalizes mnemonic and passphrase for seed generation (delegated to library)
 function parse_seed(mnemonic, input_passphrase) {
-    const empty_passphrase = input_passphrase || "",
-        clean_mnemonic = clean_string(mnemonic),
-        norm_passphrase = normalize_string(empty_passphrase),
-        salt_prefix = "mnemonic" + norm_passphrase;
-    return {
-        "mnemonic": to_bits(clean_mnemonic),
-        "passphrase": to_bits(salt_prefix)
-    }
+    return Bip39Utils.parse_seed(mnemonic, input_passphrase);
 }
 
-// Generates random mnemonic phrase of specified length
+// Generates random mnemonic phrase of specified length (delegated to library)
 function generate_mnemonic(word_count) {
-    const entropy_bits = word_count / 3 * 32,
-        random_bytes = uint_8array(entropy_bits / 8),
-        entropy_data = crypto.getRandomValues(random_bytes);
-    return to_mnemonic(entropy_data);
+    return Bip39Utils.generate_mnemonic(word_count);
 }
 
-// Converts random bytes to mnemonic using wordlist
+// Converts random bytes to mnemonic using wordlist (delegated to library)
 function to_mnemonic(byte_array) {
-    if (byte_array.length % 4 > 0) {
-        throw "Data length in bits should be divisible by 32, but it is not (" + byte_array.length + " bytes = " + byte_array.length * 8 + " bits)."
-    }
-    const word_array = byte_array_to_word_array(byte_array),
-        checksum = hmacsha(word_array, "sha256"),
-        entropy_bits = byte_array_to_binary_string(byte_array),
-        checksum_bits = pad_binary(hex_string_to_binary_string(checksum), 256),
-        checksum_length = byte_array.length * 8 / 32,
-        full_bits = entropy_bits + checksum_bits.substring(0, checksum_length),
-        word_list = [],
-        word_count = full_bits.length / 11;
-    for (let i = 0; i < word_count; i++) {
-        const word_index = parseInt(full_bits.substring(i * 11, (i + 1) * 11), 2);
-        word_list.push(wordlist[word_index]);
-    }
-    return join_words(word_list);
+    return Bip39Utils.to_mnemonic(byte_array);
 }
 
 // ** BIP32 Derivation: **
+// Note: Core BIP32 functions are now provided by assets_js_lib_bip39_utils.js
 
-// Parses extended key format into component parts
+// Parses extended key format into component parts (delegated to library)
 function objectify_extended(extended_key) {
-    const version_bytes = extended_key.slice(0, 8),
-        depth_byte = extended_key.slice(8, 10),
-        parent_fingerprint = extended_key.slice(10, 18),
-        child_number = extended_key.slice(18, 26),
-        chain_code = extended_key.slice(26, 90),
-        pubkey = extended_key.slice(90, 156),
-        remaining = extended_key.slice(156);
-    return {
-        "version": version_bytes,
-        "depth": depth_byte,
-        "fingerprint": parent_fingerprint,
-        "childnumber": child_number,
-        "chaincode": chain_code,
-        "key": pubkey,
-        "remain": remaining
-    };
+    return Bip39Utils.objectify_extended(extended_key);
 }
 
-// Performs BIP32 hierarchical key derivation
+// Performs BIP32 hierarchical key derivation (delegated to library)
 function derive_x(derive_params, from_private) {
-    const path = derive_params.dpath,
-        path_segments = path.split("/"),
-        depth = path_segments.length - 1;
-    let derived_data = {},
-        current_key = derive_params.key,
-        current_chain = derive_params.cc,
-        is_public = false,
-        path_purpose = null;
-    $.each(path_segments, function(i, segment) {
-        if (i === 0) {
-            if (segment === "m") {
-                is_public = false;
-            } else if (segment === "M") {
-                is_public = true;
-                if (from_private === true) {
-                    current_key = get_publickey(current_key);
-                }
-            } else {
-                return false
-            }
-        }
-        if (i > 0) {
-            const is_hardened = is_public === false && segment.indexOf("'") >= 0,
-                index_str = is_hardened ? segment.split("'")[0] : segment,
-                index_num = parseInt(index_str, 10),
-                child_index = is_hardened ? dec_to_hex(index_num + 2147483648) : str_pad(dec_to_hex(index_num), 8),
-                child_keys = derive_child_key(current_key, current_chain, child_index, is_public, is_hardened);
-            if (i === 1) {
-                path_purpose = segment;
-            }
-            if (i === depth) {
-                child_keys.purpose = path_purpose;
-                child_keys.depth = i;
-                child_keys.childnumber = child_index;
-                child_keys.xpub = is_public;
-                derived_data = child_keys;
-            } else {
-                current_key = child_keys.key;
-                current_chain = child_keys.chaincode;
-            }
-        }
-    });
-    if (is_public === true) {
-        derived_data.vb = derive_params.vb;
-    }
-    return derived_data;
+    return Bip39Utils.derive_x(derive_params, from_private);
 }
 
-// Derives child keys using BIP32 algorithm
+// Derives child keys using BIP32 algorithm (delegated to library)
 function derive_child_key(parent_key, chain_code, child_index, is_public, is_hardened) {
-    const derived_keys = {},
-        parent_pubkey = is_public ? parent_key : get_publickey(parent_key),
-        pub_hash = hash160(parent_pubkey),
-        parent_fp = pub_hash.slice(0, 8),
-        input_key = is_public ? parent_pubkey : (is_hardened ? "00" + parent_key : parent_pubkey),
-        hmac_result = hmac_bits(input_key + child_index, hex_to_bits(chain_code), "hex"),
-        child_key = hmac_result.slice(0, 64),
-        child_chain = hmac_result.slice(64);
-    if (is_public) {
-        const key_point = secp.Point.fromPrivateKey(child_key);
-        derived_keys.key = secp.Point.fromHex(parent_key).add(key_point).toHex(true);
-    } else {
-        const child_decimal = (hex_to_dec(parent_key) + hex_to_dec(child_key)) % oc;
-        derived_keys.key = str_pad(child_decimal.toString(16), 64);
-    }
-    derived_keys.chaincode = child_chain;
-    derived_keys.fingerprint = parent_fp;
-    return derived_keys;
+    return Bip39Utils.derive_child_key(parent_key, chain_code, child_index, is_public, is_hardened);
 }
 
 // Generates array of derived key pairs for given range
@@ -1467,20 +1365,14 @@ function key_cc() {
     return false
 }
 
-// Extracts key and chaincode components from xpub string
+// Extracts key and chaincode components from xpub string (delegated to library)
 function key_cc_xpub(xpub) {
-    const decoded_key = b58check_decode(xpub),
-        key_parts = objectify_extended(decoded_key);
-    return {
-        "key": key_parts.key,
-        "cc": key_parts.chaincode,
-        "version": key_parts.version
-    }
+    return Bip39Utils.key_cc_xpub(xpub);
 }
 
-// Generates master root key from seed using HMAC-SHA512
+// Generates master root key from seed using HMAC-SHA512 (delegated to library)
 function get_rootkey(seed) {
-    return hmac_bits(seed, to_bits("Bitcoin seed"), "hex");
+    return Bip39Utils.get_rootkey(seed);
 }
 
 // Sets initial account settings and derives addresses for all currencies

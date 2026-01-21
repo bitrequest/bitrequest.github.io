@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BIP39 Utils - Interactive Test Suite</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+            line-height: 1.6;
+        }
+        h1 { color: #00d4ff; margin-bottom: 5px; }
+        h2 { color: #00d4ff; border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 30px; }
+        h3 { color: #888; margin: 0 0 20px 0; font-weight: normal; }
+        .test-section {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .test-section h4 {
+            margin: 0 0 15px 0;
+            color: #fff;
+            font-size: 16px;
+        }
+        .test-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        input, textarea, select {
+            background: #0f0f23;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        input { flex: 1; min-width: 200px; }
+        textarea { width: 100%; min-height: 80px; resize: vertical; }
+        button {
+            background: #00d4ff;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        button:hover { background: #00a8cc; }
+        button.secondary {
+            background: #4a5568;
+            color: #fff;
+        }
+        button.secondary:hover { background: #5a6578; }
+        .output {
+            background: #0f0f23;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+        .success { color: #00ff88; }
+        .error { color: #ff4444; }
+        .info { color: #00d4ff; }
+        .warn { color: #ffaa00; }
+        #test-results {
+            background: #0f0f23;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .test-pass { color: #00ff88; }
+        .test-fail { color: #ff4444; }
+        .test-count {
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+        a { color: #00d4ff; }
+        .note {
+            background: #1e3a5f;
+            border-left: 3px solid #00d4ff;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        .warning {
+            background: #3f2e1e;
+            border-left: 3px solid #ffaa00;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        .phrase-display {
+            background: #0f0f23;
+            border: 2px solid #00d4ff;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 16px;
+            letter-spacing: 1px;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .word-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .word-item {
+            background: #16213e;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+            font-family: monospace;
+        }
+        .word-num {
+            color: #666;
+            font-size: 10px;
+        }
+        .derivation-path {
+            font-family: monospace;
+            background: #0f0f23;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔑 BIP39 Utils</h1>
+    <h3>Standalone BIP39/BIP32 HD Wallet Library v<span id="version"></span></h3>
+    
+    <div class="note">
+        <strong>Dependencies:</strong> 
+        <a href="https://github.com/bitrequest/bitrequest.github.io/blob/master/assets_js_lib_sjcl.js">sjcl.js</a> → 
+        <a href="https://github.com/bitrequest/bitrequest.github.io/blob/master/assets_js_lib_crypto_utils.js">crypto_utils.js</a> → 
+        <a href="https://github.com/bitrequest/bitrequest.github.io/blob/master/assets_js_lib_bip39_utils.js">bip39_utils.js</a><br>
+        <strong>Test phrase:</strong> <a href="https://github.com/bitcoinbook/bitcoinbook/blob/f8b883dcd4e3d1b9adf40fed59b7e898fbd9241f/ch05.asciidoc">army van defense carry jealous true garbage claim echo media make crunch</a><br>
+        <strong>Repository:</strong> <a href="https://github.com/bitrequest/bitrequest.github.io" target="_blank">github.com/bitrequest/bitrequest.github.io</a>
+    </div>
+
+    <div class="warning">
+        ⚠️ <strong>Security Warning:</strong> Never enter real seed phrases on websites. This tool is for testing and educational purposes only.
+    </div>
+
+    <!-- Automated Tests -->
+    <h2>🧪 Automated Unit Tests</h2>
+    <button onclick="runAllTests()">Run All Tests</button>
+    <div id="test-results"></div>
+
+    <!-- Interactive Tools -->
+    <h2>🛠️ Interactive Tools</h2>
+
+    <!-- Generate Mnemonic -->
+    <div class="test-section">
+        <h4>Generate New Mnemonic Phrase</h4>
+        <div class="test-row">
+            <select id="word-count">
+                <option value="12" selected>12 words (128-bit)</option>
+                <option value="15">15 words (160-bit)</option>
+                <option value="18">18 words (192-bit)</option>
+                <option value="21">21 words (224-bit)</option>
+                <option value="24">24 words (256-bit)</option>
+            </select>
+            <button onclick="generateMnemonic()">Generate Mnemonic</button>
+        </div>
+        <div class="output" id="generate-output"></div>
+    </div>
+
+    <!-- Validate Mnemonic -->
+    <div class="test-section">
+        <h4>Validate Mnemonic Phrase</h4>
+        <div class="test-row">
+            <textarea id="validate-input" placeholder="Enter 12/15/18/21/24 word mnemonic phrase"></textarea>
+        </div>
+        <div class="test-row">
+            <button onclick="validateMnemonic()">Validate</button>
+            <button class="secondary" onclick="useTestPhrase()">Use Test Phrase</button>
+        </div>
+        <div class="output" id="validate-output"></div>
+    </div>
+
+    <!-- Mnemonic to Seed -->
+    <div class="test-section">
+        <h4>Mnemonic → Seed (PBKDF2)</h4>
+        <div class="test-row">
+            <textarea id="seed-mnemonic" placeholder="Enter mnemonic phrase"></textarea>
+        </div>
+        <div class="test-row">
+            <input type="text" id="seed-passphrase" placeholder="Optional BIP39 passphrase">
+        </div>
+        <div class="test-row">
+            <button onclick="mnemonicToSeed()">Generate Seed</button>
+            <button class="secondary" onclick="useTestPhraseForSeed()">Use Test Phrase</button>
+        </div>
+        <div class="output" id="seed-output"></div>
+    </div>
+
+    <!-- Seed to Root Key -->
+    <div class="test-section">
+        <h4>Seed → Master Root Key (HMAC-SHA512)</h4>
+        <div class="test-row">
+            <textarea id="rootkey-seed" placeholder="Enter 128-character hex seed"></textarea>
+        </div>
+        <div class="test-row">
+            <button onclick="seedToRootKey()">Get Root Key</button>
+            <button class="secondary" onclick="useTestSeed()">Use Test Seed</button>
+        </div>
+        <div class="output" id="rootkey-output"></div>
+    </div>
+
+    <!-- BIP32 Derivation -->
+    <div class="test-section">
+        <h4>BIP32 Key Derivation</h4>
+        <div class="test-row">
+            <input type="text" id="derive-key" placeholder="64-char hex private key (master key)">
+        </div>
+        <div class="test-row">
+            <input type="text" id="derive-chaincode" placeholder="64-char hex chain code">
+        </div>
+        <div class="test-row">
+            <input type="text" id="derive-path" placeholder="Derivation path (e.g., m/44'/0'/0'/0/0)" value="m/44'/0'/0'/0/0">
+            <select id="derive-coin">
+                <option value="bitcoin">Bitcoin</option>
+                <option value="litecoin">Litecoin</option>
+                <option value="dogecoin">Dogecoin</option>
+                <option value="dash">Dash</option>
+                <option value="ethereum">Ethereum</option>
+                <option value="bitcoin-cash">Bitcoin Cash</option>
+            </select>
+        </div>
+        <div class="test-row">
+            <button onclick="deriveKey()">Derive Key</button>
+            <button class="secondary" onclick="useTestRootKey()">Use Test Root Key</button>
+        </div>
+        <div class="output" id="derive-output"></div>
+    </div>
+
+    <!-- Batch Derivation -->
+    <div class="test-section">
+        <h4>Batch Address Derivation</h4>
+        <div class="test-row">
+            <textarea id="batch-mnemonic" placeholder="Enter mnemonic phrase"></textarea>
+        </div>
+        <div class="test-row">
+            <select id="batch-coin">
+                <option value="bitcoin">Bitcoin (BIP84 - Native SegWit)</option>
+                <option value="litecoin">Litecoin (BIP84 - Native SegWit)</option>
+                <option value="dogecoin">Dogecoin (BIP44 - Legacy)</option>
+                <option value="dash">Dash (BIP44 - Legacy)</option>
+                <option value="ethereum">Ethereum (BIP44)</option>
+                <option value="bitcoin-cash">Bitcoin Cash (BIP44 - CashAddr)</option>
+            </select>
+            <input type="number" id="batch-count" value="5" min="1" max="20" style="width: 80px;">
+            <button onclick="batchDerive()">Derive Addresses</button>
+        </div>
+        <div class="test-row">
+            <button class="secondary" onclick="useTestPhraseForBatch()">Use Test Phrase</button>
+        </div>
+        <div class="output" id="batch-output"></div>
+    </div>
+
+    <!-- xPub Parsing -->
+    <div class="test-section">
+        <h4>Parse Extended Public Key (xpub/zpub)</h4>
+        <div class="test-row">
+            <textarea id="xpub-input" placeholder="Enter xpub, ypub, or zpub"></textarea>
+        </div>
+        <div class="test-row">
+            <button onclick="parseXpub()">Parse xPub</button>
+        </div>
+        <div class="output" id="xpub-output"></div>
+    </div>
+
+    <!-- Find Invalid Word -->
+    <div class="test-section">
+        <h4>Find Invalid Word in Phrase</h4>
+        <div class="test-row">
+            <textarea id="invalid-input" placeholder="Enter phrase with potential invalid words"></textarea>
+        </div>
+        <div class="test-row">
+            <button onclick="findInvalidWord()">Check Words</button>
+        </div>
+        <div class="output" id="invalid-output"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets_js_lib_sjcl.js"></script>
+    <script src="assets_js_lib_crypto_utils.js"></script>
+    <script src="assets_js_lib_bip39_utils.js"></script>
+    <script>
+        // Initialize version display
+        document.getElementById("version").textContent = Bip39Utils.version;
+
+        // ========================================
+        // AUTOMATED TESTS
+        // ========================================
+        
+        function runAllTests() {
+            const results = document.getElementById("test-results");
+            let passed = 0;
+            let failed = 0;
+            let html = "";
+
+            const tests = [
+                // Mnemonic validation tests
+                {
+                    name: "validate_mnemonic - Valid test phrase",
+                    fn: () => Bip39Utils.validate_mnemonic(Bip39Utils.test_phrase),
+                    expected: true
+                },
+                {
+                    name: "validate_mnemonic - Invalid phrase (wrong word)",
+                    fn: () => Bip39Utils.validate_mnemonic("army van defense carry jealous true garbage claim echo media make invalid"),
+                    expected: false
+                },
+                {
+                    name: "validate_mnemonic - Invalid checksum",
+                    fn: () => Bip39Utils.validate_mnemonic("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon"),
+                    expected: false
+                },
+                {
+                    name: "validate_mnemonic - Valid all-abandon phrase",
+                    fn: () => Bip39Utils.validate_mnemonic("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"),
+                    expected: true
+                },
+                
+                // Mnemonic to seed tests
+                {
+                    name: "mnemonic_to_seed - Test phrase",
+                    fn: () => Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase),
+                    expected: Bip39Utils.expected_seed
+                },
+                {
+                    name: "mnemonic_to_seed - Seed length (128 hex chars)",
+                    fn: () => Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase).length,
+                    expected: 128
+                },
+                
+                // Root key tests
+                {
+                    name: "get_rootkey - Output length (128 hex chars)",
+                    fn: () => Bip39Utils.get_rootkey(Bip39Utils.expected_seed).length,
+                    expected: 128
+                },
+                
+                // Address derivation tests
+                {
+                    name: "BIP44 Bitcoin Legacy Address",
+                    fn: () => {
+                        const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+                        const root = Bip39Utils.get_rootkey(seed);
+                        const derived = Bip39Utils.derive_x({
+                            dpath: "m/44'/0'/0'/0/0",
+                            key: root.slice(0, 64),
+                            cc: root.slice(64)
+                        });
+                        const formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("bitcoin"), 0, "bitcoin");
+                        return formatted.address;
+                    },
+                    expected: Bip39Utils.expected_address
+                },
+                {
+                    name: "BIP84 Bitcoin SegWit Address",
+                    fn: () => {
+                        const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+                        const root = Bip39Utils.get_rootkey(seed);
+                        const derived = Bip39Utils.derive_x({
+                            dpath: "m/84'/0'/0'/0/0",
+                            key: root.slice(0, 64),
+                            cc: root.slice(64)
+                        });
+                        const formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("bitcoin"), 0, "bitcoin");
+                        return formatted.address.startsWith("bc1q");
+                    },
+                    expected: true
+                },
+                {
+                    name: "Ethereum Address Format",
+                    fn: () => {
+                        const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+                        const root = Bip39Utils.get_rootkey(seed);
+                        const derived = Bip39Utils.derive_x({
+                            dpath: "m/44'/60'/0'/0/0",
+                            key: root.slice(0, 64),
+                            cc: root.slice(64)
+                        });
+                        const formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("ethereum"), 0, "ethereum");
+                        return formatted.address.startsWith("0x") && formatted.address.length === 42;
+                    },
+                    expected: true
+                },
+                
+                // xPub parsing tests
+                {
+                    name: "key_cc_xpub - Parse xpub structure",
+                    fn: () => {
+                        const xpub = "xpub6Cy7dUR4ZKF22HEuVq7epRgRsoXfL2MK1RE81CSvp1ZySySoYGXk5PUY9y9Cc5ExpnSwXyimQAsVhyyPDNDrfj4xjDsKZJNYgsHXoEPNCYQ";
+                        const parsed = Bip39Utils.key_cc_xpub(xpub);
+                        return parsed.key.length === 66 && parsed.cc.length === 64;
+                    },
+                    expected: true
+                },
+                
+                // Generate mnemonic tests
+                {
+                    name: "generate_mnemonic - 12 words",
+                    fn: () => Bip39Utils.generate_mnemonic(12).split(" ").length,
+                    expected: 12
+                },
+                {
+                    name: "generate_mnemonic - Valid checksum",
+                    fn: () => Bip39Utils.validate_mnemonic(Bip39Utils.generate_mnemonic(12)),
+                    expected: true
+                },
+                {
+                    name: "generate_mnemonic - 24 words valid",
+                    fn: () => {
+                        const phrase = Bip39Utils.generate_mnemonic(24);
+                        return phrase.split(" ").length === 24 && Bip39Utils.validate_mnemonic(phrase);
+                    },
+                    expected: true
+                },
+                
+                // Find invalid word tests
+                {
+                    name: "find_invalid_word - Valid phrase returns undefined",
+                    fn: () => Bip39Utils.find_invalid_word(Bip39Utils.test_phrase.split(" ")),
+                    expected: undefined
+                },
+                {
+                    name: "find_invalid_word - Detects invalid word",
+                    fn: () => Bip39Utils.find_invalid_word(["army", "van", "invalidword", "carry"]),
+                    expected: "invalidword"
+                },
+                
+                // Shuffle array test
+                {
+                    name: "shuffle_array - Same length after shuffle",
+                    fn: () => {
+                        const arr = [1, 2, 3, 4, 5];
+                        return Bip39Utils.shuffle_array([...arr]).length;
+                    },
+                    expected: 5
+                },
+                
+                // BIP32 config tests
+                {
+                    name: "get_bip32dat - Bitcoin config exists",
+                    fn: () => Bip39Utils.get_bip32dat("bitcoin").root_path,
+                    expected: "m/84'/0'/0'/0/"
+                },
+                {
+                    name: "get_bip32dat - Unknown coin returns false",
+                    fn: () => Bip39Utils.get_bip32dat("unknowncoin"),
+                    expected: false
+                }
+            ];
+
+            tests.forEach(test => {
+                try {
+                    const result = test.fn();
+                    const pass = JSON.stringify(result) === JSON.stringify(test.expected);
+                    if (pass) {
+                        passed++;
+                        html += `<div class="test-pass">✓ ${test.name}</div>`;
+                    } else {
+                        failed++;
+                        html += `<div class="test-fail">✗ ${test.name}\n  Expected: ${JSON.stringify(test.expected)}\n  Got: ${JSON.stringify(result)}</div>`;
+                    }
+                } catch (e) {
+                    failed++;
+                    html += `<div class="test-fail">✗ ${test.name}\n  Error: ${e.message}</div>`;
+                }
+            });
+
+            const summary = `<div class="test-count">Tests: ${passed + failed} | <span class="test-pass">Passed: ${passed}</span> | <span class="test-fail">Failed: ${failed}</span></div>`;
+            results.innerHTML = summary + html;
+        }
+
+        // ========================================
+        // INTERACTIVE FUNCTIONS
+        // ========================================
+
+        function generateMnemonic() {
+            const output = document.getElementById("generate-output");
+            try {
+                const wordCount = parseInt(document.getElementById("word-count").value);
+                const mnemonic = Bip39Utils.generate_mnemonic(wordCount);
+                const words = mnemonic.split(" ");
+                
+                let wordGrid = '<div class="word-grid">';
+                words.forEach((word, i) => {
+                    wordGrid += `<div class="word-item"><span class="word-num">${i + 1}</span><br>${word}</div>`;
+                });
+                wordGrid += '</div>';
+                
+                const isValid = Bip39Utils.validate_mnemonic(mnemonic);
+                
+                output.innerHTML = 
+                    `<span class="info">Generated ${wordCount}-word mnemonic:</span>\n\n` +
+                    `<div class="phrase-display">${mnemonic}</div>\n` +
+                    wordGrid +
+                    `\n<span class="${isValid ? 'success' : 'error'}">Checksum: ${isValid ? '✓ Valid' : '✗ Invalid'}</span>`;
+            } catch (e) {
+                output.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+            }
+        }
+
+        function validateMnemonic() {
+            const output = document.getElementById("validate-output");
+            const input = document.getElementById("validate-input").value.trim();
+            
+            if (!input) {
+                output.innerHTML = `<span class="warn">Please enter a mnemonic phrase</span>`;
+                return;
+            }
+            
+            try {
+                const words = input.split(/\s+/);
+                const wordCount = words.length;
+                const isValid = Bip39Utils.validate_mnemonic(input);
+                const invalidWord = Bip39Utils.find_invalid_word(words);
+                
+                let result = `<span class="info">Word count:</span> ${wordCount}\n`;
+                
+                if (invalidWord) {
+                    result += `<span class="error">Invalid word found: "${invalidWord}"</span>\n`;
+                }
+                
+                if (![12, 15, 18, 21, 24].includes(wordCount)) {
+                    result += `<span class="warn">Warning: Word count should be 12, 15, 18, 21, or 24</span>\n`;
+                }
+                
+                result += `\n<span class="${isValid ? 'success' : 'error'}">BIP39 Valid: ${isValid ? '✓ Yes' : '✗ No'}</span>`;
+                
+                if (isValid) {
+                    result += `\n\n<span class="info">Entropy bits:</span> ${wordCount / 3 * 32}`;
+                    result += `\n<span class="info">Checksum bits:</span> ${wordCount / 3}`;
+                }
+                
+                output.innerHTML = result;
+            } catch (e) {
+                output.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+            }
+        }
+
+        function useTestPhrase() {
+            document.getElementById("validate-input").value = Bip39Utils.test_phrase;
+            validateMnemonic();
+        }
+
+        function mnemonicToSeed() {
+            const output = document.getElementById("seed-output");
+            const mnemonic = document.getElementById("seed-mnemonic").value.trim();
+            const passphrase = document.getElementById("seed-passphrase").value;
+            
+            if (!mnemonic) {
+                output.innerHTML = `<span class="warn">Please enter a mnemonic phrase</span>`;
+                return;
+            }
+            
+            try {
+                if (!Bip39Utils.validate_mnemonic(mnemonic)) {
+                    output.innerHTML = `<span class="error">Invalid mnemonic phrase</span>`;
+                    return;
+                }
+                
+                const seed = Bip39Utils.mnemonic_to_seed(mnemonic, passphrase);
+                
+                let result = `<span class="info">Mnemonic:</span>\n${mnemonic}\n\n`;
+                if (passphrase) {
+                    result += `<span class="info">Passphrase:</span> "${passphrase}"\n\n`;
+                }
+                result += `<span class="info">512-bit Seed (hex):</span>\n${seed}\n\n`;
+                result += `<span class="info">Seed length:</span> ${seed.length} hex chars (${seed.length * 4} bits)`;
+                
+                output.innerHTML = result;
+            } catch (e) {
+                output.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+            }
+        }
+
+        function useTestPhraseForSeed() {
+            document.getElementById("seed-mnemonic").value = Bip39Utils.test_phrase;
+            mnemonicToSeed();
+        }
+
+        function seedToRootKey() {
+            const output = document.getElementById("rootkey-output");
+            const seed = document.getElementById("rootkey-seed").value.trim();
+            
+            if (!seed) {
+                output.innerHTML = `<span class="warn">Please enter a seed</span>`;
+                return;
+            }
+            
+            if (seed.length !== 128 || !/^[0-9a-fA-F]+$/.test(seed)) {
+                output.innerHTML = `<span class="error">Seed must be 128 hex characters</span>`;
+                return;
+            }
+            
+            try {
+                const rootKey = Bip39Utils.get_rootkey(seed);
+                const masterKey = rootKey.slice(0, 64);
+                const chainCode = rootKey.slice(64);
+                
+                let result = `<span class="info">Master Root Key (HMAC-SHA512 with "Bitcoin seed"):</span>\n\n`;
+                result += `<span class="info">Master Private Key:</span>\n${masterKey}\n\n`;
+                result += `<span class="info">Master Chain Code:</span>\n${chainCode}`;
+                
+                output.innerHTML = result;
+            } catch (e) {
+                output.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+            }
+        }
+
+        function useTestSeed() {
+            document.getElementById("rootkey-seed").value = Bip39Utils.expected_seed;
+            seedToRootKey();
+        }
+
+        function deriveKey() {
+            const output = document.getElementById("derive-output");
+            const key = document.getElementById("derive-key").value.trim();
+            const chaincode = document.getElementById("derive-chaincode").value.trim();
+            const path = document.getElementById("derive-path").value.trim();
+            const coin = document.getElementById("derive-coin").value;
+            
+            if (!key || !chaincode) {
+                output.innerHTML = `<span class="warn">Please enter master key and chain code</span>`;
+                return;
+            }
+            
+            try {
+                const derived = Bip39Utils.derive_x({
+                    dpath: path,
+                    key: key,
+                    cc: chaincode
+                });
+                
+                const config = Bip39Utils.get_bip32dat(coin);
+                const formatted = Bip39Utils.format_keys(null, derived, config, 0, coin);
+                
+                let result = `<span class="info">Derivation Path:</span> <span class="derivation-path">${path}</span>\n`;
+                result += `<span class="info">Coin:</span> ${coin}\n\n`;
+                result += `<span class="info">Derived Public Key:</span>\n${formatted.pubkey || derived.key}\n\n`;
+                result += `<span class="info">Address:</span>\n<span class="success">${formatted.address}</span>\n\n`;
+                result += `<span class="info">Chain Code:</span>\n${derived.chaincode}\n\n`;
+                result += `<span class="info">Fingerprint:</span> ${derived.fingerprint}`;
+                
+                output.innerHTML = result;
+            } catch (e) {
+                output.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+            }
+        }
+
+        function useTestRootKey() {
+            const seed = Bip39Utils.expected_seed;
+            const rootKey = Bip39Utils.get_rootkey(seed);
+            document.getElementById("derive-key").value = rootKey.slice(0, 64);
+            document.getElementById("derive-chaincode").value = rootKey.slice(64);
+            deriveKey();
+        }
+
+        function batchDerive() {
+            const output = document.getElementById("batch-output");
+            const mnemonic = document.getElementById("batch-mnemonic").value.trim();
+            const coin = document.getElementById("batch-coin").value;
+            const count = parseInt(document.getElementById("batch-count").value) || 5;
+            
+            if (!mnemonic) {
+                output.innerHTML = `<span class="warn">Please enter a mnemonic phrase</span>`;
+                return;
+            }
+            
+            if (!Bip39Utils.validate_mnemonic(mnemonic)) {
+                output.innerHTML = `<span class="error">Invalid mnemonic phrase</span>`;
+                return;
+            }
+            
+            try {
+                const seed = Bip39Utils.mnemonic_to_seed(mnemonic);
+                const rootKey = Bip39Utils.get_rootkey(seed);
+                const masterKey = rootKey.slice(0, 64);
+                const chainCode = rootKey.slice(64);
+                const config = Bip39Utils.get_bip32dat(coin);
+                
+                let result = `<span class="info">Coin:</span> ${coin}\n`;
+                result += `<span class="info">Path:</span> <span class="derivation-path">${config.root_path}[0-${count-1}]</span>\n\n`;
+                result += `<span class="info">Derived Addresses:</span>\n\n`;
+                
+                for (let i = 0; i < count; i++) {
+                    const path = config.root_path + i;
+                    const derived = Bip39Utils.derive_x({
+                        dpath: path,
+                        key: masterKey,
+                        cc: chainCode
+                    });
+                    const formatted = Bip39Utils.format_keys(seed, derived, config, i, coin);
+                    result += `<span class="info">[${i}]</span> ${formatted.address}\n`;
+                }
+                
+                output.innerHTML = result;
+            } catch (e) {
+                output.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+            }
+        }
+
+        function useTestPhraseForBatch() {
+            document.getElementById("batch-mnemonic").value = Bip39Utils.test_phrase;
+            batchDerive();
+        }
+
+        function parseXpub() {
+            const output = document.getElementById("xpub-output");
+            const xpub = document.getElementById("xpub-input").value.trim();
+            
+            if (!xpub) {
+                output.innerHTML = `<span class="warn">Please enter an xpub</span>`;
+                return;
+            }
+            
+            try {
+                const parsed = Bip39Utils.key_cc_xpub(xpub);
+                const extended = Bip39Utils.objectify_extended(CryptoUtils.b58check_decode(xpub));
+                
+                let result = `<span class="info">Extended Public Key:</span>\n${xpub}\n\n`;
+                result += `<span class="info">Version:</span> ${extended.version}\n`;
+                result += `<span class="info">Depth:</span> ${parseInt(extended.depth, 16)}\n`;
+                result += `<span class="info">Fingerprint:</span> ${extended.fingerprint}\n`;
+                result += `<span class="info">Child Number:</span> ${extended.childnumber}\n\n`;
+                result += `<span class="info">Chain Code:</span>\n${parsed.cc}\n\n`;
+                result += `<span class="info">Public Key:</span>\n${parsed.key}`;
+                
+                output.innerHTML = result;
+            } catch (e) {
+                output.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+            }
+        }
+
+        function findInvalidWord() {
+            const output = document.getElementById("invalid-output");
+            const input = document.getElementById("invalid-input").value.trim();
+            
+            if (!input) {
+                output.innerHTML = `<span class="warn">Please enter a phrase</span>`;
+                return;
+            }
+            
+            try {
+                const words = input.split(/\s+/);
+                const invalidWord = Bip39Utils.find_invalid_word(words);
+                
+                let result = `<span class="info">Words checked:</span> ${words.length}\n\n`;
+                
+                if (invalidWord) {
+                    result += `<span class="error">Invalid word found: "${invalidWord}"</span>\n\n`;
+                    
+                    // Show all invalid words
+                    const allInvalid = words.filter(w => wordlist.indexOf(w) === -1);
+                    if (allInvalid.length > 1) {
+                        result += `<span class="warn">All invalid words: ${allInvalid.join(", ")}</span>`;
+                    }
+                } else {
+                    result += `<span class="success">✓ All words are valid BIP39 words</span>`;
+                }
+                
+                output.innerHTML = result;
+            } catch (e) {
+                output.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+            }
+        }
+
+        // Run tests on load
+        window.onload = function() {
+            runAllTests();
+        };
+    </script>
+</body>
+</html>
