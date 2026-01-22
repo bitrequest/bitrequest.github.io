@@ -2,6 +2,7 @@
 // Extracted from bitrequest for reuse as a standalone library
 // Dependencies: sjcl.js, crypto_utils.js
 // Repository: https://github.com/bitrequest/bitrequest.github.io
+// bip39 (All addresses / xpubs in this app are test addresses derived from the following testphrase, taken from https://github.com/bitcoinbook/bitcoinbook/blob/f8b883dcd4e3d1b9adf40fed59b7e898fbd9241f/ch05.asciidoc)
 
 const bip39_utils_const = {
     "version": "1.0.0",

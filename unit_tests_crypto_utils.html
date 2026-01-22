@@ -629,8 +629,8 @@
         });
 
         test("pub_to_eth_address: Ethereum address (requires keccak)", () => {
-            if (typeof keccak256 === "undefined") {
-                console.log("Skipping: CryptoUtils.keccak256 not available (requires keccak256 function)");
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: CryptoUtils.keccak_256 not available (requires keccak_256 function)");
                 return;
             }
             const privkey = "0000000000000000000000000000000000000000000000000000000000000001",
@@ -641,8 +641,8 @@
         });
 
         test("to_checksum_address: EIP-55 (requires keccak)", () => {
-            if (typeof keccak256 === "undefined") {
-                console.log("Skipping: keccak256 not available (requires keccak256 function)");
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available (requires keccak_256 function)");
                 return;
             }
             const address = "0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed",
@@ -840,7 +840,6 @@
             try {
                 let privkey = rawPrivkey,
                     conversionMsg = "";
-
                 if (!rawPrivkey) {
                     // Generate random key if input is empty
                     const randomBytes = new Uint8Array(32);
@@ -953,8 +952,8 @@
                 output = document.getElementById("eth-output");
             try {
                 // Check if keccak functions are available
-                if (typeof keccak256 === "undefined") {
-                    output.innerHTML = "<span class='warn'>⚠️ CryptoUtils.keccak256 is not available.</span>\n\n<span class='muted'>keccak256 should be available via CryptoUtils.keccak256.</span>";
+                if (typeof keccak_256 === "undefined") {
+                    output.innerHTML = "<span class='warn'>⚠️ CryptoUtils.keccak_256 is not available.</span>\n\n<span class='muted'>keccak_256 should be available via CryptoUtils.keccak_256.</span>";
                     return;
                 }
                 
@@ -984,7 +983,7 @@
             try {
                 // Check if cashaddr library is available
                 if (typeof cashaddr === "undefined") {
-                    output.innerHTML = "<span class='warn'>⚠️ Bitcoin Cash address conversion requires the cashaddr library.</span>\n\n<span class='muted'>keccak256 should be available via CryptoUtils.keccak256.</span>";
+                    output.innerHTML = "<span class='warn'>⚠️ Bitcoin Cash address conversion requires the cashaddr library.</span>\n\n<span class='muted'>keccak_256 should be available via CryptoUtils.keccak_256.</span>";
                     return;
                 }
                 
