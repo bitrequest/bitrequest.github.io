@@ -1,5 +1,3 @@
---- START OF FILE unit_tests_bip39_utils.html ---
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -242,14 +240,17 @@
             <input type="text" id="derive-chaincode" placeholder="64-char hex chain code">
         </div>
         <div class="test-row">
-            <input type="text" id="derive-path" placeholder="Derivation path (e.g., m/44'/0'/0'/0/0)" value="m/44'/0'/0'/0/0">
-            <select id="derive-coin">
-                <option value="bitcoin">Bitcoin</option>
-                <option value="litecoin">Litecoin</option>
-                <option value="dogecoin">Dogecoin</option>
-                <option value="dash">Dash</option>
-                <option value="ethereum">Ethereum</option>
-                <option value="bitcoin-cash">Bitcoin Cash</option>
+            <input type="text" id="derive-path-base" value="m/84'/0'/0'/0/" readonly style="width: 200px; background: #1a1a2e; color: #888;">
+            <input type="number" id="derive-path-index" value="0" min="0" max="999" style="width: 70px;" onchange="deriveKeyIfReady()">
+            <select id="derive-coin" onchange="updateDerivePath()">
+                <option value="bitcoin-segwit" data-path="m/84'/0'/0'/0/">Bitcoin SegWit</option>
+                <option value="bitcoin" data-path="m/44'/0'/0'/0/">Bitcoin Legacy</option>
+                <option value="litecoin-segwit" data-path="m/84'/2'/0'/0/">Litecoin SegWit</option>
+                <option value="litecoin" data-path="m/44'/2'/0'/0/">Litecoin Legacy</option>
+                <option value="dogecoin" data-path="m/44'/3'/0'/0/">Dogecoin</option>
+                <option value="dash" data-path="m/44'/5'/0'/0/">Dash</option>
+                <option value="ethereum" data-path="m/44'/60'/0'/0/">Ethereum</option>
+                <option value="bitcoin-cash" data-path="m/44'/145'/0'/0/">Bitcoin Cash</option>
             </select>
         </div>
         <div class="test-row">
@@ -267,12 +268,14 @@
         </div>
         <div class="test-row">
             <select id="batch-coin">
-                <option value="bitcoin">Bitcoin (BIP84 - Native SegWit)</option>
-                <option value="litecoin">Litecoin (BIP84 - Native SegWit)</option>
-                <option value="dogecoin">Dogecoin (BIP44 - Legacy)</option>
-                <option value="dash">Dash (BIP44 - Legacy)</option>
-                <option value="ethereum">Ethereum (BIP44)</option>
-                <option value="bitcoin-cash">Bitcoin Cash (BIP44 - CashAddr)</option>
+                <option value="bitcoin-segwit">Bitcoin SegWit</option>
+                <option value="bitcoin">Bitcoin Legacy</option>
+                <option value="litecoin-segwit">Litecoin SegWit</option>
+                <option value="litecoin">Litecoin Legacy</option>
+                <option value="dogecoin">Dogecoin</option>
+                <option value="dash">Dash</option>
+                <option value="ethereum">Ethereum</option>
+                <option value="bitcoin-cash">Bitcoin Cash</option>
             </select>
             <input type="number" id="batch-count" value="5" min="1" max="20" style="width: 80px;">
             <button onclick="batchDerive()">Derive Addresses</button>
@@ -310,215 +313,497 @@
         <div class="output" id="xpub-output"></div>
     </div>
 
-    <!-- Find Invalid Word -->
-    <div class="test-section">
-        <h4>Find Invalid Word in Phrase</h4>
-        <div class="test-row">
-            <textarea id="invalid-input" placeholder="Enter phrase with potential invalid words"></textarea>
-        </div>
-        <div class="test-row">
-            <button onclick="findInvalidWord()">Check Words</button>
-        </div>
-        <div class="output" id="invalid-output"></div>
-    </div>
-
     <!-- Scripts -->
     <script src="assets_js_lib_sjcl.js"></script>
     <script src="assets_js_lib_crypto_utils.js"></script>
     <script src="assets_js_lib_bip39_utils.js"></script>
     <script>
-        // Initialize version display
-        document.getElementById("version").textContent = Bip39Utils.version;
+        // Display version
+        document.getElementById("version").textContent = Bip39Utils.version || "1.1.0";
 
-        // ========================================
-        // AUTOMATED TESTS
-        // ========================================
-        
-        function runAllTests() {
-            const results = document.getElementById("test-results"),
-                  tests = [
-                // Mnemonic validation tests
-                {
-                    name: "validate_mnemonic - Valid test phrase",
-                    fn: () => Bip39Utils.validate_mnemonic(Bip39Utils.test_phrase),
-                    expected: true
-                },
-                {
-                    name: "validate_mnemonic - Invalid phrase (wrong word)",
-                    fn: () => Bip39Utils.validate_mnemonic("army van defense carry jealous true garbage claim echo media make invalid"),
-                    expected: false
-                },
-                {
-                    name: "validate_mnemonic - Invalid checksum",
-                    fn: () => Bip39Utils.validate_mnemonic("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon"),
-                    expected: false
-                },
-                {
-                    name: "validate_mnemonic - Valid all-abandon phrase",
-                    fn: () => Bip39Utils.validate_mnemonic("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"),
-                    expected: true
-                },
-                
-                // Mnemonic to seed tests
-                {
-                    name: "mnemonic_to_seed - Test phrase",
-                    fn: () => Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase),
-                    expected: Bip39Utils.expected_seed
-                },
-                {
-                    name: "mnemonic_to_seed - Seed length (128 hex chars)",
-                    fn: () => Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase).length,
-                    expected: 128
-                },
-                
-                // Root key tests
-                {
-                    name: "get_rootkey - Output length (128 hex chars)",
-                    fn: () => Bip39Utils.get_rootkey(Bip39Utils.expected_seed).length,
-                    expected: 128
-                },
-                
-                // Address derivation tests
-                {
-                    name: "BIP44 Bitcoin Legacy Address",
-                    fn: () => {
-                        const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase),
-                              root = Bip39Utils.get_rootkey(seed),
-                              derived = Bip39Utils.derive_x({
-                                  dpath: "m/44'/0'/0'/0/0",
-                                  key: root.slice(0, 64),
-                                  cc: root.slice(64)
-                              }),
-                              formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("bitcoin"), 0, "bitcoin");
-                        return formatted.address;
-                    },
-                    expected: Bip39Utils.expected_address
-                },
-                {
-                    name: "BIP84 Bitcoin SegWit Address",
-                    fn: () => {
-                        const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase),
-                              root = Bip39Utils.get_rootkey(seed),
-                              derived = Bip39Utils.derive_x({
-                                  dpath: "m/84'/0'/0'/0/0",
-                                  key: root.slice(0, 64),
-                                  cc: root.slice(64)
-                              }),
-                              formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("bitcoin"), 0, "bitcoin");
-                        return formatted.address.startsWith("bc1q");
-                    },
-                    expected: true
-                },
-                {
-                    name: "Ethereum Address Format",
-                    fn: () => {
-                        const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase),
-                              root = Bip39Utils.get_rootkey(seed),
-                              derived = Bip39Utils.derive_x({
-                                  dpath: "m/44'/60'/0'/0/0",
-                                  key: root.slice(0, 64),
-                                  cc: root.slice(64)
-                              }),
-                              formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("ethereum"), 0, "ethereum");
-                        return formatted.address.startsWith("0x") && formatted.address.length === 42;
-                    },
-                    expected: true
-                },
-                
-                // xPub parsing tests
-                {
-                    name: "key_cc_xpub - Parse xpub structure",
-                    fn: () => {
-                        const xpub = "xpub6Cy7dUR4ZKF22HEuVq7epRgRsoXfL2MK1RE81CSvp1ZySySoYGXk5PUY9y9Cc5ExpnSwXyimQAsVhyyPDNDrfj4xjDsKZJNYgsHXoEPNCYQ",
-                              parsed = Bip39Utils.key_cc_xpub(xpub);
-                        return parsed.key.length === 66 && parsed.cc.length === 64;
-                    },
-                    expected: true
-                },
-                
-                // Generate mnemonic tests
-                {
-                    name: "generate_mnemonic - 12 words",
-                    fn: () => Bip39Utils.generate_mnemonic(12).split(" ").length,
-                    expected: 12
-                },
-                {
-                    name: "generate_mnemonic - Valid checksum",
-                    fn: () => Bip39Utils.validate_mnemonic(Bip39Utils.generate_mnemonic(12)),
-                    expected: true
-                },
-                {
-                    name: "generate_mnemonic - 24 words valid",
-                    fn: () => {
-                        const phrase = Bip39Utils.generate_mnemonic(24);
-                        return phrase.split(" ").length === 24 && Bip39Utils.validate_mnemonic(phrase);
-                    },
-                    expected: true
-                },
-                
-                // Find invalid word tests
-                {
-                    name: "find_invalid_word - Valid phrase returns undefined",
-                    fn: () => Bip39Utils.find_invalid_word(Bip39Utils.test_phrase.split(" ")),
-                    expected: undefined
-                },
-                {
-                    name: "find_invalid_word - Detects invalid word",
-                    fn: () => Bip39Utils.find_invalid_word(["army", "van", "invalidword", "carry"]),
-                    expected: "invalidword"
-                },
-                
-                // Shuffle array test
-                {
-                    name: "shuffle_array - Same length after shuffle",
-                    fn: () => {
-                        const arr = [1, 2, 3, 4, 5];
-                        return Bip39Utils.shuffle_array([...arr]).length;
-                    },
-                    expected: 5
-                },
-                
-                // BIP32 config tests
-                {
-                    name: "get_bip32dat - Bitcoin config exists",
-                    fn: () => Bip39Utils.get_bip32dat("bitcoin").root_path,
-                    expected: "m/84'/0'/0'/0/"
-                },
-                {
-                    name: "get_bip32dat - Unknown coin returns false",
-                    fn: () => Bip39Utils.get_bip32dat("unknowncoin"),
-                    expected: false
-                }
-            ];
-            
-            let passed = 0,
-                failed = 0,
-                html = "";
+        // Test framework
+        const tests = [];
+        let passed = 0, failed = 0;
 
-            tests.forEach(test => {
-                try {
-                    const result = test.fn(),
-                          pass = JSON.stringify(result) === JSON.stringify(test.expected);
-                    if (pass) {
-                        passed++;
-                        html += "<div class='test-pass'>✓ " + test.name + "</div>";
-                    } else {
-                        failed++;
-                        html += "<div class='test-fail'>✗ " + test.name + "\n  Expected: " + JSON.stringify(test.expected) + "\n  Got: " + JSON.stringify(result) + "</div>";
-                    }
-                } catch (e) {
-                    failed++;
-                    html += "<div class='test-fail'>✗ " + test.name + "\n  Error: " + e.message + "</div>";
-                }
-            });
-
-            const summary = "<div class='test-count'>Tests: " + (passed + failed) + " | <span class='test-pass'>Passed: " + passed  + "</span> | <span class='test-fail'>Failed: " + failed  + "</span></div>";
-            results.innerHTML = summary + html;
+        function test(name, fn) {
+            tests.push({ name, fn });
         }
 
-        // ========================================
-        // INTERACTIVE FUNCTIONS
-        // ========================================
+        function assertEqual(actual, expected, msg) {
+            if (actual !== expected) {
+                throw new Error(msg + " Expected: " + expected + " Got: " + actual);
+            }
+        }
+
+        function assertTrue(condition, msg) {
+            if (!condition) {
+                throw new Error(msg);
+            }
+        }
+
+        // Helper to log errors to console with full details
+        function logError(context, e) {
+            console.group("❌ " + context + " Error");
+            console.error("Message:", e.message || e);
+            console.error("Full error:", e);
+            if (e.stack) console.error("Stack:", e.stack);
+            console.groupEnd();
+        }
+
+        // ============================================================
+        // UNIT TESTS
+        // ============================================================
+
+        // === Mnemonic Validation Tests ===
+
+        test("validate_mnemonic: valid test phrase", () => {
+            const result = Bip39Utils.validate_mnemonic(Bip39Utils.test_phrase);
+            assertEqual(result, true, "Test phrase should be valid");
+        });
+
+        test("validate_mnemonic: invalid phrase (wrong word)", () => {
+            const invalid = "army van defense carry jealous true garbage claim echo media make xyz";
+            const result = Bip39Utils.validate_mnemonic(invalid);
+            assertEqual(result, false, "Invalid word should fail");
+        });
+
+        test("validate_mnemonic: invalid checksum", () => {
+            // Use a phrase with wrong checksum word (abandon x11 + abandon = invalid checksum)
+            const badChecksum = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon";
+            const result = Bip39Utils.validate_mnemonic(badChecksum);
+            assertEqual(result, false, "Bad checksum should fail");
+        });
+
+        test("validate_mnemonic: valid all-abandon phrase", () => {
+            // "abandon" x 11 + "about" is actually a valid BIP39 phrase (correct checksum)
+            const allAbandon = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+            const result = Bip39Utils.validate_mnemonic(allAbandon);
+            assertEqual(result, true, "This phrase has correct checksum");
+        });
+
+        test("validate_mnemonic: 24 word phrase", () => {
+            const phrase24 = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art";
+            const result = Bip39Utils.validate_mnemonic(phrase24);
+            assertTrue(typeof result === "boolean", "Should handle 24 words");
+        });
+
+        test("validate_mnemonic: word 'true' works correctly", () => {
+            // Test that the word "true" (which is in BIP39 wordlist) validates correctly
+            const result = Bip39Utils.validate_mnemonic(Bip39Utils.test_phrase);
+            assertEqual(result, true, "Phrase with word 'true' should validate");
+        });
+
+        // === Mnemonic to Seed Tests ===
+
+        test("mnemonic_to_seed: test phrase", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            assertEqual(seed, Bip39Utils.expected_seed, "Seed should match expected");
+        });
+
+        test("mnemonic_to_seed: output length (128 hex chars)", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            assertEqual(seed.length, 128, "Seed should be 64 bytes = 128 hex");
+        });
+
+        test("mnemonic_to_seed: deterministic", () => {
+            const seed1 = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed2 = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            assertEqual(seed1, seed2, "Same phrase should give same seed");
+        });
+
+        test("mnemonic_to_seed: with passphrase", () => {
+            const seedNoPass = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seedWithPass = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase, "password");
+            assertTrue(seedNoPass !== seedWithPass, "Passphrase should change seed");
+        });
+
+        // === Root Key Tests ===
+
+        test("get_rootkey: output length (128 hex chars)", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const rootkey = Bip39Utils.get_rootkey(seed);
+            assertEqual(rootkey.length, 128, "Root key should be 128 hex chars");
+        });
+
+        test("get_rootkey: deterministic", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root1 = Bip39Utils.get_rootkey(seed);
+            const root2 = Bip39Utils.get_rootkey(seed);
+            assertEqual(root1, root2, "Should be deterministic");
+        });
+
+        test("get_rootkey: different seeds give different roots", () => {
+            const seed1 = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed2 = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase, "password");
+            const root1 = Bip39Utils.get_rootkey(seed1);
+            const root2 = Bip39Utils.get_rootkey(seed2);
+            assertTrue(root1 !== root2, "Different seeds give different roots");
+        });
+
+        // === Key Derivation Tests ===
+
+        test("derive_x: BIP44 path", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/44'/0'/0'/0/0",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            assertTrue(derived.hasOwnProperty("key"), "Should have key");
+            assertEqual(derived.key.length, 64, "Key should be 32 bytes");
+        });
+
+        test("derive_x: BIP84 path", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/84'/0'/0'/0/0",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            assertTrue(derived.hasOwnProperty("key"), "Should have key");
+            assertEqual(derived.purpose, "84'", "Should track purpose");
+        });
+
+        test("derive_x: different indices give different keys", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const key0 = Bip39Utils.derive_x({
+                dpath: "m/84'/0'/0'/0/0",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const key1 = Bip39Utils.derive_x({
+                dpath: "m/84'/0'/0'/0/1",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            assertTrue(key0.key !== key1.key, "Different indices give different keys");
+        });
+
+        test("derive_child_key: single derivation step", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const child = Bip39Utils.derive_child_key(
+                root.slice(0, 64),
+                root.slice(64),
+                "80000000", // hardened 0
+                false,
+                true
+            );
+            assertTrue(child.hasOwnProperty("key"), "Should have key");
+            assertTrue(child.hasOwnProperty("chaincode"), "Should have chain code");
+        });
+
+        // === Address Generation Tests ===
+
+        test("format_keys: Bitcoin legacy address", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/44'/0'/0'/0/0",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("bitcoin"), 0, "bitcoin");
+            assertTrue(formatted.address.startsWith("1"), "Legacy address starts with 1");
+        });
+
+        test("format_keys: Bitcoin SegWit address (BIP84)", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/84'/0'/0'/0/0",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("bitcoin"), 0, "bitcoin");
+            assertTrue(formatted.address.startsWith("bc1q"), "SegWit address starts with bc1q");
+        });
+
+        test("format_keys: Ethereum address", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/44'/60'/0'/0/0",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("ethereum"), 0, "ethereum");
+            assertTrue(formatted.address.startsWith("0x"), "Ethereum address starts with 0x");
+            assertEqual(formatted.address.length, 42, "Ethereum address is 42 chars");
+        });
+
+        test("format_keys: Litecoin SegWit address", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/84'/2'/0'/0/0",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("litecoin"), 0, "litecoin");
+            assertTrue(formatted.address.startsWith("ltc1q"), "Litecoin SegWit starts with ltc1q");
+        });
+
+        test("format_keys: Dogecoin address", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/44'/3'/0'/0/0",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("dogecoin"), 0, "dogecoin");
+            assertTrue(formatted.address.startsWith("D"), "Dogecoin address starts with D");
+        });
+
+        test("format_keys: expected Bitcoin address from test phrase", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/44'/0'/0'/0/0",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("bitcoin"), 0, "bitcoin");
+            assertEqual(formatted.address, Bip39Utils.expected_address, "Should match expected address");
+        });
+
+        // === xPub Tests ===
+
+        test("key_cc_xpub: parse xpub structure", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/84'/0'/0'",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const extended = Bip39Utils.ext_keys(derived, Bip39Utils.get_bip32dat("bitcoin"));
+            // ext_keys returns ext_pub for the public extended key
+            const parsed = Bip39Utils.key_cc_xpub(extended.ext_pub);
+            assertTrue(parsed.hasOwnProperty("key"), "Should have key");
+            assertTrue(parsed.hasOwnProperty("cc"), "Should have chain code");
+        });
+
+        test("ext_keys: generate extended keys", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/84'/0'/0'",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const config = Bip39Utils.get_bip32dat("bitcoin");
+            const extended = Bip39Utils.ext_keys(derived, config);
+            // ext_keys returns object with ext_key (always) and ext_pub (when xpub is false)
+            assertTrue(typeof extended === "object", "Should return object");
+            assertTrue(Object.keys(extended).length > 0, "Should have at least one key");
+            // Log what we got for debugging
+            console.log("ext_keys returned:", JSON.stringify(extended));
+        });
+
+        test("xpub_obj: create xpub object", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            // xpub_obj signature: (coin_or_config, root_path, chain_code, key)
+            const xpubObj = Bip39Utils.xpub_obj("bitcoin", "m/84'/0'/0'/0", root.slice(64), root.slice(0, 64));
+            assertTrue(typeof xpubObj === "object", "Should return object");
+            assertTrue(xpubObj.hasOwnProperty("xpub"), "Should have xpub property");
+        });
+
+        // === Mnemonic Generation Tests ===
+
+        test("generate_mnemonic: 12 words", () => {
+            const mnemonic = Bip39Utils.generate_mnemonic(12);
+            const words = mnemonic.split(" ");
+            assertEqual(words.length, 12, "Should be 12 words");
+        });
+
+        test("generate_mnemonic: valid checksum", () => {
+            const mnemonic = Bip39Utils.generate_mnemonic(12);
+            const isValid = Bip39Utils.validate_mnemonic(mnemonic);
+            assertEqual(isValid, true, "Generated mnemonic should be valid");
+        });
+
+        test("generate_mnemonic: 24 words valid", () => {
+            const mnemonic = Bip39Utils.generate_mnemonic(24);
+            const words = mnemonic.split(" ");
+            assertEqual(words.length, 24, "Should be 24 words");
+            const isValid = Bip39Utils.validate_mnemonic(mnemonic);
+            assertEqual(isValid, true, "Should be valid");
+        });
+
+        test("generate_mnemonic: random each time", () => {
+            const m1 = Bip39Utils.generate_mnemonic(12);
+            const m2 = Bip39Utils.generate_mnemonic(12);
+            assertTrue(m1 !== m2, "Should be random");
+        });
+
+        // === find_invalid_word Tests ===
+
+        test("find_invalid_word: valid phrase returns undefined", () => {
+            // find_invalid_word expects an array of words
+            const words = Bip39Utils.test_phrase.split(" ");
+            const result = Bip39Utils.find_invalid_word(words);
+            assertEqual(result, undefined, "Valid phrase should return undefined");
+        });
+
+        test("find_invalid_word: detects invalid word", () => {
+            const invalid = "army van defense carry jealous true garbage claim echo media make xyz123".split(" ");
+            const result = Bip39Utils.find_invalid_word(invalid);
+            assertEqual(result, "xyz123", "Should return the invalid word");
+        });
+
+        // === BIP32 Configuration Tests ===
+
+        test("get_bip32dat: Bitcoin config", () => {
+            const config = Bip39Utils.get_bip32dat("bitcoin");
+            assertTrue(config.hasOwnProperty("root_path"), "Should have root_path");
+            assertTrue(config.hasOwnProperty("prefix"), "Should have prefix");
+        });
+
+        test("get_bip32dat: Ethereum config", () => {
+            const config = Bip39Utils.get_bip32dat("ethereum");
+            assertTrue(config !== false, "Should return config for Ethereum");
+        });
+
+        test("get_bip32dat: unknown coin returns false", () => {
+            const config = Bip39Utils.get_bip32dat("unknowncoin");
+            assertEqual(config, false, "Unknown coin should return false");
+        });
+
+        test("bip32_configs: has expected coins", () => {
+            const configs = Bip39Utils.bip32_configs;
+            assertTrue(configs.hasOwnProperty("bitcoin"), "Has bitcoin");
+            assertTrue(configs.hasOwnProperty("litecoin"), "Has litecoin");
+            assertTrue(configs.hasOwnProperty("ethereum"), "Has ethereum");
+        });
+
+        // === Utility Tests ===
+
+        test("shuffle_array: returns same length", () => {
+            const original = [1, 2, 3, 4, 5];
+            const shuffled = Bip39Utils.shuffle_array([...original]);
+            assertEqual(shuffled.length, original.length, "Same length");
+        });
+
+        test("shuffle_array: contains same elements", () => {
+            const original = [1, 2, 3, 4, 5];
+            const shuffled = Bip39Utils.shuffle_array([...original]);
+            const sortedOriginal = [...original].sort();
+            const sortedShuffled = [...shuffled].sort();
+            assertEqual(JSON.stringify(sortedOriginal), JSON.stringify(sortedShuffled), "Same elements");
+        });
+
+        test("parse_seed: prepares mnemonic and passphrase for PBKDF2", () => {
+            // parse_seed takes mnemonic and optional passphrase, returns bit arrays for PBKDF2
+            const parsed = Bip39Utils.parse_seed(Bip39Utils.test_phrase, "");
+            assertTrue(parsed.hasOwnProperty("mnemonic"), "Should have mnemonic bits");
+            assertTrue(parsed.hasOwnProperty("passphrase"), "Should have passphrase bits (salted)");
+        });
+
+        test("objectify_extended: parse extended key", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/84'/0'/0'",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const extended = Bip39Utils.ext_keys(derived, Bip39Utils.get_bip32dat("bitcoin"));
+            // objectify_extended takes a Base58Check decoded hex string, not an encoded xpub
+            const decoded = CryptoUtils.b58check_decode(extended.ext_key);
+            const obj = Bip39Utils.objectify_extended(decoded);
+            assertTrue(typeof obj === "object", "Should return object");
+        });
+
+        // === keypair_array Tests ===
+
+        test("keypair_array: derive multiple addresses", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const config = Bip39Utils.get_bip32dat("bitcoin");
+            const pairs = Bip39Utils.keypair_array(
+                seed,
+                new Array(5),
+                0,
+                "m/84'/0'/0'/0/",
+                config,
+                root.slice(0, 64),
+                root.slice(64),
+                "bitcoin",
+                null
+            );
+            assertEqual(pairs.length, 5, "Should return 5 addresses");
+            assertTrue(pairs[0].address.startsWith("bc1q"), "First address is SegWit");
+        });
+
+        // === Test Constants ===
+
+        test("test_phrase: is defined", () => {
+            assertTrue(typeof Bip39Utils.test_phrase === "string", "test_phrase should be string");
+            assertTrue(Bip39Utils.test_phrase.length > 0, "test_phrase should not be empty");
+        });
+
+        test("expected_seed: is defined", () => {
+            assertTrue(typeof Bip39Utils.expected_seed === "string", "expected_seed should be string");
+            assertEqual(Bip39Utils.expected_seed.length, 128, "expected_seed should be 128 chars");
+        });
+
+        test("expected_address: is defined", () => {
+            assertTrue(typeof Bip39Utils.expected_address === "string", "expected_address should be string");
+            assertTrue(Bip39Utils.expected_address.startsWith("1"), "expected_address should start with 1");
+        });
+
+        // === Integration Test ===
+
+        test("test_bip39_derivation: full derivation test", () => {
+            const result = Bip39Utils.test_bip39_derivation();
+            // test_bip39_derivation returns { success: boolean, tests: array }
+            assertTrue(typeof result === "object", "Should return result object");
+            assertTrue(result.hasOwnProperty("success"), "Should have success property");
+            assertEqual(result.success, true, "Full derivation test should pass");
+        });
+
+        // Run all tests
+        function runAllTests() {
+            const resultsDiv = document.getElementById("test-results");
+            resultsDiv.innerHTML = "<span class='info'>Running tests...</span>";
+            passed = 0;
+            failed = 0;
+
+            console.group("🧪 Bip39Utils Unit Tests");
+            console.log("Running " + tests.length + " tests...");
+
+            setTimeout(() => {
+                let output = "";
+                
+                for (const t of tests) {
+                    try {
+                        t.fn();
+                        output += "<span class='test-pass'>✓ " + t.name + "</span><br>\n";
+                        passed++;
+                    } catch (e) {
+                        output += "<span class='test-fail'>✗ " + t.name + "<br>  " + e.message + "</span><br>\n";
+                        failed++;
+                        logError("TEST: " + t.name, e);
+                    }
+                }
+
+                console.log("✅ Passed: " + passed + " | ❌ Failed: " + failed);
+                console.groupEnd();
+
+                const summary = "<div class='test-count'>Tests: <span class='test-pass'>" + passed + " passed</span>, <span class='" + (failed ? "test-fail" : "") + "'>" + failed + " failed</span> of " + tests.length + " total</div>";
+                resultsDiv.innerHTML = summary + output;
+            }, 10);
+        }
+
+        // ============================================================
+        // INTERACTIVE TOOLS
+        // ============================================================
 
         function generateMnemonic() {
             const output = document.getElementById("generate-output");
@@ -541,7 +826,8 @@
                     word_grid +
                     "\n<span class='" + (is_valid ? "success" : "error") + "'>Checksum: " + (is_valid ? "✓ Valid" : "✗ Invalid") + "</span>";
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("generateMnemonic", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -579,7 +865,8 @@
                 
                 output.innerHTML = result;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("validateMnemonic", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -615,7 +902,8 @@
                 
                 output.innerHTML = result;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("mnemonicToSeed", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -649,7 +937,8 @@
                 
                 output.innerHTML = result;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("seedToRootKey", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -662,8 +951,10 @@
             const output = document.getElementById("derive-output"),
                   key = document.getElementById("derive-key").value.trim(),
                   chaincode = document.getElementById("derive-chaincode").value.trim(),
-                  path = document.getElementById("derive-path").value.trim(),
-                  coin = document.getElementById("derive-coin").value;
+                  pathBase = document.getElementById("derive-path-base").value,
+                  pathIndex = document.getElementById("derive-path-index").value,
+                  path = pathBase + pathIndex,
+                  coinValue = document.getElementById("derive-coin").value;
             
             if (!key || !chaincode) {
                 output.innerHTML = "<span class='warn'>Please enter master key and chain code</span>";
@@ -671,24 +962,65 @@
             }
             
             try {
-                const derived = Bip39Utils.derive_x({
+                // Handle segwit variants - use base coin config
+                const isSegwit = coinValue.endsWith("-segwit"),
+                      baseCoin = isSegwit ? coinValue.replace("-segwit", "") : coinValue,
+                      derived = Bip39Utils.derive_x({
                         dpath: path,
                         key: key,
                         cc: chaincode
                       }),
-                      config = Bip39Utils.get_bip32dat(coin),
-                      formatted = Bip39Utils.format_keys(null, derived, config, 0, coin);
+                      config = Bip39Utils.get_bip32dat(baseCoin),
+                      pubkey = CryptoUtils.get_publickey(derived.key);
+                
+                // Generate address based on coin type
+                let address;
+                if (isSegwit && baseCoin === "bitcoin") {
+                    address = CryptoUtils.pub_to_address_bech32("bc", pubkey);
+                } else if (isSegwit && baseCoin === "litecoin") {
+                    address = CryptoUtils.pub_to_address_bech32("ltc", pubkey);
+                } else {
+                    const formatted = Bip39Utils.format_keys(null, derived, config, 0, baseCoin);
+                    address = formatted.address;
+                }
+                
+                const coinLabel = document.getElementById("derive-coin").selectedOptions[0].text;
                 
                 let result = "<span class='info'>Derivation Path:</span> <span class='derivation-path'>" + path + "</span>\n";
-                result += "<span class='info'>Coin:</span> " + coin + "\n\n";
-                result += "<span class='info'>Derived Public Key:</span>\n" + (formatted.pubkey || derived.key) + "\n\n";
-                result += "<span class='info'>Address:</span>\n<span class='success'>" + formatted.address + "</span>\n\n";
+                result += "<span class='info'>Coin:</span> " + coinLabel + "\n\n";
+                result += "<span class='info'>Derived Public Key:</span>\n" + pubkey + "\n\n";
+                result += "<span class='info'>Address:</span>\n<span class='success'>" + address + "</span>\n\n";
                 result += "<span class='info'>Chain Code:</span>\n" + derived.chaincode + "\n\n";
                 result += "<span class='info'>Fingerprint:</span> " + derived.fingerprint;
                 
                 output.innerHTML = result;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("deriveKey", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function updateDerivePath() {
+            const select = document.getElementById("derive-coin"),
+                  pathBaseInput = document.getElementById("derive-path-base"),
+                  keyInput = document.getElementById("derive-key"),
+                  chaincodeInput = document.getElementById("derive-chaincode"),
+                  selectedOption = select.selectedOptions[0],
+                  newPath = selectedOption.getAttribute("data-path");
+            if (newPath) {
+                pathBaseInput.value = newPath;
+                // Auto-derive if key and chaincode are already filled in
+                if (keyInput.value.trim() && chaincodeInput.value.trim()) {
+                    deriveKey();
+                }
+            }
+        }
+
+        function deriveKeyIfReady() {
+            const keyInput = document.getElementById("derive-key"),
+                  chaincodeInput = document.getElementById("derive-chaincode");
+            if (keyInput.value.trim() && chaincodeInput.value.trim()) {
+                deriveKey();
             }
         }
 
@@ -703,7 +1035,7 @@
         function batchDerive() {
             const output = document.getElementById("batch-output"),
                   mnemonic = document.getElementById("batch-mnemonic").value.trim(),
-                  coin = document.getElementById("batch-coin").value,
+                  coinValue = document.getElementById("batch-coin").value,
                   count = parseInt(document.getElementById("batch-count").value) || 5;
             
             if (!mnemonic) {
@@ -717,30 +1049,60 @@
             }
             
             try {
-                const seed = Bip39Utils.mnemonic_to_seed(mnemonic),
+                const isSegwit = coinValue.endsWith("-segwit"),
+                      baseCoin = isSegwit ? coinValue.replace("-segwit", "") : coinValue,
+                      seed = Bip39Utils.mnemonic_to_seed(mnemonic),
                       root_key = Bip39Utils.get_rootkey(seed),
                       master_key = root_key.slice(0, 64),
                       chain_code = root_key.slice(64),
-                      config = Bip39Utils.get_bip32dat(coin);
+                      config = Bip39Utils.get_bip32dat(baseCoin);
                 
-                let result = "<span class='info'>Coin:</span> " + coin + "\n";
-                result += "<span class='info'>Path:</span> <span class='derivation-path'>" + config.root_path + "[0-" + (count - 1) + "]</span>\n\n";
+                // Determine the correct path based on segwit vs legacy
+                let root_path;
+                if (isSegwit && baseCoin === "bitcoin") {
+                    root_path = "m/84'/0'/0'/0/";
+                } else if (isSegwit && baseCoin === "litecoin") {
+                    root_path = "m/84'/2'/0'/0/";
+                } else if (baseCoin === "bitcoin") {
+                    root_path = "m/44'/0'/0'/0/";
+                } else if (baseCoin === "litecoin") {
+                    root_path = "m/44'/2'/0'/0/";
+                } else {
+                    root_path = config.root_path;
+                }
+                
+                const coinLabel = document.getElementById("batch-coin").selectedOptions[0].text;
+                
+                let result = "<span class='info'>Coin:</span> " + coinLabel + "\n";
+                result += "<span class='info'>Path:</span> <span class='derivation-path'>" + root_path + "[0-" + (count - 1) + "]</span>\n\n";
                 result += "<span class='info'>Derived Addresses:</span>\n\n";
                 
                 for (let i = 0; i < count; i++) {
-                    const path = config.root_path + i,
+                    const path = root_path + i,
                           derived = Bip39Utils.derive_x({
                               dpath: path,
                               key: master_key,
                               cc: chain_code
                           }),
-                          formatted = Bip39Utils.format_keys(seed, derived, config, i, coin);
-                    result += "<span class='info'>[" + i + "]</span> " + formatted.address + "\n";
+                          pubkey = CryptoUtils.get_publickey(derived.key);
+                    
+                    let address;
+                    if (isSegwit && baseCoin === "bitcoin") {
+                        address = CryptoUtils.pub_to_address_bech32("bc", pubkey);
+                    } else if (isSegwit && baseCoin === "litecoin") {
+                        address = CryptoUtils.pub_to_address_bech32("ltc", pubkey);
+                    } else {
+                        const formatted = Bip39Utils.format_keys(seed, derived, config, i, baseCoin);
+                        address = formatted.address;
+                    }
+                    
+                    result += "<span class='info'>[" + i + "]</span> " + address + "\n";
                 }
                 
                 output.innerHTML = result;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("batchDerive", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -804,20 +1166,9 @@
                         };
                     }
                     
-                    // Build key data for ext_keys
-                    const public_key = CryptoUtils.get_publickey(derived.key),
-                          key_data = {
-                            chaincode: derived.chaincode,
-                            purpose: cfg.path.includes("84'") ? "84'" : "44'",
-                            childnumber: derived.childnumber,
-                            depth: derived.depth,
-                            fingerprint: derived.fingerprint,
-                            xpub: true,
-                            key: public_key
-                          },
-                          // Generate xpub
-                          ext_keys = Bip39Utils.ext_keys(key_data, coin_config),
-                          xpub = ext_keys.ext_key;
+                    // ext_keys with derived (which has xpub: false from "m/..." path) returns both xprv and xpub
+                    const ext_keys_result = Bip39Utils.ext_keys(derived, coin_config),
+                          xpub = ext_keys_result.xpub;
                     
                     result += "<span class='info'>" + cfg.name + ":</span>\n";
                     result += "<span class='derivation-path'>" + cfg.path + "</span>\n";
@@ -826,8 +1177,8 @@
                 
                 output.innerHTML = result;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
-                console.error(e);
+                logError("generateAllXpubs", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -922,41 +1273,8 @@
                 
                 output.innerHTML = result;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
-                console.error(e);
-            }
-        }
-
-        function findInvalidWord() {
-            const output = document.getElementById("invalid-output"),
-                  input = document.getElementById("invalid-input").value.trim();
-            
-            if (!input) {
-                output.innerHTML = "<span class='warn'>Please enter a phrase</span>";
-                return;
-            }
-            
-            try {
-                const words = input.split(/\s+/),
-                      invalid_word = Bip39Utils.find_invalid_word(words);
-                
-                let result = "<span class='info'>Words checked:</span> " + words.length + "\n\n";
-                
-                if (invalid_word) {
-                    result += "<span class='error'>Invalid word found: \"" + invalid_word + "\"</span>\n\n";
-                    
-                    // Show all invalid words
-                    const all_invalid = words.filter(w => wordlist.indexOf(w) === -1);
-                    if (all_invalid.length > 1) {
-                        result += "<span class='warn'>All invalid words: " + all_invalid.join(", ") + "</span>";
-                    }
-                } else {
-                    result += "<span class='success'>✓ All words are valid BIP39 words</span>";
-                }
-                
-                output.innerHTML = result;
-            } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("parseXpub", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 

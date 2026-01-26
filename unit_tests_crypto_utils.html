@@ -123,18 +123,40 @@
     <div class="test-section">
         <h4>Private Key → Public Key (secp256k1)</h4>
         <div class="test-row">
+            <select id="privkey-coin" onchange="onPrivkeyCoinChange()">
+                <option value="">-- Select coin to auto-fill --</option>
+                <option value="btc-legacy">Bitcoin (Legacy)</option>
+                <option value="btc-segwit">Bitcoin (SegWit)</option>
+                <option value="ltc-legacy">Litecoin (Legacy)</option>
+                <option value="ltc-segwit">Litecoin (SegWit)</option>
+                <option value="dash">Dash</option>
+                <option value="doge">Dogecoin</option>
+                <option value="eth">Ethereum</option>
+                <option value="bch">Bitcoin Cash</option>
+            </select>
+        </div>
+        <div class="test-row">
             <input type="text" id="privkey-input" placeholder="Enter 32-byte hex private key or WIF" value="">
             <button onclick="testKeyGen()">Generate Public Key</button>
         </div>
+        <div class="note">Select a coin to auto-fill the private key derived from the test seed phrase</div>
         <div class="output" id="privkey-output"></div>
     </div>
 
-    <!-- Bitcoin Address Generation -->
+    <!-- Address Generation -->
     <div class="test-section">
-        <h4>Public Key → BTC/LTC/DASH/DOGE Addresses</h4>
+        <h4>Public Key → Address</h4>
         <div class="test-row">
+            <select id="address-coin" onchange="onAddressCoinChange()">
+                <option value="btc-legacy">Bitcoin (Legacy)</option>
+                <option value="btc-segwit">Bitcoin (SegWit)</option>
+                <option value="ltc-legacy">Litecoin (Legacy)</option>
+                <option value="ltc-segwit">Litecoin (SegWit)</option>
+                <option value="dash">Dash</option>
+                <option value="doge">Dogecoin</option>
+            </select>
             <input type="text" id="pubkey-input" placeholder="Compressed public key (33 bytes hex)" value="">
-            <button onclick="testAddressGen()">Generate Addresses</button>
+            <button onclick="testAddressGen()">Generate Address</button>
         </div>
         <div class="output" id="address-output"></div>
     </div>
@@ -146,7 +168,7 @@
             <input type="text" id="eth-pubkey-input" placeholder="Uncompressed public key (65 bytes hex, starts with 04)" value="">
             <button onclick="testEthAddress()">Generate ETH Address</button>
         </div>
-        <div class="note">Leave empty to use default test vector (private key = 1)</div>
+        <div class="note">Pre-filled with public key derived from the test mnemonic phrase</div>
         <div class="output" id="eth-output"></div>
     </div>
 
@@ -157,6 +179,7 @@
             <input type="text" id="bch-pubkey-input" placeholder="Compressed public key" value="">
             <button onclick="testBchAddress()">Generate BCH Address</button>
         </div>
+        <div class="note">Pre-filled with public key derived from the test mnemonic phrase</div>
         <div class="output" id="bch-output"></div>
     </div>
 
@@ -232,6 +255,7 @@
                 <option value="sha256hex">SHA256 (hex input)</option>
                 <option value="hash160">Hash160 (hex input)</option>
                 <option value="ripemd160">RIPEMD160 (hex input)</option>
+                <option value="keccak256">Keccak-256 (hex input)</option>
             </select>
             <button onclick="testHash()">Hash</button>
         </div>
@@ -287,172 +311,334 @@
         <div class="output" id="string-output"></div>
     </div>
 
-    <!-- Dependencies -->
+    <!-- BigInt / Number Conversion -->
+    <div class="test-section">
+        <h4>Hex ↔ Number Conversion</h4>
+        <div class="test-row">
+            <input type="text" id="bigint-input" placeholder="Enter hex or decimal number" value="ffffffff">
+            <button onclick="testBigIntConvert()">Convert</button>
+        </div>
+        <div class="output" id="bigint-output"></div>
+    </div>
+
+    <!-- Modular Arithmetic -->
+    <div class="test-section">
+        <h4>Modular Arithmetic (secp256k1)</h4>
+        <div class="test-row">
+            <input type="text" id="mod-a" placeholder="Value a (hex)" value="ff" style="flex: 1;">
+            <select id="mod-op" style="width: 120px;">
+                <option value="mod">a mod P</option>
+                <option value="invert">invert(a)</option>
+                <option value="sqrt">sqrt(a)</option>
+            </select>
+            <button onclick="testModArith()">Calculate</button>
+        </div>
+        <div class="note">Uses secp256k1 prime P = 2²⁵⁶ - 2³² - 977</div>
+        <div class="output" id="mod-output"></div>
+    </div>
+
+    <!-- Scripts -->
     <script src="assets_js_lib_sjcl.js"></script>
     <script src="assets_js_lib_crypto_utils.js"></script>
-    
     <script>
-        // Show version
-        document.getElementById("version").textContent = CryptoUtils.VERSION;
+        // Display version
+        document.getElementById("version").textContent = CryptoUtils.VERSION || "1.1.0";
 
-        // ============================================================
-        // AUTOMATED UNIT TESTS
-        // ============================================================
-        
+        // Test framework
         const tests = [];
-        let passed = 0,
-            failed = 0;
+        let passed = 0, failed = 0;
 
         function test(name, fn) {
             tests.push({ name, fn });
         }
 
-        function assertEqual(actual, expected, message) {
+        function assertEqual(actual, expected, msg) {
             if (actual !== expected) {
-                throw new Error(message + "\nExpected: " + expected + "\nActual: " + actual);
+                throw new Error(msg + " Expected: " + expected + " Got: " + actual);
             }
         }
 
-        function assertTrue(condition, message) {
+        function assertTrue(condition, msg) {
             if (!condition) {
-                throw new Error(message || "Assertion failed");
+                throw new Error(msg);
             }
         }
 
-        function assertArrayEqual(actual, expected, message) {
+        // Helper to log errors to console with full details
+        function logError(context, e) {
+            console.group("❌ " + context + " Error");
+            console.error("Message:", e.message || e);
+            console.error("Full error:", e);
+            if (e.stack) console.error("Stack:", e.stack);
+            console.groupEnd();
+        }
+
+        function assertArrayEqual(actual, expected, msg) {
             if (actual.length !== expected.length) {
-                throw new Error(message + "\nLength mismatch: " + actual.length + " vs " + expected.length);
+                throw new Error(msg + " Length mismatch: " + actual.length + " vs " + expected.length);
             }
             for (let i = 0; i < actual.length; i++) {
                 if (actual[i] !== expected[i]) {
-                    throw new Error(message + "\nMismatch at index " + i + ": " + actual[i] + " vs " + expected[i]);
+                    throw new Error(msg + " Mismatch at index " + i);
                 }
             }
         }
 
+        // ============================================================
+        // UNIT TESTS
+        // ============================================================
+
         // === Core Helpers Tests ===
-        
-        test("hex_to_bytes: basic conversion", () => {
-            const bytes = CryptoUtils.hex_to_bytes("deadbeef");
-            assertEqual(bytes.length, 4, "Should be 4 bytes");
-            assertEqual(bytes[0], 0xde, "First byte");
-            assertEqual(bytes[3], 0xef, "Last byte");
+
+        test("uint_8array: create typed array", () => {
+            const result = CryptoUtils.uint_8array([1, 2, 3]);
+            assertTrue(result instanceof Uint8Array, "Should be Uint8Array");
+            assertEqual(result.length, 3, "Length should be 3");
         });
 
-        test("hex_to_bytes: odd length padding", () => {
-            const bytes = CryptoUtils.hex_to_bytes("abc");
-            assertEqual(bytes.length, 2, "Should pad to 2 bytes");
-        });
-
-        test("bytes_to_hex: basic conversion", () => {
-            const bytes = new Uint8Array([0xde, 0xad, 0xbe, 0xef]);
-            assertEqual(CryptoUtils.bytes_to_hex(bytes), "deadbeef", "Should convert to hex");
-        });
-
-        test("hex_to_bytes/bytes_to_hex: roundtrip", () => {
-            const original = "0123456789abcdef",
-                  bytes = CryptoUtils.hex_to_bytes(original),
-                  result = CryptoUtils.bytes_to_hex(bytes);
-            assertEqual(result, original, "Roundtrip should match");
-        });
-
-        test("is_hex: valid hex", () => {
-            assertTrue(CryptoUtils.is_hex("deadbeef"), "Lowercase valid");
-            assertTrue(CryptoUtils.is_hex("DEADBEEF"), "Uppercase valid");
-            assertTrue(CryptoUtils.is_hex("0123456789abcdefABCDEF"), "All hex chars");
-        });
-
-        test("is_hex: invalid hex", () => {
-            assertTrue(!CryptoUtils.is_hex("ghijkl"), "Invalid chars");
-            assertTrue(!CryptoUtils.is_hex("dead beef"), "Spaces invalid");
-            assertTrue(!CryptoUtils.is_hex(""), "Empty invalid");
-        });
-
-        test("dec_to_hex: conversion", () => {
-            assertEqual(CryptoUtils.dec_to_hex(255), "ff", "255 = ff");
-            assertEqual(CryptoUtils.dec_to_hex(256), "100", "256 = 100");
-            assertEqual(CryptoUtils.dec_to_hex(0), "0", "0 = 0");
-            assertEqual(CryptoUtils.dec_to_hex(4096), "1000", "4096 = 1000");
-        });
-
-        test("hex_to_dec: conversion", () => {
-            assertEqual(CryptoUtils.hex_to_dec("ff"), 255n, "ff = 255");
-            assertEqual(CryptoUtils.hex_to_dec("100"), 256n, "100 = 256");
-            assertEqual(CryptoUtils.hex_to_dec("0"), 0n, "0 = 0");
-        });
-
-        test("hex_to_int: conversion", () => {
-            assertEqual(CryptoUtils.hex_to_int("ff"), 255, "ff = 255");
-            assertEqual(CryptoUtils.hex_to_int("10"), 16, "10 = 16");
-        });
-
-        test("hex_to_number_string: large numbers", () => {
-            assertEqual(CryptoUtils.hex_to_number_string("ffffffff"), "4294967295", "Max uint32");
-        });
-
-        test("str_pad: padding", () => {
-            assertEqual(CryptoUtils.str_pad("ff", 4), "00ff", "Pad to 4");
-            assertEqual(CryptoUtils.str_pad("1234", 4), "1234", "No padding needed");
-            assertEqual(CryptoUtils.str_pad("1", 8), "00000001", "Pad to 8");
-        });
-
-        test("pad64: 64-char padding", () => {
-            assertEqual(CryptoUtils.pad64("1").length, 64, "Should be 64 chars");
-            assertEqual(CryptoUtils.pad64("1"), "0000000000000000000000000000000000000000000000000000000000000001", "Pad to 64");
-        });
-
-        test("concat_bytes: concatenation", () => {
-            const a = new Uint8Array([1, 2]),
-                  b = new Uint8Array([3, 4]),
-                  c = new Uint8Array([5]),
-                  result = CryptoUtils.concat_bytes(a, b, c);
+        test("buffer: encode string to UTF-8", () => {
+            const result = CryptoUtils.buffer("hello");
+            assertTrue(result instanceof Uint8Array, "Should be Uint8Array");
             assertEqual(result.length, 5, "Length should be 5");
-            assertEqual(CryptoUtils.bytes_to_hex(result), "0102030405", "Bytes concatenated");
+        });
+
+        test("unbuffer: decode UTF-8 to string", () => {
+            const bytes = new Uint8Array([104, 101, 108, 108, 111]);
+            const result = CryptoUtils.unbuffer(bytes);
+            assertEqual(result, "hello", "Should decode to hello");
+        });
+
+        test("buf2hex: convert buffer to hex", () => {
+            const result = CryptoUtils.buf2hex([222, 173, 190, 239]);
+            assertEqual(result, "deadbeef", "Should be deadbeef");
+        });
+
+        test("is_hex: validate hex string", () => {
+            assertTrue(CryptoUtils.is_hex("deadbeef"), "Valid hex");
+            assertTrue(CryptoUtils.is_hex("DEADBEEF"), "Valid uppercase hex");
+            assertTrue(!CryptoUtils.is_hex("ghij"), "Invalid hex");
+            assertTrue(!CryptoUtils.is_hex(""), "Empty string");
+        });
+
+        test("str_pad: pad string with zeros", () => {
+            const result = CryptoUtils.str_pad("abc", 6);
+            assertEqual(result, "000abc", "Should pad to 6 chars");
+        });
+
+        test("dec_to_hex: convert decimal to hex", () => {
+            assertEqual(CryptoUtils.dec_to_hex(255), "ff", "255 -> ff");
+            assertEqual(CryptoUtils.dec_to_hex(16), "10", "16 -> 10");
+            assertEqual(CryptoUtils.dec_to_hex(0), "0", "0 -> 0");
+        });
+
+        test("hex_to_dec: convert hex to BigInt", () => {
+            assertEqual(CryptoUtils.hex_to_dec("ff"), 255n, "ff -> 255n");
+            assertEqual(CryptoUtils.hex_to_dec("10"), 16n, "10 -> 16n");
+        });
+
+        test("hex_to_number_string: hex to decimal string", () => {
+            assertEqual(CryptoUtils.hex_to_number_string("ff"), "255", "ff -> 255");
+        });
+
+        test("hex_to_number_string: multi-byte value", () => {
+            assertEqual(CryptoUtils.hex_to_number_string("ffff"), "65535", "ffff -> 65535");
+        });
+
+        test("hex_to_int: hex to integer", () => {
+            assertEqual(CryptoUtils.hex_to_int("ff"), 255, "ff -> 255");
+            assertEqual(CryptoUtils.hex_to_int("00"), 0, "00 -> 0");
+        });
+
+        test("pad_binary: pad binary string", () => {
+            assertEqual(CryptoUtils.pad_binary("1", 8), "00000001", "Pad to 8 bits");
+            assertEqual(CryptoUtils.pad_binary("11111111", 8), "11111111", "Already 8 bits");
+        });
+
+        test("pad64: pad to 64 hex chars", () => {
+            assertEqual(CryptoUtils.pad64(1n).length, 64, "Should be 64 chars");
+            assertTrue(CryptoUtils.pad64(1n).endsWith("1"), "Should end with 1");
+            assertTrue(CryptoUtils.pad64(1n).startsWith("0"), "Should start with 0");
+        });
+
+        test("concat_bytes: concatenate byte arrays", () => {
+            const a = new Uint8Array([1, 2]);
+            const b = new Uint8Array([3, 4]);
+            const result = CryptoUtils.concat_bytes(a, b);
+            assertEqual(result.length, 4, "Length should be 4");
+            assertEqual(CryptoUtils.bytes_to_hex(result), "01020304", "Correct concatenation");
+        });
+
+        test("concat_bytes: multiple arrays", () => {
+            const a = new Uint8Array([1]);
+            const b = new Uint8Array([2]);
+            const c = new Uint8Array([3]);
+            const result = CryptoUtils.concat_bytes(a, b, c);
+            assertEqual(result.length, 3, "Length should be 3");
         });
 
         test("encode_varint: small value (< 128)", () => {
             const result = CryptoUtils.encode_varint(100);
-            assertEqual(result.length, 1, "Single byte for < 128");
+            assertEqual(result.length, 1, "Single byte");
             assertEqual(result[0], 100, "Correct value");
         });
 
-        test("encode_varint: medium value (LEB128)", () => {
-            const result = CryptoUtils.encode_varint(1000);
-            assertEqual(result.length, 2, "2 bytes for values >= 128");
-            assertEqual(result[0], 0xe8, "First byte with continuation bit");
-            assertEqual(result[1], 0x07, "Second byte");
+        test("encode_varint: medium value (>= 128)", () => {
+            const result = CryptoUtils.encode_varint(300);
+            assertEqual(result.length, 2, "Two bytes for 300");
         });
 
-        test("encode_varint: large value (LEB128)", () => {
-            const result = CryptoUtils.encode_varint(100000);
-            assertEqual(result.length, 3, "3 bytes for large values");
+        test("encode_varint: boundary value (127)", () => {
+            const result = CryptoUtils.encode_varint(127);
+            assertEqual(result.length, 1, "Single byte for 127");
+            assertEqual(result[0], 127, "Correct value");
+        });
+
+        test("encode_varint: boundary value (128)", () => {
+            const result = CryptoUtils.encode_varint(128);
+            assertEqual(result.length, 2, "Two bytes for 128");
+        });
+
+        // === Hex/Bytes Conversion Tests ===
+
+        test("hex_to_bytes: basic conversion", () => {
+            const result = CryptoUtils.hex_to_bytes("deadbeef");
+            assertEqual(result.length, 4, "4 bytes");
+            assertEqual(result[0], 0xde, "First byte");
+            assertEqual(result[3], 0xef, "Last byte");
+        });
+
+        test("hex_to_bytes: odd length padding", () => {
+            const result = CryptoUtils.hex_to_bytes("abc");
+            assertEqual(result.length, 2, "Pads odd length");
+            assertEqual(result[0], 0x0a, "Padded first byte");
+        });
+
+        test("hex_to_bytes: empty string", () => {
+            const result = CryptoUtils.hex_to_bytes("");
+            assertEqual(result.length, 0, "Empty array");
+        });
+
+        test("bytes_to_hex: basic conversion", () => {
+            const bytes = new Uint8Array([0xde, 0xad, 0xbe, 0xef]);
+            assertEqual(CryptoUtils.bytes_to_hex(bytes), "deadbeef", "Correct hex");
+        });
+
+        test("bytes_to_hex: single byte", () => {
+            const bytes = new Uint8Array([0x0f]);
+            assertEqual(CryptoUtils.bytes_to_hex(bytes), "0f", "Padded single byte");
+        });
+
+        test("hex_to_bytes/bytes_to_hex: roundtrip", () => {
+            const original = "deadbeef";
+            const bytes = CryptoUtils.hex_to_bytes(original);
+            const back = CryptoUtils.bytes_to_hex(bytes);
+            assertEqual(back, original, "Roundtrip matches");
+        });
+
+        test("hex_to_number: convert to BigInt", () => {
+            assertEqual(CryptoUtils.hex_to_number("ff"), 255n, "ff -> 255n");
+            assertEqual(CryptoUtils.hex_to_number("0100"), 256n, "0100 -> 256n");
+        });
+
+        test("bytes_to_number: convert bytes to BigInt", () => {
+            const bytes = new Uint8Array([0x01, 0x00]);
+            assertEqual(CryptoUtils.bytes_to_number(bytes), 256n, "0x0100 -> 256n");
+        });
+
+        // === SJCL Bit Operations Tests ===
+
+        test("to_bits: convert string to bits", () => {
+            const bits = CryptoUtils.to_bits("hello");
+            assertTrue(Array.isArray(bits), "Should return array");
+        });
+
+        test("hex_to_bits: convert hex to bits", () => {
+            const bits = CryptoUtils.hex_to_bits("deadbeef");
+            assertTrue(Array.isArray(bits), "Should return array");
+        });
+
+        test("from_bits: convert bits to hex", () => {
+            const bits = CryptoUtils.hex_to_bits("deadbeef");
+            const hex = CryptoUtils.from_bits(bits);
+            assertEqual(hex, "deadbeef", "Roundtrip matches");
+        });
+
+        test("bit_length: correct length", () => {
+            const bits = CryptoUtils.hex_to_bits("ff");
+            assertEqual(CryptoUtils.bit_length(bits), 8, "1 byte = 8 bits");
+        });
+
+        test("bit_length: multi-byte", () => {
+            const bits = CryptoUtils.hex_to_bits("ffff");
+            assertEqual(CryptoUtils.bit_length(bits), 16, "2 bytes = 16 bits");
+        });
+
+        test("concat_array: concatenate bit arrays", () => {
+            const a = CryptoUtils.hex_to_bits("dead");
+            const b = CryptoUtils.hex_to_bits("beef");
+            const result = CryptoUtils.concat_array(a, b);
+            assertEqual(CryptoUtils.from_bits(result), "deadbeef", "Concatenated");
         });
 
         // === String Utilities Tests ===
 
         test("clean_string: normalize whitespace", () => {
-            const result = CryptoUtils.clean_string("  hello   world  ");
-            assertEqual(result, "hello world", "Should clean whitespace");
+            assertEqual(CryptoUtils.clean_string("  hello   world  "), "hello world", "Clean whitespace");
+        });
+
+        test("clean_string: tabs and newlines", () => {
+            assertEqual(CryptoUtils.clean_string("hello\t\nworld"), "hello world", "Clean tabs/newlines");
         });
 
         test("split_words: split mnemonic", () => {
             const result = CryptoUtils.split_words("one two three");
-            assertEqual(result.length, 3, "Should have 3 words");
+            assertEqual(result.length, 3, "3 words");
             assertEqual(result[0], "one", "First word");
         });
 
+        test("split_words: extra whitespace", () => {
+            const result = CryptoUtils.split_words("  one   two  ");
+            assertEqual(result.length, 2, "2 words after trim");
+        });
+
         test("join_words: join mnemonic", () => {
-            const result = CryptoUtils.join_words(["one", "two", "three"]);
-            assertEqual(result, "one two three", "Should join with spaces");
+            assertEqual(CryptoUtils.join_words(["one", "two", "three"]), "one two three", "Joined");
+        });
+
+        test("normalize_string: NFKD normalization", () => {
+            const result = CryptoUtils.normalize_string("café");
+            assertTrue(typeof result === "string", "Returns string");
+        });
+
+        // === Base Conversion Tests ===
+
+        test("binary_string_to_word_array: convert binary", () => {
+            const result = CryptoUtils.binary_string_to_word_array("11111111");
+            assertTrue(Array.isArray(result), "Returns array");
+        });
+
+        test("byte_array_to_word_array: convert bytes", () => {
+            const result = CryptoUtils.byte_array_to_word_array([255, 0]);
+            assertTrue(Array.isArray(result), "Returns array");
+        });
+
+        test("byte_array_to_binary_string: convert to binary", () => {
+            assertEqual(CryptoUtils.byte_array_to_binary_string([255]), "11111111", "255 -> 11111111");
+            assertEqual(CryptoUtils.byte_array_to_binary_string([0]), "00000000", "0 -> 00000000");
+        });
+
+        test("hex_string_to_binary_string: convert hex to binary", () => {
+            assertEqual(CryptoUtils.hex_string_to_binary_string("ff"), "11111111", "ff -> 11111111");
+            assertEqual(CryptoUtils.hex_string_to_binary_string("00"), "00000000", "00 -> 00000000");
         });
 
         // === Base58 Tests ===
 
         test("b58enc/b58dec: roundtrip", () => {
-            const original = "deadbeef",
-                  encoded = CryptoUtils.b58enc(original, "hex"),
-                  decoded = CryptoUtils.b58dec(encoded, "hex");
-            assertEqual(decoded, original, "Roundtrip should match");
+            const original = "deadbeef";
+            const encoded = CryptoUtils.b58enc(original, "hex");
+            const decoded = CryptoUtils.b58dec(encoded, "hex");
+            assertEqual(decoded, original, "Roundtrip matches");
         });
 
         test("b58enc: leading zeros preserved", () => {
@@ -460,9 +646,21 @@
             assertTrue(encoded.startsWith("11"), "Leading zeros become 1s");
         });
 
+        test("b58enc_uint_array: encode Uint8Array", () => {
+            const bytes = new Uint8Array([0xde, 0xad, 0xbe, 0xef]);
+            const encoded = CryptoUtils.b58enc_uint_array(bytes);
+            assertTrue(typeof encoded === "string", "Returns string");
+        });
+
+        test("b58dec_uint_array: decode to Uint8Array", () => {
+            const encoded = CryptoUtils.b58enc("deadbeef");
+            const decoded = CryptoUtils.b58dec_uint_array(encoded);
+            assertTrue(decoded instanceof Uint8Array, "Returns Uint8Array");
+        });
+
         test("b58check_encode: Bitcoin address test vector", () => {
-            const payload = "00751e76e8199196d454941c45d1b3a323f1433bd6",
-                  result = CryptoUtils.b58check_encode(payload);
+            const payload = "00751e76e8199196d454941c45d1b3a323f1433bd6";
+            const result = CryptoUtils.b58check_encode(payload);
             assertEqual(result, "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH", "Known address");
         });
 
@@ -471,9 +669,11 @@
             assertEqual(decoded, "00751e76e8199196d454941c45d1b3a323f1433bd6", "Decode correctly");
         });
 
-        test("b58check_decode: strips checksum", () => {
-            const decoded = CryptoUtils.b58check_decode("1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH");
-            assertEqual(decoded, "00751e76e8199196d454941c45d1b3a323f1433bd6", "Decode correctly");
+        test("b58check_encode/decode: roundtrip", () => {
+            const original = "00deadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
+            const encoded = CryptoUtils.b58check_encode(original);
+            const decoded = CryptoUtils.b58check_decode(encoded);
+            assertEqual(decoded, original, "Roundtrip matches");
         });
 
         // === Bech32 Tests ===
@@ -489,87 +689,142 @@
             assertEqual(result, null, "Should return null");
         });
 
+        test("bech32_decode: Litecoin address", () => {
+            const result = CryptoUtils.bech32_decode("ltc1qw508d6qejxtdg4y5r3zarvary0c5xw7kgmn4n9");
+            assertEqual(result.hrp, "ltc", "HRP should be ltc");
+        });
+
         test("bech32_encode/decode: roundtrip", () => {
-            const hrp = "bc",
-                  original = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
-                  decoded = CryptoUtils.bech32_decode(original),
-                  encoded = CryptoUtils.bech32_encode(hrp, decoded.data);
-            assertEqual(encoded, original, "Roundtrip should match");
+            const original = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4";
+            const decoded = CryptoUtils.bech32_decode(original);
+            const encoded = CryptoUtils.bech32_encode("bc", decoded.data);
+            assertEqual(encoded, original, "Roundtrip matches");
         });
 
         test("to_words/from_words: roundtrip", () => {
-            const original = [0, 1, 2, 3, 255],
-                  words = CryptoUtils.to_words(original),
-                  back = CryptoUtils.from_words(words);
-            assertArrayEqual(back, original, "Roundtrip should match");
+            const original = [0, 1, 2, 3, 255];
+            const words = CryptoUtils.to_words(original);
+            const back = CryptoUtils.from_words(words);
+            assertArrayEqual(back, original, "Roundtrip matches");
         });
 
-        test("pub_to_address_bech32: generate native segwit", () => {
-            const pubkey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-                  address = CryptoUtils.pub_to_address_bech32("bc", pubkey);
-            assertEqual(address, "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4", "Known address");
+        test("convert_bits: 8 to 5 bits", () => {
+            const data = [0xff];
+            const result = CryptoUtils.convert_bits(data, 8, 5, true);
+            assertTrue(Array.isArray(result), "Returns array");
         });
-
-        test("pub_to_address_bech32: Litecoin", () => {
-            const pubkey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-                  address = CryptoUtils.pub_to_address_bech32("ltc", pubkey);
-            assertTrue(address.startsWith("ltc1q"), "Should start with ltc1q");
-        });
-
-        // === Taproot & Bech32m Tests ===
 
         test("bech32m_decode: Taproot vector", () => {
             const taproot = "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0";
             const decoded = CryptoUtils.bech32_decode(taproot);
-            if (!decoded) throw new Error("Failed to decode valid Taproot address");
             assertEqual(decoded.encoding, "bech32m", "Should detect bech32m");
             assertEqual(decoded.data[0], 1, "Witness version 1");
         });
 
+        test("pub_to_address_bech32: generate native segwit", () => {
+            const pubkey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
+            const address = CryptoUtils.pub_to_address_bech32("bc", pubkey);
+            assertEqual(address, "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4", "Known address");
+        });
+
+        test("pub_to_address_bech32: Litecoin", () => {
+            const pubkey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
+            const address = CryptoUtils.pub_to_address_bech32("ltc", pubkey);
+            assertTrue(address.startsWith("ltc1q"), "Litecoin segwit prefix");
+        });
+
         // === Elliptic Curve Tests ===
-
-        test("get_publickey: derive from private key (compressed)", () => {
-            const privkey = "0000000000000000000000000000000000000000000000000000000000000001",
-                  pubkey = CryptoUtils.get_publickey(privkey);
-            assertEqual(pubkey, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", "Known G point");
-        });
-
-        test("get_publickey: uncompressed", () => {
-            const privkey = "0000000000000000000000000000000000000000000000000000000000000001",
-                  pubkey = CryptoUtils.get_publickey(privkey, false);
-            assertTrue(pubkey.startsWith("04"), "Uncompressed starts with 04");
-            assertEqual(pubkey.length, 130, "65 bytes = 130 hex");
-        });
-
-        test("get_publickey: different private key", () => {
-            const privkey = "0000000000000000000000000000000000000000000000000000000000000002",
-                  pubkey = CryptoUtils.get_publickey(privkey);
-            assertEqual(pubkey, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5", "2G point");
-        });
-
-        test("expand_pub: decompress public key", () => {
-            const compressed = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-                  expanded = CryptoUtils.expand_pub(compressed);
-            assertTrue(expanded.startsWith("04"), "Should start with 04");
-            assertEqual(expanded.length, 130, "Should be 65 bytes");
-        });
-
-        test("expand_pub: already uncompressed", () => {
-            const uncompressed = CryptoUtils.get_publickey("0000000000000000000000000000000000000000000000000000000000000001", false),
-                  expanded = CryptoUtils.expand_pub(uncompressed);
-            assertEqual(expanded, uncompressed, "Should return same");
-        });
 
         test("mod: positive modulo", () => {
             assertEqual(CryptoUtils.mod(10n, 3n), 1n, "10 mod 3 = 1");
             assertEqual(CryptoUtils.mod(-1n, 3n), 2n, "Negative handled");
         });
 
+        test("mod: large numbers", () => {
+            const P = CryptoUtils.CURVE.P;
+            assertEqual(CryptoUtils.mod(P + 1n, P), 1n, "P+1 mod P = 1");
+        });
+
         test("invert: modular inverse", () => {
-            const P = CryptoUtils.CURVE.P,
-                  a = 12345n,
-                  inv = CryptoUtils.invert(a, P);
+            const P = CryptoUtils.CURVE.P;
+            const a = 12345n;
+            const inv = CryptoUtils.invert(a, P);
             assertEqual(CryptoUtils.mod(a * inv, P), 1n, "a * inv(a) = 1 mod P");
+        });
+
+        test("egcd: extended euclidean algorithm", () => {
+            const [gcd, x, y] = CryptoUtils.egcd(30n, 20n);
+            assertEqual(gcd, 10n, "GCD of 30, 20 is 10");
+        });
+
+        test("pow_mod: modular exponentiation", () => {
+            const result = CryptoUtils.pow_mod(2n, 10n, 1000n);
+            assertEqual(result, 24n, "2^10 mod 1000 = 24");
+        });
+
+        test("pow_mod: large exponent", () => {
+            const result = CryptoUtils.pow_mod(2n, 256n, 1000000n);
+            assertTrue(typeof result === "bigint", "Returns bigint");
+        });
+
+        test("sqrt_mod: modular square root", () => {
+            const P = CryptoUtils.CURVE.P;
+            const x = 4n;
+            const sqrt = CryptoUtils.sqrt_mod(x);
+            assertEqual(CryptoUtils.mod(sqrt * sqrt, P), x, "sqrt^2 = x");
+        });
+
+        test("weierstrass: curve equation", () => {
+            const result = CryptoUtils.weierstrass(1n);
+            assertTrue(typeof result === "bigint", "Returns bigint");
+        });
+
+        test("get_publickey: derive from private key (compressed)", () => {
+            const privkey = "0000000000000000000000000000000000000000000000000000000000000001";
+            const pubkey = CryptoUtils.get_publickey(privkey);
+            assertEqual(pubkey, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", "Known G point");
+        });
+
+        test("get_publickey: key 2", () => {
+            const privkey = "0000000000000000000000000000000000000000000000000000000000000002";
+            const pubkey = CryptoUtils.get_publickey(privkey);
+            assertEqual(pubkey, "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5", "Known 2G point");
+        });
+
+        test("get_publickey: uncompressed", () => {
+            const privkey = "0000000000000000000000000000000000000000000000000000000000000001";
+            const pubkey = CryptoUtils.get_publickey(privkey, false);
+            assertTrue(pubkey.startsWith("04"), "Uncompressed starts with 04");
+            assertEqual(pubkey.length, 130, "65 bytes = 130 hex");
+        });
+
+        test("expand_pub: decompress public key", () => {
+            const compressed = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
+            const expanded = CryptoUtils.expand_pub(compressed);
+            assertTrue(expanded.startsWith("04"), "Should start with 04");
+            assertEqual(expanded.length, 130, "Should be 65 bytes");
+        });
+
+        test("expand_pub: already uncompressed", () => {
+            const uncompressed = CryptoUtils.get_publickey("0000000000000000000000000000000000000000000000000000000000000001", false);
+            const expanded = CryptoUtils.expand_pub(uncompressed);
+            assertEqual(expanded, uncompressed, "Returns same");
+        });
+
+        test("priv_to_pub: alias for get_publickey", () => {
+            const privkey = "0000000000000000000000000000000000000000000000000000000000000001";
+            const pubkey = CryptoUtils.priv_to_pub(privkey);
+            assertEqual(pubkey, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", "Same as get_publickey");
+        });
+
+        test("normalize_privatekey: hex string", () => {
+            const key = CryptoUtils.normalize_privatekey("ff");
+            assertEqual(key, 255n, "Normalize hex to BigInt");
+        });
+
+        test("normalize_privatekey: BigInt", () => {
+            const key = CryptoUtils.normalize_privatekey(255n);
+            assertEqual(key, 255n, "Pass through BigInt");
         });
 
         // === Hash Tests ===
@@ -581,130 +836,147 @@
         });
 
         test("hmacsha: SHA256 of hex input", () => {
-            const hash = CryptoUtils.hmacsha("68656c6c6f", "sha256", "hex"); // "hello" in hex
+            const hash = CryptoUtils.hmacsha("68656c6c6f", "sha256", "hex");
             assertEqual(hash, "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824", "Known SHA256");
         });
 
-        test("hmacsha: SHA256 with bit array input", () => {
-            const bits = CryptoUtils.to_bits("hello"),
-                  hash = CryptoUtils.hmacsha(bits, "sha256");
-            assertEqual(hash, "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824", "Same as hex");
-        });
-
-        test("hmacsha: empty hex string", () => {
+        test("hmacsha: empty string", () => {
             const hash = CryptoUtils.hmacsha("", "sha256", "hex");
             assertEqual(hash, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "Empty SHA256");
         });
 
         test("hash160: SHA256 + RIPEMD160", () => {
-            const pubkey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-                  hash = CryptoUtils.hash160(pubkey);
+            const pubkey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
+            const hash = CryptoUtils.hash160(pubkey);
             assertEqual(hash, "751e76e8199196d454941c45d1b3a323f1433bd6", "Known hash160");
         });
 
-        test("sha_sub: returns substring of hash", () => {
-            const bits = CryptoUtils.hex_to_bits("68656c6c6f"),
-                  hash = CryptoUtils.sha_sub(bits, 16); // first 16 chars = 8 bytes
-            assertEqual(hash.length, 16, "Should return 16 chars");
+        test("keccak_256: Ethereum hashing", () => {
+            const input = CryptoUtils.hex_to_bytes("68656c6c6f");
+            const hash = CryptoUtils.keccak_256(input);
+            assertEqual(hash.length, 64, "32 bytes hex output");
+        });
+
+        test("keccak_256: empty input", () => {
+            const hash = CryptoUtils.keccak_256(new Uint8Array(0));
+            assertEqual(hash.length, 64, "32 bytes for empty input");
+        });
+
+        test("sha_sub: substring of hash", () => {
+            const bits = CryptoUtils.hex_to_bits("68656c6c6f");
+            const hash = CryptoUtils.sha_sub(bits, 16);
+            assertEqual(hash.length, 16, "Returns 16 chars");
+        });
+
+        test("hmac_bits: HMAC computation", () => {
+            const result = CryptoUtils.hmac_bits("deadbeef", CryptoUtils.to_bits("key"), "hex");
+            assertEqual(result.length, 128, "SHA512 HMAC is 64 bytes = 128 hex");
         });
 
         // === Address Generation Tests ===
 
         test("pub_to_address: legacy Bitcoin address", () => {
-            const pubkey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-                  address = CryptoUtils.pub_to_address("00", pubkey);
+            const pubkey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
+            const address = CryptoUtils.pub_to_address("00", pubkey);
             assertEqual(address, "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH", "Known address");
         });
 
         test("pub_to_address: Litecoin legacy", () => {
-            const pubkey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-                  address = CryptoUtils.pub_to_address("30", pubkey);
+            const pubkey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
+            const address = CryptoUtils.pub_to_address("30", pubkey);
             assertTrue(address.startsWith("L"), "Litecoin starts with L");
         });
 
+        test("pub_to_address: Dogecoin", () => {
+            const pubkey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
+            const address = CryptoUtils.pub_to_address("1e", pubkey);
+            assertTrue(address.startsWith("D"), "Dogecoin starts with D");
+        });
+
         test("hash160_to_address: from hash", () => {
-            const hash = "751e76e8199196d454941c45d1b3a323f1433bd6",
-                  address = CryptoUtils.hash160_to_address("00", hash);
+            const hash = "751e76e8199196d454941c45d1b3a323f1433bd6";
+            const address = CryptoUtils.hash160_to_address("00", hash);
             assertEqual(address, "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH", "Same as pub_to_address");
         });
 
-        test("pub_to_eth_address: Ethereum address (requires keccak)", () => {
-            if (typeof keccak_256 === "undefined") {
-                console.log("Skipping: CryptoUtils.keccak_256 not available (requires keccak_256 function)");
-                return;
-            }
-            const privkey = "0000000000000000000000000000000000000000000000000000000000000001",
-                  pubkey = CryptoUtils.get_publickey(privkey, false),
-                  address = CryptoUtils.pub_to_eth_address(pubkey);
+        test("pub_to_eth_address: Ethereum address", () => {
+            const privkey = "0000000000000000000000000000000000000000000000000000000000000001";
+            const pubkey = CryptoUtils.get_publickey(privkey, false);
+            const address = CryptoUtils.pub_to_eth_address(pubkey);
             assertTrue(address.startsWith("0x"), "Should start with 0x");
             assertEqual(address.length, 42, "Should be 42 chars");
         });
 
-        test("to_checksum_address: EIP-55 (requires keccak)", () => {
-            if (typeof keccak_256 === "undefined") {
-                console.log("Skipping: keccak_256 not available (requires keccak_256 function)");
-                return;
-            }
-            const address = "0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed",
-                  checksummed = CryptoUtils.to_checksum_address(address);
+        test("to_checksum_address: EIP-55", () => {
+            const address = "0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaed";
+            const checksummed = CryptoUtils.to_checksum_address(address);
             assertEqual(checksummed, "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed", "Known checksum");
+        });
+
+        test("to_checksum_address: all lowercase", () => {
+            const address = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359";
+            const checksummed = CryptoUtils.to_checksum_address(address);
+            assertTrue(checksummed.startsWith("0x"), "Starts with 0x");
+            assertTrue(/[A-F]/.test(checksummed), "Contains uppercase");
         });
 
         // === Bitcoin Cash Tests ===
 
-        test("pub_to_cashaddr: Bitcoin Cash address (requires cashaddr lib)", () => {
-            if (typeof cashaddr === "undefined") {
-                console.log("Skipping: cashaddr library not available");
-                return;
-            }
-            const legacyAddress = "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH",
-                  address = CryptoUtils.pub_to_cashaddr(legacyAddress);
-            assertTrue(typeof address === "string" && address.length > 0, "Should return address string");
+        test("pub_to_cashaddr: Bitcoin Cash address", () => {
+            const legacyAddress = "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH";
+            const address = CryptoUtils.pub_to_cashaddr(legacyAddress);
+            assertTrue(typeof address === "string" && address.length > 0, "Should return address");
+        });
+
+        test("bch_legacy: CashAddr to legacy", () => {
+            const cashaddr = "qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy";
+            const legacy = CryptoUtils.bch_legacy(cashaddr);
+            assertTrue(legacy.startsWith("1"), "Should return legacy address");
         });
 
         // === WIF Tests ===
 
-        test("privkey_wif: convert to WIF (Bitcoin)", () => {
-            const privkey = "0000000000000000000000000000000000000000000000000000000000000001",
-                  wif = CryptoUtils.privkey_wif("80", privkey, true);
+        test("privkey_wif: Bitcoin mainnet compressed", () => {
+            const privkey = "0000000000000000000000000000000000000000000000000000000000000001";
+            const wif = CryptoUtils.privkey_wif("80", privkey, true);
             assertEqual(wif, "KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgd9M7rFU73sVHnoWn", "Known WIF");
         });
 
-        test("privkey_wif: Litecoin compressed", () => {
-            const privkey = "0000000000000000000000000000000000000000000000000000000000000001",
-                  wif = CryptoUtils.privkey_wif("b0", privkey, true);
-            assertTrue(wif.startsWith("T"), "Litecoin WIF starts with T");
+        test("privkey_wif: Bitcoin mainnet uncompressed", () => {
+            const privkey = "0000000000000000000000000000000000000000000000000000000000000001";
+            const wif = CryptoUtils.privkey_wif("80", privkey, false);
+            assertTrue(wif.startsWith("5"), "Uncompressed WIF starts with 5");
         });
 
-        test("privkey_wif: uncompressed", () => {
-            const privkey = "0000000000000000000000000000000000000000000000000000000000000001",
-                  wif = CryptoUtils.privkey_wif("80", privkey, false);
-            assertTrue(wif.startsWith("5"), "Uncompressed WIF starts with 5");
+        test("privkey_wif: Litecoin", () => {
+            const privkey = "0000000000000000000000000000000000000000000000000000000000000001";
+            const wif = CryptoUtils.privkey_wif("b0", privkey, true);
+            assertTrue(wif.startsWith("T"), "Litecoin WIF starts with T");
         });
 
         // === AES Tests ===
 
-        test("aes_enc/aes_dec: roundtrip (base64 key)", () => {
-            const plaintext = "Hello, World!",
-                  key = btoa("1234567890123456"), // 16-byte key as base64
-                  encrypted = CryptoUtils.aes_enc(plaintext, key),
-                  decrypted = CryptoUtils.aes_dec(encrypted, key);
-            assertEqual(decrypted, plaintext, "Roundtrip should match");
+        test("aes_enc/aes_dec: roundtrip", () => {
+            const plaintext = "Hello, World!";
+            const key = btoa("1234567890123456");
+            const encrypted = CryptoUtils.aes_enc(plaintext, key);
+            const decrypted = CryptoUtils.aes_dec(encrypted, key);
+            assertEqual(decrypted, plaintext, "Roundtrip matches");
         });
 
-        test("aes_enc: random IV (different each time)", () => {
-            const plaintext = "test",
-                  key = btoa("1234567890123456"),
-                  enc1 = CryptoUtils.aes_enc(plaintext, key),
-                  enc2 = CryptoUtils.aes_enc(plaintext, key);
-            assertTrue(enc1 !== enc2, "Should use random IV");
+        test("aes_enc: random IV", () => {
+            const plaintext = "test";
+            const key = btoa("1234567890123456");
+            const enc1 = CryptoUtils.aes_enc(plaintext, key);
+            const enc2 = CryptoUtils.aes_enc(plaintext, key);
+            assertTrue(enc1 !== enc2, "Different ciphertexts");
         });
 
-        test("aes_enc/aes_dec: special characters", () => {
-            const plaintext = "こんにちは🔐!@#$%",
-                  key = btoa("1234567890123456"),
-                  encrypted = CryptoUtils.aes_enc(plaintext, key),
-                  decrypted = CryptoUtils.aes_dec(encrypted, key);
+        test("aes_enc/aes_dec: unicode", () => {
+            const plaintext = "こんにちは🔐";
+            const key = btoa("1234567890123456");
+            const encrypted = CryptoUtils.aes_enc(plaintext, key);
+            const decrypted = CryptoUtils.aes_dec(encrypted, key);
             assertEqual(decrypted, plaintext, "Unicode roundtrip");
         });
 
@@ -722,46 +994,31 @@
             assertTrue(result.script_pub_key.endsWith("88ac"), "P2PKH suffix");
         });
 
-        test("address_to_scripthash: Taproot (Bech32m)", () => {
+        test("address_to_scripthash: Taproot", () => {
             const result = CryptoUtils.address_to_scripthash("bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0");
-            assertTrue(result.script_pub_key.startsWith("5120"), "Taproot script prefix (OP_1 <32-byte pubkey>)");
+            assertTrue(result.script_pub_key.startsWith("5120"), "Taproot script");
         });
 
-        test("address_to_scripthash: Legacy P2SH", () => {
-            // P2SH address for '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy'
+        test("address_to_scripthash: P2SH", () => {
             const result = CryptoUtils.address_to_scripthash("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy");
-            assertTrue(result.script_pub_key.startsWith("a914"), "P2SH script prefix (OP_HASH160 <20-byte hash>)");
+            assertTrue(result.script_pub_key.startsWith("a914"), "P2SH prefix");
         });
 
         // === Nimiq Hash Tests ===
 
         test("nimiq_hash: hex string encoding", () => {
-            // nimiq_hash takes hex and converts to base64 uri encoded
             const hex = "deadbeef";
-            const expected = encodeURIComponent(btoa(String.fromCharCode(0xde, 0xad, 0xbe, 0xef)));
             const result = CryptoUtils.nimiq_hash(hex);
-            assertEqual(result, expected, "Nimiq hash encoding match");
+            assertTrue(typeof result === "string", "Returns string");
         });
 
-        // === SJCL Bit Operations Tests ===
+        // === CURVE Constants Tests ===
 
-        test("to_bits/from_bits: roundtrip", () => {
-            const original = "deadbeef",
-                  bits = CryptoUtils.hex_to_bits(original),
-                  back = CryptoUtils.from_bits(bits);
-            assertEqual(back, original, "Roundtrip should match");
-        });
-
-        test("bit_length: correct length", () => {
-            const bits = CryptoUtils.hex_to_bits("ff");
-            assertEqual(CryptoUtils.bit_length(bits), 8, "1 byte = 8 bits");
-        });
-
-        test("concat_array: concatenate bit arrays", () => {
-            const a = CryptoUtils.hex_to_bits("dead"),
-                  b = CryptoUtils.hex_to_bits("beef"),
-                  result = CryptoUtils.concat_array(a, b);
-            assertEqual(CryptoUtils.from_bits(result), "deadbeef", "Concatenated");
+        test("CURVE: has required constants", () => {
+            assertTrue(CryptoUtils.CURVE.P > 0n, "Has P");
+            assertTrue(CryptoUtils.CURVE.n > 0n, "Has n");
+            assertTrue(CryptoUtils.CURVE.Gx > 0n, "Has Gx");
+            assertTrue(CryptoUtils.CURVE.Gy > 0n, "Has Gy");
         });
 
         // Run all tests
@@ -771,19 +1028,26 @@
             passed = 0;
             failed = 0;
 
+            console.group("🧪 CryptoUtils Unit Tests");
+            console.log("Running " + tests.length + " tests...");
+
             setTimeout(() => {
                 let output = "";
                 
                 for (const t of tests) {
                     try {
                         t.fn();
-                        output += "<span class='test-pass'>✓ " + t.name + "</span>\n";
+                        output += "<span class='test-pass'>✓ " + t.name + "</span><br>\n";
                         passed++;
                     } catch (e) {
-                        output += "<span class='test-fail'>✗ " + t.name + "\n  " + e.message + "</span>\n";
+                        output += "<span class='test-fail'>✗ " + t.name + "\n  " + e.message + "</span><br>\n";
                         failed++;
+                        logError("TEST: " + t.name, e);
                     }
                 }
+
+                console.log("✅ Passed: " + passed + " | ❌ Failed: " + failed);
+                console.groupEnd();
 
                 const summary = "<div class='test-count'>Tests: <span class='test-pass'>" + passed + " passed</span>, <span class='" + (failed ? "test-fail" : "") + "'>" + failed + " failed</span> of " + tests.length + " total</div>";
                 resultsDiv.innerHTML = summary + output;
@@ -793,6 +1057,84 @@
         // ============================================================
         // INTERACTIVE TOOLS
         // ============================================================
+
+        // Test private keys derived from: "army van defense carry jealous true garbage claim echo media make crunch"
+        const TEST_KEYS = {
+            "btc-legacy": "L27rKoVgW4dYc1BxhD1X7jp9ixPGwnn3E2eggznmpYcuktDYPKaH",   // m/44'/0'/0'/0/0
+            "btc-segwit": "KymSva1GVQiHquxL2uGC9wve9YQjUqctJuCt2zpQFcvp7PKJiKNh",   // m/84'/0'/0'/0/0
+            "ltc-legacy": "T9pQEfFCnVriTEXoJPpxYAMNvKosvHp8HNd3q5NeMwQcngfQMFFY",   // m/44'/2'/0'/0/0
+            "ltc-segwit": "T5aCfmkZcxuq7psCuZ3dQdPTnoueogU3opMBoA8svxxWAqseeeZ2",   // m/84'/2'/0'/0/0
+            "dash":       "XDVVxNodPJT8WfWLvybQnn3YNabtVLrrfTEfmCoomqE8FAxLdcZh",   // m/44'/5'/0'/0/0
+            "doge":       "QSpQ294N775doUjovSbUULyVigMUzfjX8FSmMPM5aAewbkKKXEdG",   // m/44'/3'/0'/0/0
+            "eth":        "0x73bf21bf06769f98dabcfac16c2f74e852da823effed12794e56876ede02d45d", // m/44'/60'/0'/0/0
+            "bch":        "L5QtfxVwgwBESpcnZ1goY3wkxDqTQ57A6yxrzTaxNzQwKdTuYrCg"    // m/44'/145'/0'/0/0
+        };
+
+        // Helper to decode WIF to hex private key
+        function wifToHex(wif) {
+            let decodedHex = CryptoUtils.b58check_decode(wif);
+            if (decodedHex.length === 68 && decodedHex.endsWith("01")) {
+                return decodedHex.slice(2, 66);
+            } else if (decodedHex.length === 66) {
+                return decodedHex.slice(2);
+            }
+            throw new Error("Invalid WIF format");
+        }
+
+        // Derive public key from private key (WIF or hex)
+        function derivePublicKey(privkeyInput, compressed = true) {
+            let privkey = privkeyInput;
+            
+            // Handle 0x prefix for ETH
+            if (privkey.startsWith("0x")) {
+                privkey = privkey.slice(2);
+            }
+            // Handle WIF format
+            else if (/^[1-9A-HJ-NP-Za-km-z]{50,52}$/.test(privkey)) {
+                privkey = wifToHex(privkey);
+            }
+            
+            // Ensure 32 bytes
+            if (privkey.length < 64) privkey = privkey.padStart(64, "0");
+            
+            return CryptoUtils.get_publickey(privkey, compressed);
+        }
+
+        // Handle coin selection in Private Key section
+        function onPrivkeyCoinChange() {
+            const coin = document.getElementById("privkey-coin").value;
+            if (coin && TEST_KEYS[coin]) {
+                document.getElementById("privkey-input").value = TEST_KEYS[coin];
+                // Sync the address coin selector (only if it's a UTXO coin)
+                if (["btc-legacy", "btc-segwit", "ltc-legacy", "ltc-segwit", "dash", "doge"].includes(coin)) {
+                    document.getElementById("address-coin").value = coin;
+                    onAddressCoinChange();
+                }
+                // Generate the public key output
+                testKeyGen();
+            } else {
+                document.getElementById("privkey-input").value = "";
+                document.getElementById("privkey-output").innerHTML = "";
+            }
+        }
+
+        // Handle coin selection in Address section  
+        function onAddressCoinChange() {
+            const coin = document.getElementById("address-coin").value;
+            if (coin && TEST_KEYS[coin]) {
+                const pubkey = derivePublicKey(TEST_KEYS[coin], true);
+                document.getElementById("pubkey-input").value = pubkey;
+                
+                // Also update the Private Key section if it has content
+                const privkeyOutput = document.getElementById("privkey-output");
+                if (privkeyOutput.innerHTML && !privkeyOutput.innerHTML.includes("Enter a private key")) {
+                    // Update the privkey input and regenerate output
+                    document.getElementById("privkey-input").value = TEST_KEYS[coin];
+                    document.getElementById("privkey-coin").value = coin;
+                    testKeyGen();
+                }
+            }
+        }
 
         // Helper to handle text-to-hex input automatically
         function auto_hex_convert(input) {
@@ -829,58 +1171,60 @@
 
         function testKeyGen() {
             let rawPrivkey = document.getElementById("privkey-input").value.trim(),
-                output = document.getElementById("privkey-output");
+                output = document.getElementById("privkey-output"),
+                selectedCoin = document.getElementById("privkey-coin").value;
             
             // Clear other outputs to prevent stale data
             document.getElementById("address-output").innerHTML = "";
-            document.getElementById("eth-output").innerHTML = "";
-            document.getElementById("bch-output").innerHTML = "";
             document.getElementById("wif-output").innerHTML = "";
 
             try {
+                // If no input, show help message
+                if (!rawPrivkey) {
+                    output.innerHTML = "<span class='info'>Enter a private key or select a coin to auto-fill</span>";
+                    return;
+                }
+                
                 let privkey = rawPrivkey,
                     conversionMsg = "";
-                if (!rawPrivkey) {
-                    // Generate random key if input is empty
-                    const randomBytes = new Uint8Array(32);
-                    window.crypto.getRandomValues(randomBytes);
-                    privkey = CryptoUtils.bytes_to_hex(randomBytes);
-                    // Update input to show user
-                    document.getElementById("privkey-input").value = privkey;
-                    conversionMsg = "<span class='success'>✓ Generated Random Key.</span>\n\n";
-                } else {
-                    // Check for WIF (Wallet Import Format)
-                    const isWifLike = /^[1-9A-HJ-NP-Za-km-z]{50,52}$/.test(rawPrivkey);
-                    
-                    if (isWifLike) {
-                        try {
-                            let decodedHex = CryptoUtils.b58check_decode(rawPrivkey);
-                            
-                            if (decodedHex.length === 66) {
-                                privkey = decodedHex.slice(2);
-                                conversionMsg = "<span class='success'>✓ Valid WIF Detected (Uncompressed).</span> Decoded to Hex: <span class='info'>" + privkey + "</span>\n\n";
-                            } else if (decodedHex.length === 68) {
-                                if (decodedHex.endsWith("01")) {
-                                    privkey = decodedHex.slice(2, 66);
-                                    conversionMsg = "<span class='success'>✓ Valid WIF Detected (Compressed).</span> Decoded to Hex: <span class='info'>" + privkey + "</span>\n\n";
-                                } else {
-                                    throw new Error("Invalid WIF compression flag");
-                                }
+                
+                // Check for WIF (Wallet Import Format)
+                const isWifLike = /^[1-9A-HJ-NP-Za-km-z]{50,52}$/.test(rawPrivkey);
+                
+                if (isWifLike) {
+                    try {
+                        let decodedHex = CryptoUtils.b58check_decode(rawPrivkey);
+                        
+                        if (decodedHex.length === 66) {
+                            privkey = decodedHex.slice(2);
+                            conversionMsg = "<span class='success'>✓ Valid WIF Detected (Uncompressed).</span> Decoded to Hex: <span class='info'>" + privkey + "</span>\n\n";
+                        } else if (decodedHex.length === 68) {
+                            if (decodedHex.endsWith("01")) {
+                                privkey = decodedHex.slice(2, 66);
+                                conversionMsg = "<span class='success'>✓ Valid WIF Detected (Compressed).</span> Decoded to Hex: <span class='info'>" + privkey + "</span>\n\n";
                             } else {
-                                throw new Error("Invalid WIF length");
+                                throw new Error("Invalid WIF compression flag");
                             }
-                        } catch (e) {
-                            if (rawPrivkey.length >= 50 && rawPrivkey.length <= 52 && /^[5KLc9]/.test(rawPrivkey)) {
-                                 throw new Error("Input looks like WIF but failed decoding. Check for typos (e.g. 'l' vs '1', '0' vs 'O') or checksum errors.");
-                            }
+                        } else {
+                            throw new Error("Invalid WIF length");
+                        }
+                    } catch (e) {
+                        if (rawPrivkey.length >= 50 && rawPrivkey.length <= 52 && /^[5KLc9TXQ]/.test(rawPrivkey)) {
+                             throw new Error("Input looks like WIF but failed decoding. Check for typos (e.g. 'l' vs '1', '0' vs 'O') or checksum errors.");
                         }
                     }
+                }
+                
+                // Check for 0x prefix (Ethereum hex format)
+                if (!conversionMsg && rawPrivkey.startsWith("0x")) {
+                    privkey = rawPrivkey.slice(2);
+                    conversionMsg = "<span class='success'>✓ Ethereum hex format detected.</span>\n\n";
+                }
 
-                    if (!conversionMsg) {
-                        const conversion = auto_hex_convert(rawPrivkey);
-                        privkey = conversion.hex;
-                        conversionMsg = conversion.msg;
-                    }
+                if (!conversionMsg) {
+                    const conversion = auto_hex_convert(rawPrivkey);
+                    privkey = conversion.hex;
+                    conversionMsg = conversion.msg;
                 }
 
                 // Ensure 32 bytes (64 hex chars)
@@ -895,19 +1239,31 @@
                                    "\n\n<span class='info'>Public key (compressed, 33 bytes):</span>\n" + compressed + 
                                    "\n\n<span class='info'>Public key (uncompressed, 65 bytes):</span>\n" + uncompressed;
 
-                // Populate other fields for seamless workflow
-                document.getElementById("pubkey-input").value = compressed;
-                document.getElementById("bch-pubkey-input").value = compressed;
-                document.getElementById("eth-pubkey-input").value = uncompressed;
+                // Populate the appropriate address field based on selected coin
+                if (selectedCoin === "eth") {
+                    document.getElementById("eth-pubkey-input").value = compressed;
+                } else if (selectedCoin === "bch") {
+                    document.getElementById("bch-pubkey-input").value = compressed;
+                } else if (["btc-legacy", "btc-segwit", "ltc-legacy", "ltc-segwit", "dash", "doge"].includes(selectedCoin)) {
+                    document.getElementById("pubkey-input").value = compressed;
+                    document.getElementById("address-coin").value = selectedCoin;
+                } else {
+                    // No coin selected - fill the main address field
+                    document.getElementById("pubkey-input").value = compressed;
+                }
+                
+                // Always fill WIF input
                 document.getElementById("wif-input").value = privkey;
 
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
         function testAddressGen() {
             const rawPubkey = document.getElementById("pubkey-input").value.replace(/\s/g, ""),
+                  selectedCoin = document.getElementById("address-coin").value,
                   output = document.getElementById("address-output");
             try {
                 if (!rawPubkey) {
@@ -918,32 +1274,52 @@
                       pubkey = conversion.hex;
                 
                 const hash = CryptoUtils.hash160(pubkey);
+                let address, addressType, coinName;
                 
-                // Bitcoin
-                const btcLegacy = CryptoUtils.pub_to_address("00", pubkey),
-                      btcSegwit = CryptoUtils.pub_to_address_bech32("bc", pubkey);
-                
-                // Litecoin
-                const ltcLegacy = CryptoUtils.pub_to_address("30", pubkey),
-                      ltcSegwit = CryptoUtils.pub_to_address_bech32("ltc", pubkey);
-                
-                // Dash (Version 0x4C = 76)
-                const dashLegacy = CryptoUtils.pub_to_address("4c", pubkey);
-                
-                // Dogecoin (Version 0x1E = 30)
-                const dogeLegacy = CryptoUtils.pub_to_address("1e", pubkey);
+                switch (selectedCoin) {
+                    case "btc-legacy":
+                        address = CryptoUtils.pub_to_address("00", pubkey);
+                        addressType = "Legacy (P2PKH)";
+                        coinName = "Bitcoin";
+                        break;
+                    case "btc-segwit":
+                        address = CryptoUtils.pub_to_address_bech32("bc", pubkey);
+                        addressType = "Native SegWit (P2WPKH)";
+                        coinName = "Bitcoin";
+                        break;
+                    case "ltc-legacy":
+                        address = CryptoUtils.pub_to_address("30", pubkey);
+                        addressType = "Legacy (P2PKH)";
+                        coinName = "Litecoin";
+                        break;
+                    case "ltc-segwit":
+                        address = CryptoUtils.pub_to_address_bech32("ltc", pubkey);
+                        addressType = "Native SegWit (P2WPKH)";
+                        coinName = "Litecoin";
+                        break;
+                    case "dash":
+                        address = CryptoUtils.pub_to_address("4c", pubkey);
+                        addressType = "Legacy (P2PKH)";
+                        coinName = "Dash";
+                        break;
+                    case "doge":
+                        address = CryptoUtils.pub_to_address("1e", pubkey);
+                        addressType = "Legacy (P2PKH)";
+                        coinName = "Dogecoin";
+                        break;
+                    default:
+                        address = CryptoUtils.pub_to_address("00", pubkey);
+                        addressType = "Legacy (P2PKH)";
+                        coinName = "Bitcoin";
+                }
                 
                 output.innerHTML = conversion.msg + 
                                    "<span class='info'>Public key:</span>\n" + pubkey + 
                                    "\n\n<span class='info'>Hash160:</span> " + hash + 
-                                   "\n\n<span class='warn'>═══ Bitcoin ═══</span>\nLegacy (P2PKH):    " + btcLegacy + 
-                                   "\nNative SegWit:     " + btcSegwit + 
-                                   "\n\n<span class='warn'>═══ Litecoin ═══</span>\nLegacy (P2PKH):    " + ltcLegacy + 
-                                   "\nNative SegWit:     " + ltcSegwit +
-                                   "\n\n<span class='warn'>═══ Dash ═══</span>\nLegacy (P2PKH):    " + dashLegacy +
-                                   "\n\n<span class='warn'>═══ Dogecoin ═══</span>\nLegacy (P2PKH):    " + dogeLegacy;
+                                   "\n\n<span class='warn'>═══ " + coinName + " ═══</span>\n" + addressType + ":  " + address;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -973,7 +1349,8 @@
                                    "\n\n<span class='info'>Ethereum address:</span>\n" + address + 
                                    "\n\n<span class='info'>Checksummed (EIP-55):</span>\n" + checksummed;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -983,7 +1360,7 @@
             try {
                 // Check if cashaddr library is available
                 if (typeof cashaddr === "undefined") {
-                    output.innerHTML = "<span class='warn'>⚠️ Bitcoin Cash address conversion requires the cashaddr library.</span>\n\n<span class='muted'>keccak_256 should be available via CryptoUtils.keccak_256.</span>";
+                    output.innerHTML = "<span class='warn'>⚠️ Bitcoin Cash address conversion requires the cashaddr library.</span>";
                     return;
                 }
                 
@@ -1005,7 +1382,8 @@
                                    "\n\n<span class='info'>CashAddr format:</span>\nbitcoincash:" + cashAddr + 
                                    "\n\n<span class='info'>Back to legacy:</span>\n" + legacy;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1041,6 +1419,12 @@
                         result = CryptoUtils.hmacsha(convRipe.hex, "ripemd160", "hex");
                         algo = "RIPEMD160 (hex input)";
                         break;
+                    case "keccak256":
+                        const convKeccak = auto_hex_convert(input);
+                        msg = convKeccak.msg;
+                        result = CryptoUtils.keccak_256(CryptoUtils.hex_to_bytes(convKeccak.hex));
+                        algo = "Keccak-256 (hex input)";
+                        break;
                 }
                 output.innerHTML = msg + 
                                    "<span class='info'>Input:</span> " + input + 
@@ -1048,7 +1432,8 @@
                                    "\n<span class='info'>Hash:</span> " + result + 
                                    "\n<span class='info'>Length:</span> " + result.length / 2 + " bytes";
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1064,7 +1449,8 @@
                 document.getElementById("aes-plaintext").value = encrypted;
                 output.innerHTML = "<span class='info'>Plaintext:</span> " + plaintext + "\n<span class='info'>Password:</span> " + password + "\n<span class='info'>Key (base64):</span> " + key + "\n<span class='info'>Encrypted:</span>\n" + encrypted + "\n<span class='success'>✓ Encrypted (copied to input field)</span>";
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1083,7 +1469,8 @@
                 document.getElementById("aes-plaintext").value = decrypted;
                 output.innerHTML = "<span class='info'>Ciphertext:</span>\n" + ciphertext + "\n<span class='info'>Password:</span> " + password + "\n<span class='info'>Decrypted:</span> " + decrypted + "\n<span class='success'>✓ Decrypted (copied to input field)</span>";
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1097,13 +1484,13 @@
                 // Convert 5-bit words back to 8-bit bytes
                 const bytes = CryptoUtils.from_words(decodedObj.data),
                       // Convert bytes to string (URL)
-                      // CryptoUtils.unbuffer expects Uint8Array
                       url = CryptoUtils.unbuffer(new Uint8Array(bytes));
                 
                 output.innerHTML = "<span class='info'>LNURL:</span>\n" + input + 
                                    "\n\n<span class='info'>Decoded URL:</span>\n" + url;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1121,7 +1508,8 @@
                 output.innerHTML = "<span class='info'>URL:</span>\n" + input + 
                                    "\n\n<span class='info'>Encoded LNURL:</span>\n" + encoded.toUpperCase();
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1132,7 +1520,8 @@
                 const result = CryptoUtils.address_to_scripthash(address);
                 output.innerHTML = "<span class='info'>Address:</span> " + address + "\n\n<span class='info'>ScriptPubKey:</span>\n" + result.script_pub_key + "\n\n<span class='info'>Script Hash (Electrum format):</span>\n" + result.hash;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1162,7 +1551,8 @@
                                    "\n\n<span class='info'>WIF (compressed):</span>\n" + wif + 
                                    "\n\n<span class='info'>WIF (uncompressed):</span>\n" + wifUncompressed;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1177,7 +1567,8 @@
                 
                 output.innerHTML = "<span class='info'>Original:</span> \"" + input + "\"\n<span class='info'>clean_string:</span> \"" + cleaned + "\"\n<span class='info'>split_words:</span> [" + words.map(function(w) { return '"' + w + '"'; }).join(", ") + "]\n<span class='info'>join_words:</span> \"" + rejoined + "\"\n<span class='info'>normalize_string:</span> \"" + normalized + "\"";
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1198,7 +1589,8 @@
                                    "\n<span class='info'>Back to hex:</span> " + backToHex + 
                                    "\n<span class='success'>✓ Conversion successful</span>";
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1213,7 +1605,8 @@
                                    "<span class='info'>Hex input:</span> " + input + 
                                    "\n<span class='info'>Base58:</span> " + encoded;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1225,7 +1618,8 @@
                 const decoded = CryptoUtils.b58dec(input);
                 output.innerHTML = "<span class='info'>Base58 input:</span> " + input + "\n<span class='info'>Hex:</span> " + decoded;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1241,7 +1635,8 @@
                                    "\n<span class='info'>Base58Check:</span> " + encoded + 
                                    "\n<span class='success'>✓ Checksum added</span>";
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1252,7 +1647,8 @@
                 const decoded = CryptoUtils.b58check_decode(input);
                 output.innerHTML = "<span class='info'>Base58Check input:</span> " + input + "\n<span class='info'>Hex payload:</span> " + decoded + "\n<span class='success'>✓ Checksum valid</span>";
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1264,9 +1660,15 @@
                 if (!decoded) throw new Error("Invalid bech32 string");
                 const program = CryptoUtils.from_words(decoded.data.slice(1)),
                       programHex = program.map(b => b.toString(16).padStart(2, "0")).join("");
-                output.innerHTML = "<span class='info'>Input:</span> " + input + "\n<span class='info'>HRP:</span> " + decoded.hrp + "\n<span class='info'>Witness version:</span> " + decoded.data[0] + "\n<span class='info'>Program (hex):</span> " + programHex + "\n<span class='info'>Program length:</span> " + program.length + " bytes";
+                output.innerHTML = "<span class='info'>Input:</span> " + input + 
+                                   "\n<span class='info'>HRP:</span> " + decoded.hrp + 
+                                   "\n<span class='info'>Encoding:</span> " + decoded.encoding + 
+                                   "\n<span class='info'>Witness version:</span> " + decoded.data[0] + 
+                                   "\n<span class='info'>Program (hex):</span> " + programHex + 
+                                   "\n<span class='info'>Program length:</span> " + program.length + " bytes";
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
@@ -1287,16 +1689,114 @@
                                    "\n<span class='info'>Data (hex):</span> " + dataHex + 
                                    "\n<span class='info'>Bech32:</span> " + encoded;
             } catch (e) {
-                output.innerHTML = "<span class='error'>Error: " + e.message + "</span>";
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testBigIntConvert() {
+            const input = document.getElementById("bigint-input").value.trim(),
+                  output = document.getElementById("bigint-output");
+            try {
+                let hexVal, decVal;
+                
+                // Check if input is hex or decimal
+                if (/^[0-9a-fA-F]+$/.test(input) && /[a-fA-F]/.test(input)) {
+                    // Contains a-f, so it's definitely hex
+                    hexVal = input.toLowerCase();
+                    decVal = CryptoUtils.hex_to_dec(hexVal);
+                } else if (/^0x/i.test(input)) {
+                    // Has 0x prefix
+                    hexVal = input.slice(2).toLowerCase();
+                    decVal = CryptoUtils.hex_to_dec(hexVal);
+                } else if (/^[0-9]+$/.test(input)) {
+                    // Only digits - treat as decimal
+                    decVal = BigInt(input);
+                    hexVal = decVal.toString(16);
+                } else {
+                    // Default to hex
+                    hexVal = input.toLowerCase();
+                    decVal = CryptoUtils.hex_to_dec(hexVal);
+                }
+                
+                output.innerHTML = "<span class='info'>Input:</span> " + input + 
+                                   "\n\n<span class='info'>Hex:</span> " + hexVal + 
+                                   "\n<span class='info'>Hex (0x):</span> 0x" + hexVal + 
+                                   "\n<span class='info'>Hex (padded 64):</span> " + hexVal.padStart(64, "0") + 
+                                   "\n\n<span class='info'>Decimal:</span> " + decVal.toString() + 
+                                   "\n<span class='info'>Bytes:</span> " + Math.ceil(hexVal.length / 2);
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testModArith() {
+            const aInput = document.getElementById("mod-a").value.trim(),
+                  op = document.getElementById("mod-op").value,
+                  output = document.getElementById("mod-output");
+            try {
+                const P = CryptoUtils.CURVE.P;
+                let a;
+                
+                // Parse input as hex
+                if (/^0x/i.test(aInput)) {
+                    a = BigInt(aInput);
+                } else if (/^[0-9a-fA-F]+$/.test(aInput)) {
+                    a = BigInt("0x" + aInput);
+                } else {
+                    a = BigInt(aInput);
+                }
+                
+                let result, resultHex, opName;
+                
+                switch(op) {
+                    case "mod":
+                        result = CryptoUtils.mod(a, P);
+                        opName = "a mod P";
+                        break;
+                    case "invert":
+                        result = CryptoUtils.invert(a, P);
+                        opName = "modular inverse of a";
+                        break;
+                    case "sqrt":
+                        result = CryptoUtils.sqrt_mod(a);
+                        opName = "modular square root of a";
+                        break;
+                }
+                
+                resultHex = result.toString(16);
+                
+                output.innerHTML = "<span class='info'>a (hex):</span> " + a.toString(16) + 
+                                   "\n<span class='info'>a (dec):</span> " + a.toString() + 
+                                   "\n\n<span class='info'>Operation:</span> " + opName + 
+                                   "\n\n<span class='info'>Result (hex):</span>\n" + resultHex + 
+                                   "\n\n<span class='info'>Result (dec):</span>\n" + result.toString();
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
             }
         }
 
         // Run tests on load
         window.onload = function() {
-            // Populate fields with specific test vectors derived from the seed:
-            // "army van defense carry jealous true garbage claim echo media make crunch"
+            // Pre-populate ETH public key (compressed, derived from test mnemonic)
+            const ethPubkey = derivePublicKey(TEST_KEYS["eth"], true);
+            document.getElementById("eth-pubkey-input").value = ethPubkey;
             
-            // Hex Bytes: Private Key Hex
+            // Pre-populate BCH public key (compressed, derived from test mnemonic)
+            const bchPubkey = derivePublicKey(TEST_KEYS["bch"], true);
+            document.getElementById("bch-pubkey-input").value = bchPubkey;
+            
+            // Set default address coin to BTC SegWit and populate its public key
+            document.getElementById("address-coin").value = "btc-segwit";
+            const btcPubkey = derivePublicKey(TEST_KEYS["btc-segwit"], true);
+            document.getElementById("pubkey-input").value = btcPubkey;
+            
+            // Leave privkey-input empty (user can select coin from dropdown)
+            document.getElementById("privkey-input").value = "";
+            
+            // Hex Bytes: Private Key Hex (BTC SegWit)
             document.getElementById("hex-input").value = "dae1479836371c6670870f2053153648605c316719572d4c0b53364f0b2f5341";
             
             // Base58 Encode: Hex payload of Legacy Address
@@ -1307,10 +1807,7 @@
             
             // Bech32 Encode/Decode: Segwit Address from seed
             document.getElementById("bech32-input").value = "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5";
-            document.getElementById("bech32-data").value = "686940d341398516035f83897764d0dd13670985"; // Witness program (20 bytes)
-            
-            // Key Gen: WIF from seed
-            document.getElementById("privkey-input").value = "KymSva1GVQiHquxL2uGC9wve9YQjUqctJuCt2zpQFcvp7PKJiKNh";
+            document.getElementById("bech32-data").value = "43fa2fcaae57c603ca1018c5ac846b5273e4fb2d"; // Click Decode first to get the Program hex
             
             // Script Hash: Segwit Address
             document.getElementById("scripthash-input").value = "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5";

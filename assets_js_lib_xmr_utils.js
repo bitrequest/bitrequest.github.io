@@ -1,194 +1,261 @@
+/**
+ * XmrUtils - Standalone Monero cryptocurrency utilities
+ * 
+ * STANDALONE USAGE (outside Bitrequest):
+ * ----------------------------------------
+ * <script src="assets_js_lib_sjcl.js"></script>
+ * <script src="assets_js_lib_crypto_utils.js"></script>
+ * <script src="assets_js_lib_xmr_utils.js"></script>
+ * <script>
+ *   const keys = XmrUtils.xmr_getpubs(secret_spend_key, 0);
+ *   const amount = XmrUtils.decode_rct_amount(encrypted, shared_secret);
+ *   const tx = XmrUtils.parse_xmr_tx_hex(raw_tx_hex);
+ * </script>
+ * 
+ * FEATURES:
+ * - Monero key derivation (spend key, view key, subaddresses)
+ * - Address generation and validation
+ * - Transaction parsing and payment detection
+ * - RingCT amount decryption
+ * - Payment ID handling
+ * - Mnemonic seed conversion
+ * 
+ * DEPENDENCIES:
+ * - sjcl.js
+ * - crypto_utils.js (for hex_to_bytes, bytes_to_hex, keccak_256, egcd, etc.)
+ * 
+ * @version 1.1.0
+ * @license AGPL-3.0
+ * @see https://github.com/bitrequest/bitrequest.github.io
+ */
+
+// ============================================
+// CONSTANTS
+// ============================================
+
 const l = 7237005577332262213973186563042994240857116359379907606001950938285454250989n,
     xmr_words = [
         "abbey", "abducts", "ability", "ablaze", "abnormal", "abort", "abrasive", "absorb", "abyss", "academy", "aces", "aching", "acidic", "acoustic", "acquire", "across", "actress", "acumen", "adapt", "addicted", "adept", "adhesive", "adjust", "adopt", "adrenalin", "adult", "adventure", "aerial", "afar", "affair", "afield", "afloat", "afoot", "afraid", "after", "against", "agenda", "aggravate", "agile", "aglow", "agnostic", "agony", "agreed", "ahead", "aided", "ailments", "aimless", "airport", "aisle", "ajar", "akin", "alarms", "album", "alchemy", "alerts", "algebra", "alkaline", "alley", "almost", "aloof", "alpine", "already", "also", "altitude", "alumni", "always", "amaze", "ambush", "amended", "amidst", "ammo", "amnesty", "among", "amply", "amused", "anchor", "android", "anecdote", "angled", "ankle", "annoyed", "answers", "antics", "anvil", "anxiety", "anybody", "apart", "apex", "aphid", "aplomb", "apology", "apply", "apricot", "aptitude", "aquarium", "arbitrary", "archer", "ardent", "arena", "argue", "arises", "army", "around", "arrow", "arsenic", "artistic", "ascend", "ashtray", "aside", "asked", "asleep", "aspire", "assorted", "asylum", "athlete", "atlas", "atom", "atrium", "attire", "auburn", "auctions", "audio", "august", "aunt", "austere", "autumn", "avatar", "avidly", "avoid", "awakened", "awesome", "awful", "awkward", "awning", "awoken", "axes", "axis", "axle", "aztec", "azure", "baby", "bacon", "badge", "baffles", "bagpipe", "bailed", "bakery", "balding", "bamboo", "banjo", "baptism", "basin", "batch", "bawled", "bays", "because", "beer", "befit", "begun", "behind", "being", "below", "bemused", "benches", "berries", "bested", "betting", "bevel", "beware", "beyond", "bias", "bicycle", "bids", "bifocals", "biggest", "bikini", "bimonthly", "binocular", "biology", "biplane", "birth", "biscuit", "bite", "biweekly", "blender", "blip", "bluntly", "boat", "bobsled", "bodies", "bogeys", "boil", "boldly", "bomb", "border", "boss", "both", "bounced", "bovine", "bowling", "boxes", "boyfriend", "broken", "brunt", "bubble", "buckets", "budget", "buffet", "bugs", "building", "bulb", "bumper", "bunch", "business", "butter", "buying", "buzzer", "bygones", "byline", "bypass", "cabin", "cactus", "cadets", "cafe", "cage", "cajun", "cake", "calamity", "camp", "candy", "casket", "catch", "cause", "cavernous", "cease", "cedar", "ceiling", "cell", "cement", "cent", "certain", "chlorine", "chrome", "cider", "cigar", "cinema", "circle", "cistern", "citadel", "civilian", "claim", "click", "clue", "coal", "cobra", "cocoa", "code", "coexist", "coffee", "cogs", "cohesive", "coils", "colony", "comb", "cool", "copy", "corrode", "costume", "cottage", "cousin", "cowl", "criminal", "cube", "cucumber", "cuddled", "cuffs", "cuisine", "cunning", "cupcake", "custom", "cycling", "cylinder", "cynical", "dabbing", "dads", "daft", "dagger", "daily", "damp", "dangerous", "dapper", "darted", "dash", "dating", "dauntless", "dawn", "daytime", "dazed", "debut", "decay", "dedicated", "deepest", "deftly", "degrees", "dehydrate", "deity", "dejected", "delayed", "demonstrate", "dented", "deodorant", "depth", "desk", "devoid", "dewdrop", "dexterity", "dialect", "dice", "diet", "different", "digit", "dilute", "dime", "dinner", "diode", "diplomat", "directed", "distance", "ditch", "divers", "dizzy", "doctor", "dodge", "does", "dogs", "doing", "dolphin", "domestic", "donuts", "doorway", "dormant", "dosage", "dotted", "double", "dove", "down", "dozen", "dreams", "drinks", "drowning", "drunk", "drying", "dual", "dubbed", "duckling", "dude", "duets", "duke", "dullness", "dummy", "dunes", "duplex", "duration", "dusted", "duties", "dwarf", "dwelt", "dwindling", "dying", "dynamite", "dyslexic", "each", "eagle", "earth", "easy", "eating", "eavesdrop", "eccentric", "echo", "eclipse", "economics", "ecstatic", "eden", "edgy", "edited", "educated", "eels", "efficient", "eggs", "egotistic", "eight", "either", "eject", "elapse", "elbow", "eldest", "eleven", "elite", "elope", "else", "eluded", "emails", "ember", "emerge", "emit", "emotion", "empty", "emulate", "energy", "enforce", "enhanced", "enigma", "enjoy", "enlist", "enmity", "enough", "enraged", "ensign", "entrance", "envy", "epoxy", "equip", "erase", "erected", "erosion", "error", "eskimos", "espionage", "essential", "estate", "etched", "eternal", "ethics", "etiquette", "evaluate", "evenings", "evicted", "evolved", "examine", "excess", "exhale", "exit", "exotic", "exquisite", "extra", "exult", "fabrics", "factual", "fading", "fainted", "faked", "fall", "family", "fancy", "farming", "fatal", "faulty", "fawns", "faxed", "fazed", "feast", "february", "federal", "feel", "feline", "females", "fences", "ferry", "festival", "fetches", "fever", "fewest", "fiat", "fibula", "fictional", "fidget", "fierce", "fifteen", "fight", "films", "firm", "fishing", "fitting", "five", "fixate", "fizzle", "fleet", "flippant", "flying", "foamy", "focus", "foes", "foggy", "foiled", "folding", "fonts", "foolish", "fossil", "fountain", "fowls", "foxes", "foyer", "framed", "friendly", "frown", "fruit", "frying", "fudge", "fuel", "fugitive", "fully", "fuming", "fungal", "furnished", "fuselage", "future", "fuzzy", "gables", "gadget", "gags", "gained", "galaxy", "gambit", "gang", "gasp", "gather", "gauze", "gave", "gawk", "gaze", "gearbox", "gecko", "geek", "gels", "gemstone", "general", "geometry", "germs", "gesture", "getting", "geyser", "ghetto", "ghost", "giant", "giddy", "gifts", "gigantic", "gills", "gimmick", "ginger", "girth", "giving", "glass", "gleeful", "glide", "gnaw", "gnome", "goat", "goblet", "godfather", "goes", "goggles", "going", "goldfish", "gone", "goodbye", "gopher", "gorilla", "gossip", "gotten", "gourmet", "governing", "gown", "greater", "grunt", "guarded", "guest", "guide", "gulp", "gumball", "guru", "gusts", "gutter", "guys", "gymnast", "gypsy", "gyrate", "habitat", "hacksaw", "haggled", "hairy", "hamburger", "happens", "hashing", "hatchet", "haunted", "having", "hawk", "haystack", "hazard", "hectare", "hedgehog", "heels", "hefty", "height", "hemlock", "hence", "heron", "hesitate", "hexagon", "hickory", "hiding", "highway", "hijack", "hiker", "hills", "himself", "hinder", "hippo", "hire", "history", "hitched", "hive", "hoax", "hobby", "hockey", "hoisting", "hold", "honked", "hookup", "hope", "hornet", "hospital", "hotel", "hounded", "hover", "howls", "hubcaps", "huddle", "huge", "hull", "humid", "hunter", "hurried", "husband", "huts", "hybrid", "hydrogen", "hyper", "iceberg", "icing", "icon", "identity", "idiom", "idled", "idols", "igloo", "ignore", "iguana", "illness", "imagine", "imbalance", "imitate", "impel", "inactive", "inbound", "incur", "industrial", "inexact", "inflamed", "ingested", "initiate", "injury", "inkling", "inline", "inmate", "innocent", "inorganic", "input", "inquest", "inroads", "insult", "intended", "inundate", "invoke", "inwardly", "ionic", "irate", "iris", "irony", "irritate", "island", "isolated", "issued", "italics", "itches", "items", "itinerary", "itself", "ivory", "jabbed", "jackets", "jaded", "jagged", "jailed", "jamming", "january", "jargon", "jaunt", "javelin", "jaws", "jazz", "jeans", "jeers", "jellyfish", "jeopardy", "jerseys", "jester", "jetting", "jewels", "jigsaw", "jingle", "jittery", "jive", "jobs", "jockey", "jogger", "joining", "joking", "jolted", "jostle", "journal", "joyous", "jubilee", "judge", "juggled", "juicy", "jukebox", "july", "jump", "junk", "jury", "justice", "juvenile", "kangaroo", "karate", "keep", "kennel", "kept", "kernels", "kettle", "keyboard", "kickoff", "kidneys", "king", "kiosk", "kisses", "kitchens", "kiwi", "knapsack", "knee", "knife", "knowledge", "knuckle", "koala", "laboratory", "ladder", "lagoon", "lair", "lakes", "lamb", "language", "laptop", "large", "last", "later", "launching", "lava", "lawsuit", "layout", "lazy", "lectures", "ledge", "leech", "left", "legion", "leisure", "lemon", "lending", "leopard", "lesson", "lettuce", "lexicon", "liar", "library", "licks", "lids", "lied", "lifestyle", "light", "likewise", "lilac", "limits", "linen", "lion", "lipstick", "liquid", "listen", "lively", "loaded", "lobster", "locker", "lodge", "lofty", "logic", "loincloth", "long", "looking", "lopped", "lordship", "losing", "lottery", "loudly", "love", "lower", "loyal", "lucky", "luggage", "lukewarm", "lullaby", "lumber", "lunar", "lurk", "lush", "luxury", "lymph", "lynx", "lyrics", "macro", "madness", "magically", "mailed", "major", "makeup", "malady", "mammal", "maps", "masterful", "match", "maul", "maverick", "maximum", "mayor", "maze", "meant", "mechanic", "medicate", "meeting", "megabyte", "melting", "memoir", "menu", "merger", "mesh", "metro", "mews", "mice", "midst", "mighty", "mime", "mirror", "misery", "mittens", "mixture", "moat", "mobile", "mocked", "mohawk", "moisture", "molten", "moment", "money", "moon", "mops", "morsel", "mostly", "motherly", "mouth", "movement", "mowing", "much", "muddy", "muffin", "mugged", "mullet", "mumble", "mundane", "muppet", "mural", "musical", "muzzle", "myriad", "mystery", "myth", "nabbing", "nagged", "nail", "names", "nanny", "napkin", "narrate", "nasty", "natural", "nautical", "navy", "nearby", "necklace", "needed", "negative", "neither", "neon", "nephew", "nerves", "nestle", "network", "neutral", "never", "newt", "nexus", "nibs", "niche", "niece", "nifty", "nightly", "nimbly", "nineteen", "nirvana", "nitrogen", "nobody", "nocturnal", "nodes", "noises", "nomad", "noodles", "northern", "nostril", "noted", "nouns", "novelty", "nowhere", "nozzle", "nuance", "nucleus", "nudged", "nugget", "nuisance", "null", "number", "nuns", "nurse", "nutshell", "nylon", "oaks", "oars", "oasis", "oatmeal", "obedient", "object", "obliged", "obnoxious", "observant", "obtains", "obvious", "occur", "ocean", "october", "odds", "odometer", "offend", "often", "oilfield", "ointment", "okay", "older", "olive", "olympics", "omega", "omission", "omnibus", "onboard", "oncoming", "oneself", "ongoing", "onion", "online", "onslaught", "onto", "onward", "oozed", "opacity", "opened", "opposite", "optical", "opus", "orange", "orbit", "orchid", "orders", "organs", "origin", "ornament", "orphans", "oscar", "ostrich", "otherwise", "otter", "ouch", "ought", "ounce", "ourselves", "oust", "outbreak", "oval", "oven", "owed", "owls", "owner", "oxidant", "oxygen", "oyster", "ozone", "pact", "paddles", "pager", "pairing", "palace", "pamphlet", "pancakes", "paper", "paradise", "pastry", "patio", "pause", "pavements", "pawnshop", "payment", "peaches", "pebbles", "peculiar", "pedantic", "peeled", "pegs", "pelican", "pencil", "people", "pepper", "perfect", "pests", "petals", "phase", "pheasants", "phone", "phrases", "physics", "piano", "picked", "pierce", "pigment", "piloted", "pimple", "pinched", "pioneer", "pipeline", "pirate", "pistons", "pitched", "pivot", "pixels", "pizza", "playful", "pledge", "pliers", "plotting", "plus", "plywood", "poaching", "pockets", "podcast", "poetry", "point", "poker", "polar", "ponies", "pool", "popular", "portents", "possible", "potato", "pouch", "poverty", "powder", "pram", "present", "pride", "problems", "pruned", "prying", "psychic", "public", "puck", "puddle", "puffin", "pulp", "pumpkins", "punch", "puppy", "purged", "push", "putty", "puzzled", "pylons", "pyramid", "python", "queen", "quick", "quote", "rabbits", "racetrack", "radar", "rafts", "rage", "railway", "raking", "rally", "ramped", "randomly", "rapid", "rarest", "rash", "rated", "ravine", "rays", "razor", "react", "rebel", "recipe", "reduce", "reef", "refer", "regular", "reheat", "reinvest", "rejoices", "rekindle", "relic", "remedy", "renting", "reorder", "repent", "request", "reruns", "rest", "return", "reunion", "revamp", "rewind", "rhino", "rhythm", "ribbon", "richly", "ridges", "rift", "rigid", "rims", "ringing", "riots", "ripped", "rising", "ritual", "river", "roared", "robot", "rockets", "rodent", "rogue", "roles", "romance", "roomy", "roped", "roster", "rotate", "rounded", "rover", "rowboat", "royal", "ruby", "rudely", "ruffled", "rugged", "ruined", "ruling", "rumble", "runway", "rural", "rustled", "ruthless", "sabotage", "sack", "sadness", "safety", "saga", "sailor", "sake", "salads", "sample", "sanity", "sapling", "sarcasm", "sash", "satin", "saucepan", "saved", "sawmill", "saxophone", "sayings", "scamper", "scenic", "school", "science", "scoop", "scrub", "scuba", "seasons", "second", "sedan", "seeded", "segments", "seismic", "selfish", "semifinal", "sensible", "september", "sequence", "serving", "session", "setup", "seventh", "sewage", "shackles", "shelter", "shipped", "shocking", "shrugged", "shuffled", "shyness", "siblings", "sickness", "sidekick", "sieve", "sifting", "sighting", "silk", "simplest", "sincerely", "sipped", "siren", "situated", "sixteen", "sizes", "skater", "skew", "skirting", "skulls", "skydive", "slackens", "sleepless", "slid", "slower", "slug", "smash", "smelting", "smidgen", "smog", "smuggled", "snake", "sneeze", "sniff", "snout", "snug", "soapy", "sober", "soccer", "soda", "software", "soggy", "soil", "solved", "somewhere", "sonic", "soothe", "soprano", "sorry", "southern", "sovereign", "sowed", "soya", "space", "speedy", "sphere", "spiders", "splendid", "spout", "sprig", "spud", "spying", "square", "stacking", "stellar", "stick", "stockpile", "strained", "stunning", "stylishly", "subtly", "succeed", "suddenly", "suede", "suffice", "sugar", "suitcase", "sulking", "summon", "sunken", "superior", "surfer", "sushi", "suture", "swagger", "swept", "swiftly", "sword", "swung", "syllabus", "symptoms", "syndrome", "syringe", "system", "taboo", "tacit", "tadpoles", "tagged", "tail", "taken", "talent", "tamper", "tanks", "tapestry", "tarnished", "tasked", "tattoo", "taunts", "tavern", "tawny", "taxi", "teardrop", "technical", "tedious", "teeming", "tell", "template", "tender", "tepid", "tequila", "terminal", "testing", "tether", "textbook", "thaw", "theatrics", "thirsty", "thorn", "threaten", "thumbs", "thwart", "ticket", "tidy", "tiers", "tiger", "tilt", "timber", "tinted", "tipsy", "tirade", "tissue", "titans", "toaster", "tobacco", "today", "toenail", "toffee", "together", "toilet", "token", "tolerant", "tomorrow", "tonic", "toolbox", "topic", "torch", "tossed", "total", "touchy", "towel", "toxic", "toyed", "trash", "trendy", "tribal", "trolling", "truth", "trying", "tsunami", "tubes", "tucks", "tudor", "tuesday", "tufts", "tugs", "tuition", "tulips", "tumbling", "tunnel", "turnip", "tusks", "tutor", "tuxedo", "twang", "tweezers", "twice", "twofold", "tycoon", "typist", "tyrant", "ugly", "ulcers", "ultimate", "umbrella", "umpire", "unafraid", "unbending", "uncle", "under", "uneven", "unfit", "ungainly", "unhappy", "union", "unjustly", "unknown", "unlikely", "unmask", "unnoticed", "unopened", "unplugs", "unquoted", "unrest", "unsafe", "until", "unusual", "unveil", "unwind", "unzip", "upbeat", "upcoming", "update", "upgrade", "uphill", "upkeep", "upload", "upon", "upper", "upright", "upstairs", "uptight", "upwards", "urban", "urchins", "urgent", "usage", "useful", "usher", "using", "usual", "utensils", "utility", "utmost", "utopia", "uttered", "vacation", "vague", "vain", "value", "vampire", "vane", "vapidly", "vary", "vastness", "vats", "vaults", "vector", "veered", "vegan", "vehicle", "vein", "velvet", "venomous", "verification", "vessel", "veteran", "vexed", "vials", "vibrate", "victim", "video", "viewpoint", "vigilant", "viking", "village", "vinegar", "violin", "vipers", "virtual", "visited", "vitals", "vivid", "vixen", "vocal", "vogue", "voice", "volcano", "vortex", "voted", "voucher", "vowels", "voyage", "vulture", "wade", "waffle", "wagtail", "waist", "waking", "wallets", "wanted", "warped", "washing", "water", "waveform", "waxing", "wayside", "weavers", "website", "wedge", "weekday", "weird", "welders", "went", "wept", "were", "western", "wetsuit", "whale", "when", "whipped", "whole", "wickets", "width", "wield", "wife", "wiggle", "wildly", "winter", "wipeout", "wiring", "wise", "withdrawn", "wives", "wizard", "wobbly", "woes", "woken", "wolf", "womanly", "wonders", "woozy", "worry", "wounded", "woven", "wrap", "wrist", "wrong", "yacht", "yahoo", "yanks", "yard", "yawning", "yearbook", "yellow", "yesterday", "yeti", "yields", "yodel", "yoga", "younger", "yoyo", "zapped", "zeal", "zebra", "zero", "zesty", "zigzags", "zinger", "zippers", "zodiac", "zombie", "zones", "zoom"
     ],
     xmr_CURVE = {
-        a: -1n,
-        d: 37095705934669439343138083508754565189542113879843219016388785533085940283555n,
-        P: 2n ** 255n - 19n,
-        n: 2n ** 252n + 27742317777372353535851937790883648493n,
-        h: 8n,
-        Gx: 15112221349535400772501151409588531511454012693041857206046113283949847762202n,
-        Gy: 46316835694926478169428394003475163141307993866256225615783033603165251855960n,
+        "a": -1n,
+        "d": 37095705934669439343138083508754565189542113879843219016388785533085940283555n,
+        "P": 2n ** 255n - 19n,
+        "n": 2n ** 252n + 27742317777372353535851937790883648493n,
+        "h": 8n,
+        "Gx": 15112221349535400772501151409588531511454012693041857206046113283949847762202n,
+        "Gy": 46316835694926478169428394003475163141307993866256225615783033603165251855960n
     },
     ENCODING_LENGTH = 32,
     DIV_8_MINUS_3 = (xmr_CURVE.P + 3n) / 8n,
-    xmr_I = xpow_mod(2n, (xmr_CURVE.P + 1n) / 4n, xmr_CURVE.P),
-    xmr_pointPrecomputes = new WeakMap(),
-    cn_base_58 = (function() {
-        const b58 = {},
-            alphabet_str = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
-            alphabet = [];
-        for (let i = 0; i < alphabet_str.length; i++) {
-            alphabet.push(alphabet_str.charCodeAt(i));
+    xmr_pointPrecomputes = new WeakMap();
+
+// Precomputed constant for point decompression
+let xmr_I = null;
+
+// ============================================
+// MONERO BASE58 ENCODING
+// ============================================
+
+const cn_base_58 = (function() {
+    const b58 = {},
+        alphabet_str = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
+        alphabet = [];
+    for (let i = 0; i < alphabet_str.length; i++) {
+        alphabet.push(alphabet_str.charCodeAt(i));
+    }
+    const encoded_block_sizes = [0, 2, 3, 5, 6, 7, 9, 10, 11],
+        full_block_size = 8,
+        full_encoded_block_size = 11,
+        UINT64_MAX = BigInt("18446744073709551615");
+
+    function hextobin(hex) {
+        if (hex.length % 2 !== 0) throw "Hex string has invalid length!";
+        const res = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length / 2; ++i) {
+            res[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
         }
-        const encoded_block_sizes = [0, 2, 3, 5, 6, 7, 9, 10, 11],
-            alphabet_size = alphabet.length,
-            full_block_size = 8,
-            full_encoded_block_size = 11,
-            uint64_max = 2n ** 64n;
+        return res;
+    }
 
-        // Decodes a single block of Base58 encoded data
-        b58.decode_block = function(data, buf, index) {
-            if (data.length < 1 || data.length > full_encoded_block_size) {
-                throw "Invalid block length: " + data.length;
+    function bintohex(bin) {
+        const out = [];
+        for (let i = 0; i < bin.length; ++i) {
+            out.push(("0" + bin[i].toString(16)).slice(-2));
+        }
+        return out.join("");
+    }
+
+    function uint8_be_to_64(data) {
+        let num = 0n;
+        for (let i = 0; i < data.length; i++) {
+            num = (num << 8n) | BigInt(data[i]);
+        }
+        return num;
+    }
+
+    function uint64_to_8be(num, size) {
+        const res = new Uint8Array(size);
+        if (size < 1 || size > 8) {
+            throw "Invalid input length";
+        }
+        let twopow8 = 256n;
+        for (let i = size - 1; i >= 0; i--) {
+            res[i] = Number(num % twopow8);
+            num = num / twopow8;
+        }
+        return res;
+    }
+
+    function encode_block(data, buf, index) {
+        let num = uint8_be_to_64(data);
+        const i = encoded_block_sizes[data.length];
+        for (let s = i - 1; s >= 0; s--) {
+            buf[index + s] = alphabet[Number(num % 58n)];
+            num = num / 58n;
+        }
+        return buf;
+    }
+
+    function decode_block(data, buf, index) {
+        if (data.length < 1 || data.length > full_encoded_block_size) {
+            throw "Invalid block length: " + data.length;
+        }
+        const idx = encoded_block_sizes.indexOf(data.length);
+        if (idx === -1) {
+            throw "Invalid block size";
+        }
+        let num = 0n;
+        for (let i = 0; i < data.length; i++) {
+            const alpha_idx = alphabet.indexOf(data[i]);
+            if (alpha_idx === -1) {
+                throw "Invalid character";
             }
-            const res_size = encoded_block_sizes.indexOf(data.length);
-            if (res_size <= 0) {
-                throw "Invalid block size";
-            }
-            let res_num = 0n,
-                order = 1n;
-            for (let i = data.length - 1; i >= 0; i--) {
-                const digit = alphabet.indexOf(data[i]);
-                if (digit < 0) {
-                    throw "Invalid symbol";
-                }
-                const product = (order * BigInt(digit)) + BigInt(res_num);
-                if (product > uint64_max) { // UINT64_MAX as BigInt
-                    throw "Overflow";
-                }
-                res_num = product;
-                order = order * BigInt(alphabet_size);
-            }
-            if (res_size < full_block_size && ((2n ** BigInt(8 * res_size)) <= res_num)) {
-                throw "Overflow 2";
-            }
-            buf.set(uint64_to_8be(res_num, res_size), index);
-            return buf;
-        };
+            num = num * 58n + BigInt(alpha_idx);
+        }
+        if (num > UINT64_MAX) {
+            throw "Overflow";
+        }
+        const res = uint64_to_8be(num, idx);
+        for (let i = 0; i < res.length; i++) {
+            buf[index + i] = res[i];
+        }
+        return buf;
+    }
 
-        // Decodes a complete Base58 encoded string
-        b58.decode = function(encode) {
-            const enc = str_to_bin(encode);
-            if (enc.length === 0) {
-                return "";
-            }
-            const full_block_count = Math.floor(enc.length / full_encoded_block_size),
-                last_block_size = enc.length % full_encoded_block_size,
-                last_block_decoded_size = encoded_block_sizes.indexOf(last_block_size);
-            if (last_block_decoded_size < 0) {
-                throw "Invalid encoded length";
-            }
-            const data_size = full_block_count * full_block_size + last_block_decoded_size;
-            let data = uint_8array(data_size);
-            for (let i = 0; i < full_block_count; i++) {
-                data = b58.decode_block(enc.subarray(i * full_encoded_block_size, i * full_encoded_block_size + full_encoded_block_size), data, i * full_block_size);
-            }
-            if (last_block_size > 0) {
-                data = b58.decode_block(enc.subarray(full_block_count * full_encoded_block_size, full_block_count * full_encoded_block_size + last_block_size), data, full_block_count * full_block_size);
-            }
-            return bytes_to_hex(data);
-        };
-        return b58;
-    })();
+    b58.encode = function(hex) {
+        const data = hextobin(hex);
+        if (data.length === 0) return "";
+        const full_block_count = Math.floor(data.length / full_block_size),
+            last_block_size = data.length % full_block_size,
+            res_size = full_block_count * full_encoded_block_size + encoded_block_sizes[last_block_size];
+        let res = new Uint8Array(res_size);
+        for (let i = 0; i < full_block_count; i++) {
+            res = encode_block(data.subarray(i * full_block_size, i * full_block_size + full_block_size), res, i * full_encoded_block_size);
+        }
+        if (last_block_size > 0) {
+            res = encode_block(data.subarray(full_block_count * full_block_size, full_block_count * full_block_size + last_block_size), res, full_block_count * full_encoded_block_size);
+        }
+        return bintohex(res);
+    };
 
-// ** Core Buffer & Conversion Utilities: **
-//str_to_bin  
-//uint64_to_8be
-//bytes_to_number_le
-//uint32_hex
-//xmr_number_to_hex
+    b58.decode = function(enc) {
+        const data = str_to_bin(enc);
+        if (data.length === 0) return "";
+        const full_block_count = Math.floor(data.length / full_encoded_block_size),
+            last_block_size = data.length % full_encoded_block_size,
+            last_block_decoded_size = encoded_block_sizes.indexOf(last_block_size);
+        if (last_block_decoded_size < 0) {
+            throw "Invalid encoded length";
+        }
+        const data_size = full_block_count * full_block_size + last_block_decoded_size;
+        let data_res = new Uint8Array(data_size);
+        for (let i = 0; i < full_block_count; i++) {
+            data_res = decode_block(data.subarray(i * full_encoded_block_size, i * full_encoded_block_size + full_encoded_block_size), data_res, i * full_block_size);
+        }
+        if (last_block_size > 0) {
+            data_res = decode_block(data.subarray(full_block_count * full_encoded_block_size, full_block_count * full_encoded_block_size + last_block_size), data_res, full_block_count * full_block_size);
+        }
+        return bintohex(data_res);
+    };
 
-// ** Mathematical Foundations: **
-//xmod
-//xpow_mod
-//xmr_invert
-//xmr_invert_batch
+    return b58;
+})();
 
-// ** Base Classes & Points: **
-//ExtendedPoint class 
-//xPoint class
-//xmr_getpoint
-//point_multiply
-//xmr_get_publickey
+// ============================================
+// BYTE/NUMBER UTILITIES
+// ============================================
 
-// ** Mnemonic & Secret Key Generation: **
-//mn_random
-//secret_spend_key_to_words
-//get_ssk
-//sc_reduce32
-//crc_32
-//make_crc_table
-
-// ** Address Generation: **
-//pub_keys_to_address
-//xmr_getpubs
-//fasthash
-
-// ** Base58 Encoding: **
-//base58_encode
-
-// ** View Key Management: **
-//get_vk
-//vk_obj
-//share_vk
-//get_spend_pubkey_from_address
-
-// ** Payment ID Functions: **
-//xmr_pid
-//check_pid
-//parse_xmr_tx_hex
-//decode_rct_amount
-//extract_xmr_payment_id
-
-// ** Core Buffer & Conversion Utilities: **
-
-// Creates a Uint8Array from a string by converting each character to its ASCII value
+// Converts string to binary Uint8Array
 function str_to_bin(str) {
-    const res = uint_8array(str.length);
+    const res = new Uint8Array(str.length);
     for (let i = 0; i < str.length; i++) {
         res[i] = str.charCodeAt(i);
     }
     return res;
 }
 
-// Converts a BigInt to a fixed-size big-endian byte array with range validation
+// Converts unsigned 64-bit integer to big-endian byte array
 function uint64_to_8be(num, size) {
-    const res = uint_8array(size);
+    const res = new Uint8Array(size);
     if (size < 1 || size > 8) {
         throw "Invalid input length";
     }
-    const twopow8 = 2n ** 8n;
+    let twopow8 = 256n;
     for (let i = size - 1; i >= 0; i--) {
-        res[i] = Number(num % twopow8); // Convert remainder to Number
-        num = num / twopow8; // BigInt division
+        res[i] = Number(num % twopow8);
+        num = num / twopow8;
     }
     return res;
 }
 
-// Converts a byte array to BigInt using little-endian byte ordering with bit-shifting
+// Converts Uint8Array to BigInt (little-endian)
 function bytes_to_number_le(uint8a) {
-    let value = 0n;
-    for (let i = 0; i < uint8a.length; i++) {
-        value += BigInt(uint8a[i]) << (8n * BigInt(i));
+    let num = 0n;
+    for (let i = uint8a.length - 1; i >= 0; i--) {
+        num = (num << 8n) | BigInt(uint8a[i]);
     }
-    return value;
+    return num;
 }
 
-// Formats a 32-bit number as an 8-character little-endian hex string
+// Converts 32-bit unsigned integer to 8-character hex string
 function uint32_hex(value) {
-    let h = value.toString(16);
-    if (h.length > 8) throw "value must not equal or exceed 2^32";
-    while (h.length < 8) h = "0" + h;
-    return h.match(/../g).reverse().join("");
+    const buffer = new ArrayBuffer(4),
+        view = new DataView(buffer);
+    view.setUint32(0, value, true);
+    return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Converts a positive integer to hexadecimal with leading zero padding
+// Converts BigInt to hexadecimal string with even length padding
 function xmr_number_to_hex(num) {
     const hex = num.toString(16);
     return hex.length % 2 === 1 ? "0" + hex : hex;
 }
 
-// ** Mathematical Foundations: **
+// ============================================
+// MONERO MODULAR ARITHMETIC
+// ============================================
 
-// Performs modular arithmetic with optional modulus defaulting to Monero curve order P
+// Computes modular reduction with positive result (ed25519 curve)
 function xmod(a, b = xmr_CURVE.P) {
     const res = a % b;
     return res >= 0n ? res : b + res;
 }
 
-// Computes modular multiplicative inverse using Extended Euclidean Algorithm with optional curve modulus
+// Computes modular exponentiation using square-and-multiply algorithm (ed25519)
+function xpow_mod(a, power, m = xmr_CURVE.P) {
+    let res = 1n;
+    while (power > 0n) {
+        if (power & 1n) {
+            res = xmod(res * a, m);
+        }
+        power >>= 1n;
+        a = xmod(a * a, m);
+    }
+    return res;
+}
+
+// Computes modular multiplicative inverse using Extended Euclidean Algorithm
 function xmr_invert(number, modulo = xmr_CURVE.P) {
     if (number === 0n || modulo <= 0n) {
         throw new Error("invert: expected positive integers");
@@ -200,7 +267,7 @@ function xmr_invert(number, modulo = xmr_CURVE.P) {
     return xmod(x, modulo);
 }
 
-// Efficiently computes multiple modular inverses using Montgomery's batch inversion algorithm
+// Efficiently computes multiple modular inverses using Montgomery's batch inversion
 function xmr_invert_batch(nums, n = xmr_CURVE.P) {
     const len = nums.length,
         scratch = new Array(len);
@@ -222,7 +289,9 @@ function xmr_invert_batch(nums, n = xmr_CURVE.P) {
     return nums;
 }
 
-// ** Base Classes & Points: **
+// ============================================
+// EXTENDED POINT (ED25519)
+// ============================================
 
 class ExtendedPoint {
     constructor(x, y, z, t) {
@@ -232,7 +301,6 @@ class ExtendedPoint {
         this.t = t;
     }
 
-    // Converts an affine point to an extended point
     static fromAffine(p) {
         if (!(p instanceof xPoint)) {
             throw new TypeError("ExtendedPoint#fromAffine: expected Point");
@@ -242,23 +310,19 @@ class ExtendedPoint {
         return new ExtendedPoint(p.x, p.y, 1n, xmod(p.x * p.y));
     }
 
-    // Converts a batch of extended points to affine points
     static toAffineBatch(points) {
         const toInv = xmr_invert_batch(points.map((p) => p.z));
         return points.map((p, i) => p.toAffine(toInv[i]));
     }
 
-    // Normalizes the Z coordinate of a batch of points
     static normalizeZ(points) {
         return this.toAffineBatch(points).map(this.fromAffine);
     }
 
-    // Negates the point
     negate() {
         return new ExtendedPoint(xmod(-this.x), this.y, this.z, xmod(-this.t));
     }
 
-    // Doubles the point
     double() {
         const X1 = this.x,
             Y1 = this.y,
@@ -281,7 +345,6 @@ class ExtendedPoint {
         return new ExtendedPoint(X3, Y3, Z3, T3);
     }
 
-    // Adds another point to this point
     add(other) {
         const X1 = this.x,
             Y1 = this.y,
@@ -309,7 +372,6 @@ class ExtendedPoint {
         return new ExtendedPoint(X3, Y3, Z3, T3);
     }
 
-    // Precomputes window of points for faster multiplication
     precomputeWindow(W) {
         const windows = 256 / W + 1;
         let points = [],
@@ -327,7 +389,6 @@ class ExtendedPoint {
         return points;
     }
 
-    // Implements the w-ary non-adjacent form (wNAF) method for point multiplication
     wNAF(n, affinePoint) {
         if (!affinePoint && this.equals(ExtendedPoint.BASE))
             affinePoint = xPoint.BASE;
@@ -368,7 +429,6 @@ class ExtendedPoint {
         return [p, f];
     }
 
-    // Multiplies the point by a scalar
     multiply(scalar, affinePoint) {
         if (typeof scalar !== "number" && typeof scalar !== "bigint") {
             throw new TypeError("Point#multiply: expected number or bigint");
@@ -380,14 +440,21 @@ class ExtendedPoint {
         return ExtendedPoint.normalizeZ(this.wNAF(n, affinePoint))[0];
     }
 
-    // Converts the extended point to an affine point
     toAffine(invZ = xmr_invert(this.z)) {
         const x = xmod(this.x * invZ),
             y = xmod(this.y * invZ);
         return new xPoint(x, y);
     }
+
+    equals(other) {
+        return this.x === other.x && this.y === other.y && this.z === other.z && this.t === other.t;
+    }
 }
 ExtendedPoint.ZERO = new ExtendedPoint(0n, 1n, 1n, 0n);
+
+// ============================================
+// AFFINE POINT (ED25519)
+// ============================================
 
 class xPoint {
     constructor(x, y) {
@@ -395,13 +462,11 @@ class xPoint {
         this.y = y;
     }
 
-    // Sets the window size for precomputation
     _setWindowSize(windowSize) {
         this._WINDOW_SIZE = windowSize;
         xmr_pointPrecomputes.delete(this);
     }
 
-    // Creates a point from a hexadecimal string
     static fromHex(hash) {
         const {
             d,
@@ -418,6 +483,10 @@ class xPoint {
         }
         const sqrY = y * y,
             sqrX = xmod((sqrY - 1n) * xmr_invert(d * sqrY + 1n));
+        // Lazy init xmr_I
+        if (xmr_I === null) {
+            xmr_I = xpow_mod(2n, (xmr_CURVE.P + 1n) / 4n, xmr_CURVE.P);
+        }
         let x = xpow_mod(sqrX, DIV_8_MINUS_3);
         if (xmod(x * x - sqrX) !== 0n) {
             x = xmod(x * xmr_I);
@@ -429,7 +498,6 @@ class xPoint {
         return new xPoint(x, y);
     }
 
-    // Converts the point to raw bytes
     toRawBytes() {
         const hex = xmr_number_to_hex(this.y),
             u8 = uint_8array(ENCODING_LENGTH);
@@ -441,22 +509,18 @@ class xPoint {
         return u8;
     }
 
-    // Converts the point to a hexadecimal string
     toHex() {
         return bytes_to_hex(this.toRawBytes());
     }
 
-    // Checks if this point is equal to another point
     equals(other) {
         return this.x === other.x && this.y === other.y;
     }
 
-    // Adds another point to this point
     add(other) {
         return ExtendedPoint.fromAffine(this).add(ExtendedPoint.fromAffine(other)).toAffine();
     }
 
-    // Multiplies this point by a scalar
     multiply(scalar) {
         return ExtendedPoint.fromAffine(this).multiply(scalar, this).toAffine();
     }
@@ -464,6 +528,10 @@ class xPoint {
 xPoint.BASE = new xPoint(xmr_CURVE.Gx, xmr_CURVE.Gy);
 xPoint.ZERO = new xPoint(0n, 1n);
 xPoint.BASE._setWindowSize(8);
+
+// ============================================
+// KEY OPERATIONS
+// ============================================
 
 // Constructs an elliptic curve point from a 32-byte hex string representation
 function xmr_getpoint(hex) {
@@ -480,7 +548,7 @@ function xmr_get_publickey(privateKey) {
     return point_multiply(privateKey).toHex();
 }
 
-// Converts an elliptic curve point to Monero's compressed hex format (y-coordinate with x-parity bit)
+// Converts an elliptic curve point to Monero's compressed hex format
 function point_to_monero_hex(point) {
     const y_hex = point.y.toString(16).padStart(64, "0"),
         y_bytes = [];
@@ -493,7 +561,9 @@ function point_to_monero_hex(point) {
     return y_bytes.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// ** Mnemonic & Secret Key Generation: **
+// ============================================
+// MNEMONIC & SECRET KEY GENERATION
+// ============================================
 
 // Generates cryptographically secure random bits using browser's crypto API
 function mn_random(bits) {
@@ -516,7 +586,6 @@ function mn_random(bits) {
     if (arr_is_zero()) {
         throw "Something went wrong and we could not securely generate random data for your account";
     }
-    // Convert to hex
     let out = "";
     for (let j = 0; j < bits / 32; ++j) {
         out += ("0000000" + array[j].toString(16)).slice(-8);
@@ -564,6 +633,10 @@ function sc_reduce32(hex) {
     return hex_to_bytes(str_pad((BigInt("0x" + bytes_to_hex(hex_to_bytes(hex).reverse())) % l).toString(16), 64)).reverse();
 }
 
+// ============================================
+// CRC32 CHECKSUM
+// ============================================
+
 // Calculates a 32-bit CRC checksum using the IEEE 802.3 polynomial
 function crc_32(str) {
     let crcTable = window.crcTable || (window.crcTable = make_crc_table()),
@@ -588,9 +661,11 @@ function make_crc_table() {
     return crcTable;
 }
 
-// ** Address Generation: **
+// ============================================
+// ADDRESS GENERATION
+// ============================================
 
-// Generates a standardized Monero address from public keys with network-specific prefix (12 for mainnet, 2a for subaddress)
+// Generates a standardized Monero address from public keys with network-specific prefix
 function pub_keys_to_address(psk, pvk, index) {
     const pref = (index < 1) ? "12" : "2a",
         res_hex = pref + psk + pvk,
@@ -598,7 +673,7 @@ function pub_keys_to_address(psk, pvk, index) {
     return base58_encode(hex_to_bytes(cpa));
 }
 
-// Generates Monero keys and addresses from secret spend key, supporting both standard and subaddresses via index
+// Generates Monero keys and addresses from secret spend key
 function xmr_getpubs(ssk, index) {
     const sskh = bytes_to_hex(ssk),
         svk = bytes_to_hex(sc_reduce32(fasthash(sskh))),
@@ -632,12 +707,18 @@ function xmr_getpubs(ssk, index) {
     }
 }
 
+// ============================================
+// HASHING
+// ============================================
+
 // Computes and returns a Keccak-256 hash of input hexadecimal data
 function fasthash(hex) {
     return keccak_256(hex_to_bytes(hex));
 }
 
-// ** Base58 Encoding: **
+// ============================================
+// BASE58 ENCODING (MONERO-SPECIFIC)
+// ============================================
 
 // Implements Monero's modified Base58 encoding algorithm for address generation
 function base58_encode(data) {
@@ -678,7 +759,9 @@ function base58_encode(data) {
     return resu;
 }
 
-// ** View Key Management: **
+// ============================================
+// VIEW KEY MANAGEMENT
+// ============================================
 
 // Retrieves cached view key data for a Monero address from storage
 function get_vk(address) {
@@ -717,6 +800,7 @@ function share_vk() {
     return false
 }
 
+// Extracts spend pubkey from Monero address
 function get_spend_pubkey_from_address(address) {
     try {
         const decoded = cn_base_58.decode(address);
@@ -727,7 +811,9 @@ function get_spend_pubkey_from_address(address) {
     }
 }
 
-// ** Payment ID Functions: **
+// ============================================
+// PAYMENT ID FUNCTIONS
+// ============================================
 
 // Generates a 16-byte cryptographically secure random payment ID
 function xmr_pid() {
@@ -738,7 +824,7 @@ function xmr_pid() {
 function check_pid(payment_id) {
     const payment_id_length = payment_id.length;
     if (payment_id_length !== 16) {
-        return false // invalid length
+        return false
     }
     const pattern = RegExp("^[0-9a-fA-F]{16}$");
     if (pattern.test(payment_id) != true) {
@@ -747,12 +833,15 @@ function check_pid(payment_id) {
     return true
 }
 
-// Decodes a Monero transaction from hex string into a structured object with inputs, outputs, and signatures
+// ============================================
+// TRANSACTION PARSING
+// ============================================
+
+// Decodes a Monero transaction from hex string into a structured object
 function parse_xmr_tx_hex(tx_hex) {
     const bytes = hex_to_bytes(tx_hex);
     let offset = 0;
 
-    // Reads a variable-length integer (small numbers use fewer bytes, large numbers use more)
     function read_varint() {
         let result = 0n,
             shift = 0n;
@@ -765,7 +854,6 @@ function parse_xmr_tx_hex(tx_hex) {
         return result;
     }
 
-    // Reads a fixed number of bytes from the current position and advances the offset
     function read_bytes(count) {
         const result = bytes.slice(offset, offset + count);
         offset += count;
@@ -775,7 +863,7 @@ function parse_xmr_tx_hex(tx_hex) {
     const tx = {};
     tx.version = Number(read_varint());
     tx.unlock_time = Number(read_varint());
-    // Inputs
+
     const vin_count = read_varint();
     tx.vin = [];
     for (let i = 0; i < vin_count; i++) {
@@ -794,7 +882,7 @@ function parse_xmr_tx_hex(tx_hex) {
             });
         }
     }
-    // Outputs
+
     const vout_count = Number(read_varint());
     tx.vout = [];
     for (let i = 0; i < vout_count; i++) {
@@ -813,10 +901,10 @@ function parse_xmr_tx_hex(tx_hex) {
         }
         tx.vout.push(output);
     }
-    // Extra
+
     const extra_size = Number(read_varint());
     tx.extra = Array.from(read_bytes(extra_size));
-    // RCT signatures
+
     if (offset < bytes.length) {
         const rct_type = bytes[offset++];
         tx.rct_signatures = {
@@ -843,48 +931,46 @@ function extract_xmr_payment_id(extra_bytes, tx_pub_key, view_key) {
     let i = 0;
     while (i < extra_bytes.length) {
         const tag = extra_bytes[i];
-        if (tag === 0x00) { // Padding
+        if (tag === 0x00) {
             i++;
             continue;
         }
-        if (tag === 0x01) { // TX pubkey
+        if (tag === 0x01) {
             i += 33;
             continue;
         }
-        if (tag === 0x02) { // Nonce (includes payment IDs)
+        if (tag === 0x02) {
             if (i + 2 >= extra_bytes.length) break;
             const length = extra_bytes[i + 1],
                 nonce_type = extra_bytes[i + 2];
-            if (nonce_type === 0x01 && length === 0x09) { // Encrypted payment ID
+            if (nonce_type === 0x01 && length === 0x09) {
                 if (i + 11 > extra_bytes.length) return false;
                 const encrypted_pid = extra_bytes.slice(i + 3, i + 11),
                     r_point = xmr_getpoint(tx_pub_key),
                     a_scalar = bytes_to_number_le(hex_to_bytes(view_key)),
                     derivation_point = r_point.multiply(a_scalar).multiply(8n),
-                    derivation_bytes = derivation_point.toRawBytes(), // 32 bytes
-                    tail_byte = new Uint8Array([0x8d]), // CRITICAL: Append tail byte 0x8d (ENCRYPTED_PAYMENT_ID_TAIL)
-                    hash_input = concat_bytes(derivation_bytes, tail_byte), // 33 bytes
+                    derivation_bytes = derivation_point.toRawBytes(),
+                    tail_byte = new Uint8Array([0x8d]),
+                    hash_input = concat_bytes(derivation_bytes, tail_byte),
                     hash = fasthash(bytes_to_hex(hash_input)),
                     key = hex_to_bytes(hash.slice(0, 16)),
-                    decrypted_pid = new Uint8Array(8); // XOR decrypt
+                    decrypted_pid = new Uint8Array(8);
                 for (let j = 0; j < 8; j++) {
                     decrypted_pid[j] = encrypted_pid[j] ^ key[j];
                 }
                 const payment_id_hex = bytes_to_hex(decrypted_pid);
-                // Return false if payment ID is all zeros
-                if (payment_id_hex == 0000000000000000) {
+                if (payment_id_hex === "0000000000000000") {
                     return false;
                 }
                 return {
                     "type": "encrypted",
                     "payment_id": payment_id_hex
                 };
-            } else if (nonce_type === 0x00 && length === 0x21) { // Unencrypted (deprecated)
+            } else if (nonce_type === 0x00 && length === 0x21) {
                 if (i + 35 > extra_bytes.length) return false;
                 const unencrypted_pid = extra_bytes.slice(i + 3, i + 35),
                     payment_id_hex = bytes_to_hex(unencrypted_pid);
-                // Return false if payment ID is all zeros
-                if (payment_id_hex == 00000000000000000000000000000000000000000000000000000000000000) {
+                if (payment_id_hex === "00000000000000000000000000000000000000000000000000000000000000") {
                     return false;
                 }
                 return {
@@ -895,7 +981,7 @@ function extract_xmr_payment_id(extra_bytes, tx_pub_key, view_key) {
             i += 2 + length;
             continue;
         }
-        if (tag === 0x04) { // Additional pubkeys
+        if (tag === 0x04) {
             const count = extra_bytes[i + 1];
             i += 2 + (count * 32);
             continue;
@@ -905,26 +991,23 @@ function extract_xmr_payment_id(extra_bytes, tx_pub_key, view_key) {
     return false;
 }
 
-// Decrypts the amount for a specific output in a RingCT transaction.
+// Decrypts the amount for a specific output in a RingCT transaction
 function decode_rct_amount(rct, output_idx, shared_secret_hex) {
     const encrypted_amount_hex = rct?.ecdhInfo?.[output_idx]?.amount;
     if (!encrypted_amount_hex) return null;
     const rct_type = rct.type;
     let scalar;
 
-    // For RCT type 5 (CLSAG) and 6 (Bulletproof+): Include output index
     if (rct_type === 5 || rct_type === 6) {
         const derivation_data = concat_bytes(
             hex_to_bytes(shared_secret_hex),
             encode_varint(output_idx)
         );
-        scalar = bytes_to_hex(sc_reduce32(fasthash(bytes_to_hex(derivation_data)))); // ✓ Reduce scalar!
+        scalar = bytes_to_hex(sc_reduce32(fasthash(bytes_to_hex(derivation_data))));
     } else {
-        // Old (RCT types 1-4): No output index
-        scalar = bytes_to_hex(sc_reduce32(fasthash(shared_secret_hex))); // ✓ Reduce scalar!
+        scalar = bytes_to_hex(sc_reduce32(fasthash(shared_secret_hex)));
     }
 
-    // Hash("amount" || scalar) to get decryption key
     const prefix_bytes = str_to_bin("amount"),
         hash_input = concat_bytes(prefix_bytes, hex_to_bytes(scalar)),
         amount_key = fasthash(bytes_to_hex(hash_input)),
@@ -932,51 +1015,19 @@ function decode_rct_amount(rct, output_idx, shared_secret_hex) {
         encrypted_bytes = hex_to_bytes(encrypted_amount_hex),
         decrypted_bytes = new Uint8Array(8);
 
-    // XOR to decrypt
     for (let i = 0; i < 8; i++) {
         decrypted_bytes[i] = encrypted_bytes[i] ^ key_bytes[i];
     }
     return bytes_to_number_le(decrypted_bytes);
 }
 
-/**
- * XmrUtils - Standalone Monero cryptocurrency utilities
- * 
- * STANDALONE USAGE (outside Bitrequest):
- * ----------------------------------------
- * <script src="assets_js_lib_sjcl.js"></script>
- * <script src="assets_js_lib_crypto_utils.js"></script>
- * <script src="assets_js_lib_xmr_utils.js"></script>
- * <script>
- *   // Derive Monero keys from BIP39 seed
- *   const keys = XmrUtils.xmr_getpubs(secret_spend_key, 0);
- *   
- *   // Decode RCT amount from transaction
- *   const amount = XmrUtils.decode_rct_amount(encrypted, shared_secret);
- *   
- *   // Parse transaction for payment detection
- *   const tx = XmrUtils.parse_xmr_tx_hex(raw_tx_hex);
- * </script>
- * 
- * FEATURES:
- * - Monero key derivation (spend key, view key, subaddresses)
- * - Address generation and validation
- * - Transaction parsing and payment detection
- * - RingCT amount decryption
- * - Payment ID handling
- * - Mnemonic seed conversion
- * 
- * DEPENDENCIES:
- * - assets_js_lib_sjcl.js
- * - assets_js_lib_crypto_utils.js (for hex_to_bytes, bytes_to_hex, keccak_256, etc.)
- * 
- * @license AGPL-3.0
- * @see https://github.com/bitrequest/bitrequest.github.io
- */
+// ============================================
+// MODULE EXPORT
+// ============================================
 
 const XmrUtils = {
     // Library info
-    VERSION: "1.0.0",
+    VERSION: "1.1.0",
 
     // Curve parameters
     xmr_CURVE: xmr_CURVE,
@@ -1030,3 +1081,6 @@ const XmrUtils = {
     extract_xmr_payment_id,
     decode_rct_amount
 };
+
+// Make XmrUtils globally available
+window.XmrUtils = XmrUtils;

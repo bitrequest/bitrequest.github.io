@@ -852,7 +852,7 @@ function verify_words() {
     $(document).on("input", "#seed_verify_box input", function(e) {
         const input_field = $(this),
             word_box = input_field.closest(".checkword_box"),
-            target_word = input_field.data("word"),
+            target_word = String(input_field.data("word")),
             input_value = input_field.val();
         if (input_value === target_word) {
             input_field.blur();

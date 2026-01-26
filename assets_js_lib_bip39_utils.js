@@ -1,11 +1,39 @@
-// BIP39 Utils - Standalone BIP39/BIP32 Cryptocurrency Utilities Library
-// Extracted from bitrequest for reuse as a standalone library
-// Dependencies: sjcl.js, crypto_utils.js
-// Repository: https://github.com/bitrequest/bitrequest.github.io
-// bip39 (All addresses / xpubs in this app are test addresses derived from the following testphrase, taken from https://github.com/bitcoinbook/bitcoinbook/blob/f8b883dcd4e3d1b9adf40fed59b7e898fbd9241f/ch05.asciidoc)
+/**
+ * Bip39Utils - Standalone BIP39/BIP32 Cryptocurrency Utilities Library
+ * 
+ * STANDALONE USAGE (outside Bitrequest):
+ * ----------------------------------------
+ * <script src="assets_js_lib_sjcl.js"></script>
+ * <script src="assets_js_lib_crypto_utils.js"></script>
+ * <script src="assets_js_lib_bip39_utils.js"></script>
+ * <script>
+ *   const mnemonic = Bip39Utils.generate_mnemonic(12);
+ *   const seed = Bip39Utils.mnemonic_to_seed(mnemonic);
+ *   const keys = Bip39Utils.derive_x(params);
+ * </script>
+ * 
+ * FEATURES:
+ * - BIP39 mnemonic generation and validation
+ * - BIP32 hierarchical deterministic key derivation
+ * - Extended public/private key encoding
+ * - Multi-currency address generation
+ * - Support for Bitcoin, Litecoin, Ethereum, Dogecoin, Dash, Bitcoin Cash
+ * 
+ * DEPENDENCIES:
+ * - sjcl.js
+ * - crypto_utils.js
+ * 
+ * @version 1.1.0
+ * @license AGPL-3.0
+ * @see https://github.com/bitrequest/bitrequest.github.io
+ */
+
+// ============================================
+// CONSTANTS
+// ============================================
 
 const bip39_utils_const = {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "test_phrase": "army van defense carry jealous true garbage claim echo media make crunch",
     "expected_seed": "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570",
     "expected_address": "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm"
@@ -190,7 +218,7 @@ function derive_child_key(parent_key, chain_code, child_index, is_public, is_har
         const key_point = secp.Point.fromPrivateKey(child_key);
         derived_keys.key = secp.Point.fromHex(parent_key).add(key_point).toHex(true);
     } else {
-        const child_decimal = (hex_to_dec(parent_key) + hex_to_dec(child_key)) % oc;
+        const child_decimal = (hex_to_dec(parent_key) + hex_to_dec(child_key)) % CURVE.n;
         derived_keys.key = str_pad(child_decimal.toString(16), 64);
     }
     derived_keys.chaincode = child_chain;
@@ -228,69 +256,53 @@ function keypair_array(seed, indices, start_index, derive_path, bip32_config, ke
     return derived_pairs;
 }
 
+// ============================================
+// EXTENDED KEY ENCODING
+// ============================================
+
 // Creates extended private and public keys from key object
 function ext_keys(key_data, coin_or_config) {
     const extended_keys = {},
         ext_payload = b58c_x_payload(key_data, coin_or_config),
         private_key = key_data.key;
-    extended_keys.ext_key = b58check_encode(ext_payload);
-    if (key_data.xpub === false) {
-        const public_key = get_publickey(private_key),
-            pub_data = {
-                "chaincode": key_data.chaincode,
-                "purpose": key_data.purpose,
-                "childnumber": key_data.childnumber,
-                "depth": key_data.depth,
-                "fingerprint": key_data.fingerprint,
-                "xpub": true,
-                "key": public_key
-            },
-            pub_payload = b58c_x_payload(pub_data, coin_or_config),
-            ext_pubkey = b58check_encode(pub_payload);
-        extended_keys.ext_pub = ext_pubkey;
-    }
+    extended_keys.xprv = b58check_encode(ext_payload.private);
+    extended_keys.xpub = b58check_encode(ext_payload.public);
     return extended_keys;
 }
 
-// Builds xpub object from derivation parameters
+// Creates xpub object from derivation data
 function xpub_obj(coin_or_config, root_path, chain_code, key) {
-    const derive_params = {
-            "dpath": root_path.slice(0, -3),
-            "key": key,
-            "cc": chain_code
-        },
-        derived_keys = derive_x(derive_params),
-        extended_keys = ext_keys(derived_keys, coin_or_config),
-        xpub_key = extended_keys.ext_pub,
-        xpub_id = hmacsha(xpub_key, "sha256").slice(0, 8);
+    const bip32_config = (typeof coin_or_config === "object") ? coin_or_config : get_bip32dat(coin_or_config),
+        pub_version = bip32_config.prefix.pubz || bip32_config.prefix.pubx,
+        versionh = str_pad(dec_to_hex(pub_version), 8),
+        depth = "03",
+        fingerprint = "00000000",
+        childnumber = "80000000",
+        xpub_hex = versionh + depth + fingerprint + childnumber + chain_code + key;
     return {
-        "xpub": xpub_key,
-        "xpubid": xpub_id,
-        "prefix": xpub_key.slice(0, 4)
+        "xpub": b58check_encode(xpub_hex),
+        "version": versionh
     }
 }
 
-// Creates Base58Check payload for extended key encoding
+// Constructs Base58Check payload for extended keys
 function b58c_x_payload(key_data, coin_or_config) {
-    // Accept either coin string or config object directly
-    const xpub_config = typeof coin_or_config === "string" ? get_bip32dat(coin_or_config) : coin_or_config;
-    if (!xpub_config) {
-        return false
-    }
-    const z_public = key_data.purpose === "84'" ? xpub_config.prefix.pubz : xpub_config.prefix.pubx,
-        is_public = key_data.xpub === true,
-        version = is_public ? z_public : xpub_config.prefix.privx,
-        version_hex = str_pad(dec_to_hex(version), 8),
-        depth = key_data.depth ? str_pad(key_data.depth, 2) : "00",
-        fingerprint = key_data.fingerprint || "00000000",
-        child_num = key_data.childnumber ? str_pad(key_data.childnumber, 8) : "00000000",
+    const bip32_config = (typeof coin_or_config === "object") ? coin_or_config : get_bip32dat(coin_or_config),
         chain_code = key_data.chaincode,
-        key_prefix = is_public ? "" : "00",
-        key_hex = key_data.key;
-    if (version && key_hex && chain_code) {
-        return version_hex + depth + fingerprint + child_num + chain_code + key_prefix + key_hex;
-    } else {
-        return false
+        private_key = key_data.key,
+        public_key = get_publickey(private_key),
+        depth = str_pad(dec_to_hex(key_data.depth), 2),
+        fingerprint = key_data.fingerprint,
+        childnumber = key_data.childnumber,
+        priv_version = bip32_config.prefix.privx,
+        pub_version = (key_data.purpose === "84'") ? bip32_config.prefix.pubz : bip32_config.prefix.pubx,
+        priv_versionh = str_pad(dec_to_hex(priv_version), 8),
+        pub_versionh = str_pad(dec_to_hex(pub_version), 8),
+        priv_payload = priv_versionh + depth + fingerprint + childnumber + chain_code + "00" + private_key,
+        pub_payload = pub_versionh + depth + fingerprint + childnumber + chain_code + public_key;
+    return {
+        "private": priv_payload,
+        "public": pub_payload
     }
 }
 
@@ -298,39 +310,10 @@ function b58c_x_payload(key_data, coin_or_config) {
 // ADDRESS FORMATTING
 // ============================================
 
-// Formats derived keys into currency-specific address formats
+// Formats derived keys into address and key pairs for specific coin
 function format_keys(seed, key_data, bip32_config, index, coin) {
-    const formatted_keys = {};
-
-    // Nano uses NanocurrencyWeb library
-    if (coin === "nano") {
-        if (seed && typeof NanocurrencyWeb !== "undefined") {
-            const nano_account = NanocurrencyWeb.wallet.accounts(seed, index, index)[0];
-            return {
-                "index": nano_account.accountIndex,
-                "address": nano_account.address,
-                "pubkey": nano_account.publicKey,
-                "privkey": nano_account.privateKey
-            }
-        }
-        return formatted_keys;
-    }
-
-    // Monero uses xmr_utils
-    if (coin === "monero") {
-        if (seed && typeof get_ssk !== "undefined" && typeof xmr_getpubs !== "undefined") {
-            const spend_key = get_ssk(seed, true),
-                xmr_keys = xmr_getpubs(spend_key, index);
-            return {
-                "index": index,
-                "address": xmr_keys.address,
-                "vk": xmr_keys.svk
-            }
-        }
-        return formatted_keys;
-    }
-
-    const purpose = key_data.purpose,
+    const formatted_keys = {},
+        purpose = key_data.purpose,
         is_public = key_data.xpub,
         raw_key = key_data.key,
         pubkey = is_public ? raw_key : get_publickey(raw_key),
@@ -366,7 +349,6 @@ function format_keys(seed, key_data, bip32_config, index, coin) {
         const legacy_address = pub_to_address(version_bytes, pubkey);
         formatted_keys.address = pub_to_cashaddr(legacy_address);
     } else {
-        // Default: Legacy address (Dogecoin, Dash, etc.)
         formatted_keys.address = pub_to_address(version_bytes, pubkey);
     }
 
@@ -393,9 +375,9 @@ const bip32_configs = {
         "root_path": "m/84'/0'/0'/0/",
         "prefix": {
             "pub": 0,
-            "pubx": 76067358, // xpub
-            "pubz": 78792518, // zpub
-            "privx": 76066276 // xprv
+            "pubx": 76067358,
+            "pubz": 78792518,
+            "privx": 76066276
         },
         "pk_vbytes": {
             "wif": 128
@@ -405,9 +387,9 @@ const bip32_configs = {
         "root_path": "m/84'/2'/0'/0/",
         "prefix": {
             "pub": 48,
-            "pubx": 27108450, // Ltub
-            "pubz": 78792518, // zpub
-            "privx": 27106558 // Ltpv
+            "pubx": 27108450,
+            "pubz": 78792518,
+            "privx": 27106558
         },
         "pk_vbytes": {
             "wif": 176
@@ -417,8 +399,8 @@ const bip32_configs = {
         "root_path": "m/44'/3'/0'/0/",
         "prefix": {
             "pub": 30,
-            "pubx": 49990397, // dgub
-            "privx": 49988504 // dgpv
+            "pubx": 49990397,
+            "privx": 49988504
         },
         "pk_vbytes": {
             "wif": 158
@@ -428,8 +410,8 @@ const bip32_configs = {
         "root_path": "m/44'/5'/0'/0/",
         "prefix": {
             "pub": 76,
-            "pubx": 50221772, // drkp
-            "privx": 50221816 // drkv
+            "pubx": 50221772,
+            "privx": 50221816
         },
         "pk_vbytes": {
             "wif": 204
@@ -484,33 +466,29 @@ function shuffle_array(array) {
 // Validates complete BIP39/BIP32 implementation using test vectors
 function test_bip39_derivation() {
     const results = {
-        "success": true,
-        "tests": []
-    };
-
-    // Test 1: Mnemonic to seed
-    const seed = mnemonic_to_seed(bip39_utils_const.test_phrase);
-    const seed_test = {
-        "name": "Mnemonic to Seed",
-        "expected": bip39_utils_const.expected_seed,
-        "actual": seed,
-        "pass": seed === bip39_utils_const.expected_seed
-    };
+            "success": true,
+            "tests": []
+        },
+        seed = mnemonic_to_seed(bip39_utils_const.test_phrase),
+        seed_test = {
+            "name": "Mnemonic to Seed",
+            "expected": bip39_utils_const.expected_seed,
+            "actual": seed,
+            "pass": seed === bip39_utils_const.expected_seed
+        };
     results.tests.push(seed_test);
     if (!seed_test.pass) results.success = false;
 
-    // Test 2: Validate mnemonic
-    const is_valid = validate_mnemonic(bip39_utils_const.test_phrase);
-    const validate_test = {
-        "name": "Validate Mnemonic",
-        "expected": true,
-        "actual": is_valid,
-        "pass": is_valid === true
-    };
+    const is_valid = validate_mnemonic(bip39_utils_const.test_phrase),
+        validate_test = {
+            "name": "Validate Mnemonic",
+            "expected": true,
+            "actual": is_valid,
+            "pass": is_valid === true
+        };
     results.tests.push(validate_test);
     if (!validate_test.pass) results.success = false;
 
-    // Test 3: Address derivation
     try {
         const root_key = get_rootkey(seed),
             bip32_config = get_bip32dat("bitcoin"),
@@ -588,3 +566,6 @@ const Bip39Utils = {
     // Testing
     test_bip39_derivation
 };
+
+// Make Bip39Utils globally available
+window.Bip39Utils = Bip39Utils;

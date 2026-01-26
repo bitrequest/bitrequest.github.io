@@ -1,132 +1,50 @@
-// ** Core Helpers: **
-//uint_8array
-//buffer 
-//unbuffer
-//buf2hex
-//is_hex
-//str_pad
-//dec_to_hex
-//hex_to_dec
-//hex_to_number_string
-//hex_to_int
-//pad_binary
-//concat_bytes
-//encode_varint
+/**
+ * CryptoUtils - Standalone cryptocurrency utilities library
+ * 
+ * STANDALONE USAGE (outside Bitrequest):
+ * ----------------------------------------
+ * <script src="assets_js_lib_sjcl.js"></script>
+  * <script src="assets_js_lib_crypto_utils.js"></script>
+ * <script>
+ *   const bytes = CryptoUtils.hex_to_bytes("crypto");
+ *   const addr = CryptoUtils.pub_to_address_bech32("bc", pubkey);
+ * </script>
+ * 
+ * FEATURES:
+ * - Base58 / Base58Check encoding
+ * - Bech32 / Bech32m encoding
+ * - Secp256k1 elliptic curve operations
+ * - SHA256, RIPEMD160, Hash160, Keccak-256
+ * - Bitcoin/Litecoin/Ethereum address generation
+ * - Bitcoin Cash CashAddr support
+ * - BIP39 mnemonic utilities
+ * - AES encryption/decryption
+ * - LNURL decoding
+ * 
+ * @version 1.1.0
+ * @license AGPL-3.0
+ * @see https://github.com/bitrequest/bitrequest.github.io
+ * secp256k1 implementation based onhttps://github.com/paulmillr/noble-secp256k1
+ */
 
-// ** SJCL Bitwise Operations: **
-//to_bits
-//hex_to_bits 
-//from_bits
-//bit_length
-//concat_array
-
-// ** Base Conversion: **
-//binary_string_to_word_array
-//byte_array_to_word_array
-//byte_array_to_binary_string
-//hex_string_to_binary_string
-
-// ** Base58: **
-//b58enc
-//b58enc_uint_array
-//b58dec
-//b58dec_uint_array
-//b58check_encode
-//b58check_decode
-
-// ** Bech32: **
-//to_words
-//from_words
-//convert
-//polymod
-//hrp_expand
-//verify_checksum
-//create_checksum 
-//bech32_encode
-//bech32_decode
-//verify_checksum_with_type
-//bech32_dec_array
-//pub_to_address_bech32
-
-// ** Secp256k1: **
-//mod
-//weierstrass
-//egcd
-//invert
-//hex_to_bytes
-//bytes_to_hex
-//hex_to_number
-//bytes_to_number
-//pad64
-//JacobianPoint
-//Point
-//sqrt_mod
-//pow_mod
-//normalize_privatekey
-//get_publickey
-
-// ** Hash Functions: **
-//hmac_bits
-//hmacsha
-//hmacsha_bits 
-//hash160
-//sha_sub
-//keccak_256
-
-// ** Key & Address Generation: **
-//privkey_wif
-//priv_to_pub
-//expand_pub
-//pub_to_address
-//pub_to_eth_address
-//hash160_to_address
-//to_checksum_address
-
-// ** Bitcoin Cash Specific: **
-//cashaddr (encode, decode)
-//pub_to_cashaddr
-//bch_legacy
-//bch_cashaddr
-
-// ** LNURL & Lightning: **
-//lnurl_decodeb32
-
-// ** Mnemonic Functions: **
-//clean_string
-//join_words
-//split_words
-//normalize_string
-//mnemonic_to_binary_string
-
-// ** Encryption: **
-//aes_enc
-//aes_dec
-
-// ** Miscellaneous: **
-//nimiq_hash
-
-// ** Scripthash: **
-//address_to_scripthash
-//convert5to8
-
-"use strict";
+// ============================================
+// CONSTANTS
+// ============================================
 
 const crypto = window.crypto,
     b58ab = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
     b32ab = "qpzry9x8gf2tvdw0s3jn54khce6mua7l",
     generator = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3],
     bytestring = "0000000000000000000000000000000000000000000000000000000000000000",
-    oc = 115792089237316195423570985008687907852837564279074904382605163141518161494337n,
     wordlist = ["abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse", "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act", "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit", "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent", "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert", "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter", "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger", "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique", "anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch", "arctic", "area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange", "arrest", "arrive", "arrow", "art", "artefact", "artist", "artwork", "ask", "aspect", "assault", "asset", "assist", "assume", "asthma", "athlete", "atom", "attack", "attend", "attitude", "attract", "auction", "audit", "august", "aunt", "author", "auto", "autumn", "average", "avocado", "avoid", "awake", "aware", "away", "awesome", "awful", "awkward", "axis", "baby", "bachelor", "bacon", "badge", "bag", "balance", "balcony", "ball", "bamboo", "banana", "banner", "bar", "barely", "bargain", "barrel", "base", "basic", "basket", "battle", "beach", "bean", "beauty", "because", "become", "beef", "before", "begin", "behave", "behind", "believe", "below", "belt", "bench", "benefit", "best", "betray", "better", "between", "beyond", "bicycle", "bid", "bike", "bind", "biology", "bird", "birth", "bitter", "black", "blade", "blame", "blanket", "blast", "bleak", "bless", "blind", "blood", "blossom", "blouse", "blue", "blur", "blush", "board", "boat", "body", "boil", "bomb", "bone", "bonus", "book", "boost", "border", "boring", "borrow", "boss", "bottom", "bounce", "box", "boy", "bracket", "brain", "brand", "brass", "brave", "bread", "breeze", "brick", "bridge", "brief", "bright", "bring", "brisk", "broccoli", "broken", "bronze", "broom", "brother", "brown", "brush", "bubble", "buddy", "budget", "buffalo", "build", "bulb", "bulk", "bullet", "bundle", "bunker", "burden", "burger", "burst", "bus", "business", "busy", "butter", "buyer", "buzz", "cabbage", "cabin", "cable", "cactus", "cage", "cake", "call", "calm", "camera", "camp", "can", "canal", "cancel", "candy", "cannon", "canoe", "canvas", "canyon", "capable", "capital", "captain", "car", "carbon", "card", "cargo", "carpet", "carry", "cart", "case", "cash", "casino", "castle", "casual", "cat", "catalog", "catch", "category", "cattle", "caught", "cause", "caution", "cave", "ceiling", "celery", "cement", "census", "century", "cereal", "certain", "chair", "chalk", "champion", "change", "chaos", "chapter", "charge", "chase", "chat", "cheap", "check", "cheese", "chef", "cherry", "chest", "chicken", "chief", "child", "chimney", "choice", "choose", "chronic", "chuckle", "chunk", "churn", "cigar", "cinnamon", "circle", "citizen", "city", "civil", "claim", "clap", "clarify", "claw", "clay", "clean", "clerk", "clever", "click", "client", "cliff", "climb", "clinic", "clip", "clock", "clog", "close", "cloth", "cloud", "clown", "club", "clump", "cluster", "clutch", "coach", "coast", "coconut", "code", "coffee", "coil", "coin", "collect", "color", "column", "combine", "come", "comfort", "comic", "common", "company", "concert", "conduct", "confirm", "congress", "connect", "consider", "control", "convince", "cook", "cool", "copper", "copy", "coral", "core", "corn", "correct", "cost", "cotton", "couch", "country", "couple", "course", "cousin", "cover", "coyote", "crack", "cradle", "craft", "cram", "crane", "crash", "crater", "crawl", "crazy", "cream", "credit", "creek", "crew", "cricket", "crime", "crisp", "critic", "crop", "cross", "crouch", "crowd", "crucial", "cruel", "cruise", "crumble", "crunch", "crush", "cry", "crystal", "cube", "culture", "cup", "cupboard", "curious", "current", "curtain", "curve", "cushion", "custom", "cute", "cycle", "dad", "damage", "damp", "dance", "danger", "daring", "dash", "daughter", "dawn", "day", "deal", "debate", "debris", "decade", "december", "decide", "decline", "decorate", "decrease", "deer", "defense", "define", "defy", "degree", "delay", "deliver", "demand", "demise", "denial", "dentist", "deny", "depart", "depend", "deposit", "depth", "deputy", "derive", "describe", "desert", "design", "desk", "despair", "destroy", "detail", "detect", "develop", "device", "devote", "diagram", "dial", "diamond", "diary", "dice", "diesel", "diet", "differ", "digital", "dignity", "dilemma", "dinner", "dinosaur", "direct", "dirt", "disagree", "discover", "disease", "dish", "dismiss", "disorder", "display", "distance", "divert", "divide", "divorce", "dizzy", "doctor", "document", "dog", "doll", "dolphin", "domain", "donate", "donkey", "donor", "door", "dose", "double", "dove", "draft", "dragon", "drama", "drastic", "draw", "dream", "dress", "drift", "drill", "drink", "drip", "drive", "drop", "drum", "dry", "duck", "dumb", "dune", "during", "dust", "dutch", "duty", "dwarf", "dynamic", "eager", "eagle", "early", "earn", "earth", "easily", "east", "easy", "echo", "ecology", "economy", "edge", "edit", "educate", "effort", "egg", "eight", "either", "elbow", "elder", "electric", "elegant", "element", "elephant", "elevator", "elite", "else", "embark", "embody", "embrace", "emerge", "emotion", "employ", "empower", "empty", "enable", "enact", "end", "endless", "endorse", "enemy", "energy", "enforce", "engage", "engine", "enhance", "enjoy", "enlist", "enough", "enrich", "enroll", "ensure", "enter", "entire", "entry", "envelope", "episode", "equal", "equip", "era", "erase", "erode", "erosion", "error", "erupt", "escape", "essay", "essence", "estate", "eternal", "ethics", "evidence", "evil", "evoke", "evolve", "exact", "example", "excess", "exchange", "excite", "exclude", "excuse", "execute", "exercise", "exhaust", "exhibit", "exile", "exist", "exit", "exotic", "expand", "expect", "expire", "explain", "expose", "express", "extend", "extra", "eye", "eyebrow", "fabric", "face", "faculty", "fade", "faint", "faith", "fall", "false", "fame", "family", "famous", "fan", "fancy", "fantasy", "farm", "fashion", "fat", "fatal", "father", "fatigue", "fault", "favorite", "feature", "february", "federal", "fee", "feed", "feel", "female", "fence", "festival", "fetch", "fever", "few", "fiber", "fiction", "field", "figure", "file", "film", "filter", "final", "find", "fine", "finger", "finish", "fire", "firm", "first", "fiscal", "fish", "fit", "fitness", "fix", "flag", "flame", "flash", "flat", "flavor", "flee", "flight", "flip", "float", "flock", "floor", "flower", "fluid", "flush", "fly", "foam", "focus", "fog", "foil", "fold", "follow", "food", "foot", "force", "forest", "forget", "fork", "fortune", "forum", "forward", "fossil", "foster", "found", "fox", "fragile", "frame", "frequent", "fresh", "friend", "fringe", "frog", "front", "frost", "frown", "frozen", "fruit", "fuel", "fun", "funny", "furnace", "fury", "future", "gadget", "gain", "galaxy", "gallery", "game", "gap", "garage", "garbage", "garden", "garlic", "garment", "gas", "gasp", "gate", "gather", "gauge", "gaze", "general", "genius", "genre", "gentle", "genuine", "gesture", "ghost", "giant", "gift", "giggle", "ginger", "giraffe", "girl", "give", "glad", "glance", "glare", "glass", "glide", "glimpse", "globe", "gloom", "glory", "glove", "glow", "glue", "goat", "goddess", "gold", "good", "goose", "gorilla", "gospel", "gossip", "govern", "gown", "grab", "grace", "grain", "grant", "grape", "grass", "gravity", "great", "green", "grid", "grief", "grit", "grocery", "group", "grow", "grunt", "guard", "guess", "guide", "guilt", "guitar", "gun", "gym", "habit", "hair", "half", "hammer", "hamster", "hand", "happy", "harbor", "hard", "harsh", "harvest", "hat", "have", "hawk", "hazard", "head", "health", "heart", "heavy", "hedgehog", "height", "hello", "helmet", "help", "hen", "hero", "hidden", "high", "hill", "hint", "hip", "hire", "history", "hobby", "hockey", "hold", "hole", "holiday", "hollow", "home", "honey", "hood", "hope", "horn", "horror", "horse", "hospital", "host", "hotel", "hour", "hover", "hub", "huge", "human", "humble", "humor", "hundred", "hungry", "hunt", "hurdle", "hurry", "hurt", "husband", "hybrid", "ice", "icon", "idea", "identify", "idle", "ignore", "ill", "illegal", "illness", "image", "imitate", "immense", "immune", "impact", "impose", "improve", "impulse", "inch", "include", "income", "increase", "index", "indicate", "indoor", "industry", "infant", "inflict", "inform", "inhale", "inherit", "initial", "inject", "injury", "inmate", "inner", "innocent", "input", "inquiry", "insane", "insect", "inside", "inspire", "install", "intact", "interest", "into", "invest", "invite", "involve", "iron", "island", "isolate", "issue", "item", "ivory", "jacket", "jaguar", "jar", "jazz", "jealous", "jeans", "jelly", "jewel", "job", "join", "joke", "journey", "joy", "judge", "juice", "jump", "jungle", "junior", "junk", "just", "kangaroo", "keen", "keep", "ketchup", "key", "kick", "kid", "kidney", "kind", "kingdom", "kiss", "kit", "kitchen", "kite", "kitten", "kiwi", "knee", "knife", "knock", "know", "lab", "label", "labor", "ladder", "lady", "lake", "lamp", "language", "laptop", "large", "later", "latin", "laugh", "laundry", "lava", "law", "lawn", "lawsuit", "layer", "lazy", "leader", "leaf", "learn", "leave", "lecture", "left", "leg", "legal", "legend", "leisure", "lemon", "lend", "length", "lens", "leopard", "lesson", "letter", "level", "liar", "liberty", "library", "license", "life", "lift", "light", "like", "limb", "limit", "link", "lion", "liquid", "list", "little", "live", "lizard", "load", "loan", "lobster", "local", "lock", "logic", "lonely", "long", "loop", "lottery", "loud", "lounge", "love", "loyal", "lucky", "luggage", "lumber", "lunar", "lunch", "luxury", "lyrics", "machine", "mad", "magic", "magnet", "maid", "mail", "main", "major", "make", "mammal", "man", "manage", "mandate", "mango", "mansion", "manual", "maple", "marble", "march", "margin", "marine", "market", "marriage", "mask", "mass", "master", "match", "material", "math", "matrix", "matter", "maximum", "maze", "meadow", "mean", "measure", "meat", "mechanic", "medal", "media", "melody", "melt", "member", "memory", "mention", "menu", "mercy", "merge", "merit", "merry", "mesh", "message", "metal", "method", "middle", "midnight", "milk", "million", "mimic", "mind", "minimum", "minor", "minute", "miracle", "mirror", "misery", "miss", "mistake", "mix", "mixed", "mixture", "mobile", "model", "modify", "mom", "moment", "monitor", "monkey", "monster", "month", "moon", "moral", "more", "morning", "mosquito", "mother", "motion", "motor", "mountain", "mouse", "move", "movie", "much", "muffin", "mule", "multiply", "muscle", "museum", "mushroom", "music", "must", "mutual", "myself", "mystery", "myth", "naive", "name", "napkin", "narrow", "nasty", "nation", "nature", "near", "neck", "need", "negative", "neglect", "neither", "nephew", "nerve", "nest", "net", "network", "neutral", "never", "news", "next", "nice", "night", "noble", "noise", "nominee", "noodle", "normal", "north", "nose", "notable", "note", "nothing", "notice", "novel", "now", "nuclear", "number", "nurse", "nut", "oak", "obey", "object", "oblige", "obscure", "observe", "obtain", "obvious", "occur", "ocean", "october", "odor", "off", "offer", "office", "often", "oil", "okay", "old", "olive", "olympic", "omit", "once", "one", "onion", "online", "only", "open", "opera", "opinion", "oppose", "option", "orange", "orbit", "orchard", "order", "ordinary", "organ", "orient", "original", "orphan", "ostrich", "other", "outdoor", "outer", "output", "outside", "oval", "oven", "over", "own", "owner", "oxygen", "oyster", "ozone", "pact", "paddle", "page", "pair", "palace", "palm", "panda", "panel", "panic", "panther", "paper", "parade", "parent", "park", "parrot", "party", "pass", "patch", "path", "patient", "patrol", "pattern", "pause", "pave", "payment", "peace", "peanut", "pear", "peasant", "pelican", "pen", "penalty", "pencil", "people", "pepper", "perfect", "permit", "person", "pet", "phone", "photo", "phrase", "physical", "piano", "picnic", "picture", "piece", "pig", "pigeon", "pill", "pilot", "pink", "pioneer", "pipe", "pistol", "pitch", "pizza", "place", "planet", "plastic", "plate", "play", "please", "pledge", "pluck", "plug", "plunge", "poem", "poet", "point", "polar", "pole", "police", "pond", "pony", "pool", "popular", "portion", "position", "possible", "post", "potato", "pottery", "poverty", "powder", "power", "practice", "praise", "predict", "prefer", "prepare", "present", "pretty", "prevent", "price", "pride", "primary", "print", "priority", "prison", "private", "prize", "problem", "process", "produce", "profit", "program", "project", "promote", "proof", "property", "prosper", "protect", "proud", "provide", "public", "pudding", "pull", "pulp", "pulse", "pumpkin", "punch", "pupil", "puppy", "purchase", "purity", "purpose", "purse", "push", "put", "puzzle", "pyramid", "quality", "quantum", "quarter", "question", "quick", "quit", "quiz", "quote", "rabbit", "raccoon", "race", "rack", "radar", "radio", "rail", "rain", "raise", "rally", "ramp", "ranch", "random", "range", "rapid", "rare", "rate", "rather", "raven", "raw", "razor", "ready", "real", "reason", "rebel", "rebuild", "recall", "receive", "recipe", "record", "recycle", "reduce", "reflect", "reform", "refuse", "region", "regret", "regular", "reject", "relax", "release", "relief", "rely", "remain", "remember", "remind", "remove", "render", "renew", "rent", "reopen", "repair", "repeat", "replace", "report", "require", "rescue", "resemble", "resist", "resource", "response", "result", "retire", "retreat", "return", "reunion", "reveal", "review", "reward", "rhythm", "rib", "ribbon", "rice", "rich", "ride", "ridge", "rifle", "right", "rigid", "ring", "riot", "ripple", "risk", "ritual", "rival", "river", "road", "roast", "robot", "robust", "rocket", "romance", "roof", "rookie", "room", "rose", "rotate", "rough", "round", "route", "royal", "rubber", "rude", "rug", "rule", "run", "runway", "rural", "sad", "saddle", "sadness", "safe", "sail", "salad", "salmon", "salon", "salt", "salute", "same", "sample", "sand", "satisfy", "satoshi", "sauce", "sausage", "save", "say", "scale", "scan", "scare", "scatter", "scene", "scheme", "school", "science", "scissors", "scorpion", "scout", "scrap", "screen", "script", "scrub", "sea", "search", "season", "seat", "second", "secret", "section", "security", "seed", "seek", "segment", "select", "sell", "seminar", "senior", "sense", "sentence", "series", "service", "session", "settle", "setup", "seven", "shadow", "shaft", "shallow", "share", "shed", "shell", "sheriff", "shield", "shift", "shine", "ship", "shiver", "shock", "shoe", "shoot", "shop", "short", "shoulder", "shove", "shrimp", "shrug", "shuffle", "shy", "sibling", "sick", "side", "siege", "sight", "sign", "silent", "silk", "silly", "silver", "similar", "simple", "since", "sing", "siren", "sister", "situate", "six", "size", "skate", "sketch", "ski", "skill", "skin", "skirt", "skull", "slab", "slam", "sleep", "slender", "slice", "slide", "slight", "slim", "slogan", "slot", "slow", "slush", "small", "smart", "smile", "smoke", "smooth", "snack", "snake", "snap", "sniff", "snow", "soap", "soccer", "social", "sock", "soda", "soft", "solar", "soldier", "solid", "solution", "solve", "someone", "song", "soon", "sorry", "sort", "soul", "sound", "soup", "source", "south", "space", "spare", "spatial", "spawn", "speak", "special", "speed", "spell", "spend", "sphere", "spice", "spider", "spike", "spin", "spirit", "split", "spoil", "sponsor", "spoon", "sport", "spot", "spray", "spread", "spring", "spy", "square", "squeeze", "squirrel", "stable", "stadium", "staff", "stage", "stairs", "stamp", "stand", "start", "state", "stay", "steak", "steel", "stem", "step", "stereo", "stick", "still", "sting", "stock", "stomach", "stone", "stool", "story", "stove", "strategy", "street", "strike", "strong", "struggle", "student", "stuff", "stumble", "style", "subject", "submit", "subway", "success", "such", "sudden", "suffer", "sugar", "suggest", "suit", "summer", "sun", "sunny", "sunset", "super", "supply", "supreme", "sure", "surface", "surge", "surprise", "surround", "survey", "suspect", "sustain", "swallow", "swamp", "swap", "swarm", "swear", "sweet", "swift", "swim", "swing", "switch", "sword", "symbol", "symptom", "syrup", "system", "table", "tackle", "tag", "tail", "talent", "talk", "tank", "tape", "target", "task", "taste", "tattoo", "taxi", "teach", "team", "tell", "ten", "tenant", "tennis", "tent", "term", "test", "text", "thank", "that", "theme", "then", "theory", "there", "they", "thing", "this", "thought", "three", "thrive", "throw", "thumb", "thunder", "ticket", "tide", "tiger", "tilt", "timber", "time", "tiny", "tip", "tired", "tissue", "title", "toast", "tobacco", "today", "toddler", "toe", "together", "toilet", "token", "tomato", "tomorrow", "tone", "tongue", "tonight", "tool", "tooth", "top", "topic", "topple", "torch", "tornado", "tortoise", "toss", "total", "tourist", "toward", "tower", "town", "toy", "track", "trade", "traffic", "tragic", "train", "transfer", "trap", "trash", "travel", "tray", "treat", "tree", "trend", "trial", "tribe", "trick", "trigger", "trim", "trip", "trophy", "trouble", "truck", "true", "truly", "trumpet", "trust", "truth", "try", "tube", "tuition", "tumble", "tuna", "tunnel", "turkey", "turn", "turtle", "twelve", "twenty", "twice", "twin", "twist", "two", "type", "typical", "ugly", "umbrella", "unable", "unaware", "uncle", "uncover", "under", "undo", "unfair", "unfold", "unhappy", "uniform", "unique", "unit", "universe", "unknown", "unlock", "until", "unusual", "unveil", "update", "upgrade", "uphold", "upon", "upper", "upset", "urban", "urge", "usage", "use", "used", "useful", "useless", "usual", "utility", "vacant", "vacuum", "vague", "valid", "valley", "valve", "van", "vanish", "vapor", "various", "vast", "vault", "vehicle", "velvet", "vendor", "venture", "venue", "verb", "verify", "version", "very", "vessel", "veteran", "viable", "vibrant", "vicious", "victory", "video", "view", "village", "vintage", "violin", "virtual", "virus", "visa", "visit", "visual", "vital", "vivid", "vocal", "voice", "void", "volcano", "volume", "vote", "voyage", "wage", "wagon", "wait", "walk", "wall", "walnut", "want", "warfare", "warm", "warrior", "wash", "wasp", "waste", "water", "wave", "way", "wealth", "weapon", "wear", "weasel", "weather", "web", "wedding", "weekend", "weird", "welcome", "west", "wet", "whale", "what", "wheat", "wheel", "when", "where", "whip", "whisper", "wide", "width", "wife", "wild", "will", "win", "window", "wine", "wing", "wink", "winner", "winter", "wire", "wisdom", "wise", "wish", "witness", "wolf", "woman", "wonder", "wood", "wool", "word", "work", "world", "worry", "worth", "wrap", "wreck", "wrestle", "wrist", "write", "wrong", "yard", "year", "yellow", "you", "young", "youth", "zebra", "zero", "zone", "zoo"],
     utf8_encoder = new TextEncoder(),
     utf8_decoder = new TextDecoder("utf-8", {
         "fatal": true
     }),
-    // Constants for bech32 and bech32m
     BECH32_CONST = 1,
     BECH32M_CONST = 0x2bc830a3;
 
-// Minimal curve params for secp256k1
+// Secp256k1 curve parameters
 const secp = {},
     CURVE = {
         "a": 0n,
@@ -138,7 +56,9 @@ const secp = {},
     };
 secp.CURVE = CURVE;
 
-// ** Core Helpers: **
+// ============================================
+// CORE HELPERS
+// ============================================
 
 // Creates a typed array with 8-bit unsigned integers from a byte array
 function uint_8array(bytes) {
@@ -156,7 +76,7 @@ function unbuffer(enc, encoding) {
 }
 
 // Converts ArrayBuffer to zero-padded hexadecimal string
-function buf2hex(buffer) { // buffer is an ArrayBuffer
+function buf2hex(buffer) {
     return Array.prototype.map.call(uint_8array(buffer), x => ("00" + x.toString(16)).slice(-2)).join("");
 }
 
@@ -199,19 +119,19 @@ function pad_binary(binary_str, target_length) {
     return padded_str;
 }
 
-// Combines multiple byte arrays into a single continuous byte array
+// Concatenates multiple Uint8Arrays into one
 function concat_bytes(...arrays) {
-    const total_length = arrays.reduce((acc, arr) => acc + arr.length, 0),
-        result = new Uint8Array(total_length);
+    const sizes = arrays.reduce((acc, a) => acc + a.length, 0),
+        result = uint_8array(sizes);
     let offset = 0;
-    for (const arr of arrays) {
-        result.set(arr, offset);
-        offset += arr.length;
+    for (const array of arrays) {
+        result.set(array, offset);
+        offset += array.length;
     }
     return result;
 }
 
-// Encodes a number into variable-length byte format (larger numbers use more bytes)
+// Encodes integer as Bitcoin-style variable-length integer (LEB128)
 function encode_varint(n) {
     const bytes = [];
     while (n >= 0x80) {
@@ -222,85 +142,98 @@ function encode_varint(n) {
     return new Uint8Array(bytes);
 }
 
-// ** SJCL Bitwise Operations: **
+// ============================================
+// SJCL BIT OPERATIONS
+// ============================================
 
-// Converts UTF-8 string to SJCL bitArray format
+// Converts UTF-8 string to SJCL bit array
 function to_bits(val) {
     return sjcl.codec.utf8String.toBits(val);
 }
 
-// Converts hexadecimal string to SJCL bitArray format
+// Converts hex string to SJCL bit array
 function hex_to_bits(val) {
     return sjcl.codec.hex.toBits(val);
 }
 
-// Converts SJCL bitArray to hexadecimal string
+// Converts SJCL bit array to hex string
 function from_bits(val) {
     return sjcl.codec.hex.fromBits(val);
 }
 
-// Calculates total bit length of SJCL bitArray
+// Returns the bit length of SJCL bit array
 function bit_length(val) {
     return sjcl.bitArray.bitLength(val);
 }
 
-// Merges two SJCL bitArrays into single concatenated array
+// Concatenates two SJCL bit arrays
 function concat_array(arr1, arr2) {
     return sjcl.bitArray.concat(arr1, arr2);
 }
 
-// ** Base Conversion: **
+// ============================================
+// BASE CONVERSION
+// ============================================
 
-// Chunks 32-bit segments from binary string into decimal integer array
+// Converts binary string to SJCL word array
 function binary_string_to_word_array(binary) {
-    let aLen = binary.length / 32,
-        a = [];
-    for (let i = 0; i < aLen; i++) {
-        let valueStr = binary.substring(0, 32),
-            value = parseInt(valueStr, 2);
-        a.push(value);
-        binary = binary.slice(32);
+    const bit_len = binary.length;
+    let words = [];
+    for (let i = 0; i < bit_len; i += 32) {
+        const str_chunk = binary.substring(i, i + 32),
+            int_word = parseInt(str_chunk, 2);
+        words.push(int_word | 0);
     }
-    return a;
+    return sjcl.bitArray.clamp(words, bit_len);
 }
 
-// Converts byte array to 32-bit word array using big-endian ordering
+// Converts byte array to SJCL word array
 function byte_array_to_word_array(data) {
-    const a = [];
-    for (let i = 0; i < data.length / 4; i++) {
-        let v = 0;
-        v += data[i * 4 + 0] << 8 * 3;
-        v += data[i * 4 + 1] << 8 * 2;
-        v += data[i * 4 + 2] << 8 * 1;
-        v += data[i * 4 + 3] << 8 * 0;
-        a.push(v);
+    let words = [],
+        i,
+        word = 0;
+    for (i = 0; i < data.length; i++) {
+        word = (word << 8) | data[i];
+        if ((i + 1) % 4 === 0) {
+            words.push(word);
+            word = 0;
+        }
     }
-    return a;
+    if (i % 4 !== 0) {
+        word <<= (4 - (i % 4)) * 8;
+        words.push(word);
+    }
+    return sjcl.bitArray.clamp(words, data.length * 8);
 }
 
-// Converts byte array to binary string with 8-bit zero-padded values
+// Converts byte array to binary string
 function byte_array_to_binary_string(data) {
-    let bin = "";
+    let bin_str = "";
     for (let i = 0; i < data.length; i++) {
-        bin += pad_binary(data[i].toString(2), 8);
+        bin_str += pad_binary(data[i].toString(2), 8);
     }
-    return bin;
+    return bin_str;
 }
 
-// Converts hex string to binary string with 4-bit zero-padded values
+// Converts hex string to binary string
 function hex_string_to_binary_string(hexString) {
-    let binaryString = "";
+    let bin_str = "";
     for (let i = 0; i < hexString.length; i++) {
-        binaryString += pad_binary(parseInt(hexString[i], 16).toString(2), 4);
+        const hexChar = hexString[i],
+            hexInt = parseInt(hexChar, 16),
+            bin_frag = hexInt.toString(2);
+        bin_str += pad_binary(bin_frag, 4);
     }
-    return binaryString;
+    return bin_str;
 }
 
-// ** Base58: **
+// ============================================
+// BASE58 ENCODING
+// ============================================
 
 // Encodes data to Base58 string from hex or UTF-8 input
-function b58enc(enc, encode) {
-    const bytestring = (encode = "hex") ? hex_to_bytes(enc) : buffer(enc);
+function b58enc(enc, encode = "hex") {
+    const bytestring = (encode === "hex") ? hex_to_bytes(enc) : buffer(enc);
     return b58enc_uint_array(bytestring);
 }
 
@@ -351,7 +284,6 @@ function b58dec_uint_array(dec) {
     return uint_8array(b);
 }
 
-// base58check
 // Implements Base58Check encoding with double SHA256 checksum
 function b58check_encode(payload) {
     const full_bytes = payload + hmacsha(hmacsha(payload, "sha256", "hex"), "sha256", "hex").slice(0, 8);
@@ -365,11 +297,13 @@ function b58check_decode(val) {
     return bytes;
 }
 
-// ** Bech32: **
+// ============================================
+// BECH32 ENCODING
+// ============================================
 
 // Converts input byte array to 5-bit word representation for bech32 encoding
 function to_words(bytes) {
-    const res = convert(bytes, 8, 5, true);
+    const res = convert_bits(bytes, 8, 5, true);
     if (Array.isArray(res)) {
         return res
     }
@@ -378,7 +312,7 @@ function to_words(bytes) {
 
 // Converts 5-bit word array back to byte representation for bech32 decoding
 function from_words(bytes) {
-    const res = convert(bytes, 5, 8, true);
+    const res = convert_bits(bytes, 5, 8, true);
     if (Array.isArray(res)) {
         return res
     }
@@ -386,7 +320,7 @@ function from_words(bytes) {
 }
 
 // Transforms data between different bit-length representations with optional padding
-function convert(data, inBits, outBits, pad) {
+function convert_bits(data, inBits, outBits, pad) {
     let value = 0,
         bits = 0,
         maxV = (1 << outBits) - 1,
@@ -474,7 +408,6 @@ function bech32_decode(bechString) {
     let p, has_lower = false,
         has_upper = false;
 
-    // Check for mixed case and valid character range
     for (p = 0; p < bechString.length; ++p) {
         if (bechString.charCodeAt(p) < 33 || bechString.charCodeAt(p) > 126) {
             return null;
@@ -490,18 +423,15 @@ function bech32_decode(bechString) {
         return null;
     }
 
-    // Convert to lowercase and find separator
     bechString = bechString.toLowerCase();
     const pos = bechString.lastIndexOf("1");
     if (pos < 1 || pos + 7 > bechString.length || bechString.length > 90) {
         return null;
     }
 
-    // Extract HRP and data
     const hrp = bechString.substring(0, pos),
         data = [];
 
-    // Convert data characters to 5-bit integers
     for (p = pos + 1; p < bechString.length; ++p) {
         const d = b32ab.indexOf(bechString.charAt(p));
         if (d === -1) {
@@ -510,17 +440,14 @@ function bech32_decode(bechString) {
         data.push(d);
     }
 
-    // Verify checksum and determine encoding type
     const encoding = verify_checksum_with_type(hrp, data);
     if (!encoding) {
         return null;
     }
 
-    // For Taproot (witness version 1), ensure bech32m encoding
     if (data[0] === 1 && encoding !== "bech32m") {
         return null;
     }
-    // For version 0, ensure bech32 encoding
     if (data[0] === 0 && encoding !== "bech32") {
         return null;
     }
@@ -534,7 +461,6 @@ function bech32_decode(bechString) {
 // Modified polymod function to support both bech32 and bech32m
 function verify_checksum_with_type(hrp, data) {
     const modulo = polymod(hrp_expand(hrp).concat(data));
-    // Returns the encoding type: "bech32", "bech32m", or null if invalid
     if (modulo === BECH32_CONST) return "bech32";
     if (modulo === BECH32M_CONST) return "bech32m";
     return null;
@@ -558,9 +484,11 @@ function pub_to_address_bech32(hrp, pubkey) {
     return bech32_encode(hrp, step4);
 }
 
-// ** Secp256k1: **
+// ============================================
+// SECP256K1 ELLIPTIC CURVE
+// ============================================
 
-// Performs modular arithmetic (a mod m) with correct handling of negative numbers
+// Computes modular reduction with positive result
 function mod(a, m = CURVE.P) {
     const r = a % m;
     return r >= 0n ? r : m + r;
@@ -598,21 +526,20 @@ function invert(number, modulo = CURVE.P) {
     return mod(x, modulo);
 }
 
-// Some basic hex / byte array helpers
-
 // Converts hexadecimal string to Uint8Array with zero-padding for odd length
 function hex_to_bytes(hex) {
     if (typeof hex !== "string") throw new TypeError("hexToBytes: expected string");
-    if (hex.length % 2 !== 0) hex = "0" + hex; // pad if needed
-    const array = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < array.length; i++) {
+    if (hex.length % 2) hex = "0" + hex;
+    const len = hex.length / 2,
+        array = uint_8array(len);
+    for (let i = 0; i < len; i++) {
         const j = i * 2;
         array[i] = parseInt(hex.slice(j, j + 2), 16);
     }
     return array;
 }
 
-// Converts Uint8Array to lowercase hexadecimal string with zero-padding
+// Converts Uint8Array to hexadecimal string
 function bytes_to_hex(uint8a) {
     let hex = "";
     for (let i = 0; i < uint8a.length; i++) {
@@ -621,18 +548,18 @@ function bytes_to_hex(uint8a) {
     return hex;
 }
 
-// Converts hexadecimal string to BigInt with 0x prefix
+// Parses hexadecimal string to BigInt
 function hex_to_number(hex) {
     if (typeof hex !== "string") throw new TypeError("hexToNumber: expected string");
-    return BigInt("0x" + hex);
+    return hex.length ? BigInt("0x" + hex) : 0n;
 }
 
-// Converts Uint8Array to BigInt via intermediate hex representation
+// Converts Uint8Array to BigInt (big-endian)
 function bytes_to_number(bytes) {
     return hex_to_number(bytes_to_hex(bytes));
 }
 
-// Zero-pads a number's hexadecimal representation to 64 characters (32 bytes)
+// Zero-pads BigInt to 64-character hex string
 function pad64(num) {
     return num.toString(16).padStart(64, "0");
 }
@@ -649,7 +576,6 @@ class JacobianPoint {
         return new JacobianPoint(p.x, p.y, 1n);
     }
 
-    // Point doubling in Jacobian coordinates
     double() {
         const {
             "x": X1,
@@ -669,7 +595,6 @@ class JacobianPoint {
         return new JacobianPoint(X3, Y3, Z3);
     }
 
-    // Point addition in Jacobian coordinates
     add(other) {
         if (!other.x && !other.y) return this;
         if (!this.x && !this.y) return other;
@@ -698,7 +623,6 @@ class JacobianPoint {
         return new JacobianPoint(X3, Y3, Z3);
     }
 
-    // Simple double-and-add scalar multiplication
     multiplyUnsafe(scalar) {
         let n = scalar;
         if (typeof n !== "bigint") n = BigInt(n);
@@ -733,13 +657,11 @@ class Point {
         this.y = y;
     }
 
-    // Create new point from a private key scalar
     static fromPrivateKey(privateKey) {
         const key = normalize_privatekey(privateKey);
         return Point.BASE.multiply(key);
     }
 
-    // Parse a compressed or uncompressed hex/bytes public key
     static fromHex(hex) {
         const bytes = hex instanceof Uint8Array ? hex : hex_to_bytes(hex);
         if (bytes.length === 32) {
@@ -755,11 +677,10 @@ class Point {
         throw new Error("Point.fromHex: invalid format");
     }
 
-    // For 32-byte X only
     static fromX(bytes) {
         const x = bytes_to_number(bytes),
             y2 = weierstrass(x);
-        let y = sqrt_mod(y2); // we need sqrt for y
+        let y = sqrt_mod(y2);
         if ((y & 1n) === 1n) {
             y = mod(-y);
         }
@@ -796,7 +717,6 @@ class Point {
         return p;
     }
 
-    // Validate that a point is on the curve
     assertValidity() {
         const {
             x,
@@ -812,49 +732,41 @@ class Point {
         }
     }
 
-    // Convert affine to Jacobian => multiply => back to Affine
     multiply(scalar) {
         return JacobianPoint.fromAffine(this).multiplyUnsafe(scalar).toAffine();
     }
 
-    // Standard point addition in affine
     add(other) {
         const pA = JacobianPoint.fromAffine(this),
             pB = JacobianPoint.fromAffine(other);
         return pA.add(pB).toAffine();
     }
 
-    // Negate a point
     negate() {
         return new Point(this.x, mod(-this.y));
     }
 
-    // For printing / compressed or uncompressed
     toHex(compressed = false) {
         const xHex = pad64(this.x);
         if (compressed) {
-            // 02 or 03 + x
             const prefix = (this.y & 1n) === 1n ? "03" : "02";
             return prefix + xHex;
         } else {
-            // 04 + x + y
             const yHex = pad64(this.y);
             return "04" + xHex + yHex;
         }
     }
 
-    // Shortcut for multiplication by base point
     static get BASE() {
         return new Point(CURVE.Gx, CURVE.Gy);
     }
 
-    // For "empty" (aka point at infinity in affine form)
     static get ZERO() {
         return new Point(0n, 0n);
     }
 }
 
-// For sqrt mod P, we can use Tonelli–Shanks or a simplified variant for P ≡ 3 (mod 4) (like secp256k1). P is prime => (p+1)/4 exponent y = x^((p+1)/4) mod p
+// Precomputed constant for sqrt_mod
 const P_1_4 = (CURVE.P + 1n) >> 2n;
 
 // Calculates modular square root using simplified Tonelli-Shanks for p ≡ 3 (mod 4)
@@ -862,7 +774,7 @@ function sqrt_mod(x) {
     return pow_mod(x, P_1_4, CURVE.P);
 }
 
-// Performs modular exponentiation using square-and-multiply algorithm
+// Computes modular exponentiation using square-and-multiply algorithm
 function pow_mod(base, exponent, modulus) {
     let result = 1n,
         b = mod(base, modulus),
@@ -873,19 +785,6 @@ function pow_mod(base, exponent, modulus) {
         e >>= 1n;
     }
     return result;
-}
-
-// Computes modular exponentiation using square-and-multiply algorithm with optional modulus P
-function xpow_mod(a, power, m = xmr_CURVE.P) {
-    let res = 1n;
-    while (power > 0n) {
-        if (power & 1n) {
-            res = xmod(res * a, m);
-        }
-        power >>= 1n;
-        a = xmod(a * a, m);
-    }
-    return res;
 }
 
 // Validates and normalizes private key to BigInt within curve order range
@@ -916,7 +815,9 @@ function get_publickey(privateKey, isCompressed = true) {
 // Export the main Point class
 secp.Point = Point;
 
-// ** Hash Functions: **
+// ============================================
+// HASH FUNCTIONS
+// ============================================
 
 // Generates HMAC using SJCL with optional hex encoding
 function hmac_bits(message, key, encode) {
@@ -947,7 +848,6 @@ function sha_sub(val, lim) {
 }
 
 // Keccak-256 hash function (used for Ethereum addresses)
-// Based on js-sha3 by Chen, Yi-Cyuan
 function keccak_256(input) {
     const rc = [
         1, 0, 32898, 0, 32906, 2147483648, 2147516416, 2147483648,
@@ -963,7 +863,6 @@ function keccak_256(input) {
             b = [],
             h, l;
         for (let n = 0; n < 48; n += 2) {
-            // Theta
             for (let x = 0; x < 10; x++) {
                 c[x] = s[x] ^ s[x + 10] ^ s[x + 20] ^ s[x + 30] ^ s[x + 40];
             }
@@ -975,7 +874,6 @@ function keccak_256(input) {
                     s[x + y + 1] ^= l;
                 }
             }
-            // Rho + Pi
             b[0] = s[0];
             b[1] = s[1];
             b[32] = s[11] << 4 | s[10] >>> 28;
@@ -1026,20 +924,17 @@ function keccak_256(input) {
             b[27] = s[39] << 8 | s[38] >>> 24;
             b[8] = s[48] << 14 | s[49] >>> 18;
             b[9] = s[49] << 14 | s[48] >>> 18;
-            // Chi
             for (let y = 0; y < 50; y += 10) {
                 for (let x = 0; x < 10; x += 2) {
                     s[y + x] = b[y + x] ^ (~b[y + (x + 2) % 10] & b[y + (x + 4) % 10]);
                     s[y + x + 1] = b[y + x + 1] ^ (~b[y + (x + 3) % 10] & b[y + (x + 5) % 10]);
                 }
             }
-            // Iota
             s[0] ^= rc[n];
             s[1] ^= rc[n + 1];
         }
     }
 
-    // Convert input to bytes
     let bytes;
     if (typeof input === "string") {
         bytes = new Uint8Array(input.length);
@@ -1058,7 +953,6 @@ function keccak_256(input) {
         blocks = new Array(35).fill(0);
     let i = 0;
 
-    // Absorb
     for (let pos = 0; pos < bytes.length; pos++) {
         blocks[i >> 2] |= bytes[pos] << ((i & 3) << 3);
         if (++i >= rate) {
@@ -1071,13 +965,11 @@ function keccak_256(input) {
         }
     }
 
-    // Pad and final block
     blocks[i >> 2] |= 1 << ((i & 3) << 3);
     blocks[block_count - 1] |= 0x80000000;
     for (let j = 0; j < block_count; j++) s[j] ^= blocks[j];
     keccak_f(s);
 
-    // Squeeze
     let hex = "";
     for (let i = 0; i < 32; i++) {
         const byte = (s[i >> 2] >> ((i & 3) << 3)) & 0xff;
@@ -1086,7 +978,9 @@ function keccak_256(input) {
     return hex;
 }
 
-// ** Key & Address Generation: **
+// ============================================
+// KEY & ADDRESS GENERATION
+// ============================================
 
 // Encodes private key to Wallet Import Format (WIF) with optional compression
 function privkey_wif(versionbytes, hexkey, comp) {
@@ -1096,7 +990,7 @@ function privkey_wif(versionbytes, hexkey, comp) {
 
 // Generates corresponding public key from a private key
 function priv_to_pub(priv) {
-    return secp.getPublicKey(priv, true);
+    return get_publickey(priv, true);
 }
 
 // Converts compressed public key to full uncompressed format
@@ -1137,12 +1031,12 @@ function to_checksum_address(e) {
     return r;
 }
 
-// ** Bitcoin Cash Specific: **
+// ============================================
+// BITCOIN CASH (CASHADDR)
+// ============================================
 
-// CashAddr encoding/decoding for Bitcoin Cash addresses
-// Based on cashaddrjs, using native BigInt
 const cashaddr = (function() {
-    const CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+    const CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
     const CHARSET_MAP = {};
     for (let i = 0; i < CHARSET.length; i++) {
         CHARSET_MAP[CHARSET[i]] = i;
@@ -1192,18 +1086,18 @@ const cashaddr = (function() {
         if (pad) {
             if (bits > 0) result.push((acc << (toBits - bits)) & maxv);
         } else if (bits >= fromBits || ((acc << (toBits - bits)) & maxv)) {
-            throw new Error('Invalid padding');
+            throw new Error("Invalid padding");
         }
         return new Uint8Array(result);
     }
 
     function createChecksum(prefix, payload) {
-        const prefixArray = prefixToArray(prefix);
-        const combined = new Uint8Array(prefixArray.length + payload.length + 8);
+        const prefixArray = prefixToArray(prefix),
+            combined = new Uint8Array(prefixArray.length + payload.length + 8);
         combined.set(prefixArray);
         combined.set(payload, prefixArray.length);
-        const mod = polymod(combined);
-        const checksum = new Uint8Array(8);
+        const mod = polymod(combined),
+            checksum = new Uint8Array(8);
         for (let i = 0; i < 8; i++) {
             checksum[7 - i] = Number((mod >> BigInt(i * 5)) & 31n);
         }
@@ -1211,8 +1105,8 @@ const cashaddr = (function() {
     }
 
     function verifyChecksum(prefix, payload) {
-        const prefixArray = prefixToArray(prefix);
-        const combined = new Uint8Array(prefixArray.length + payload.length);
+        const prefixArray = prefixToArray(prefix),
+            combined = new Uint8Array(prefixArray.length + payload.length);
         combined.set(prefixArray);
         combined.set(payload, prefixArray.length);
         return polymod(combined) === 0n;
@@ -1224,79 +1118,79 @@ const cashaddr = (function() {
 
     function getType(versionByte) {
         const typeValue = versionByte & 120;
-        if (typeValue === 0) return 'P2PKH';
-        if (typeValue === 8) return 'P2SH';
-        throw new Error('Invalid address type');
+        if (typeValue === 0) return "P2PKH";
+        if (typeValue === 8) return "P2SH";
+        throw new Error("Invalid address type");
     }
 
     return {
-        encode: function(prefix, type, hash) {
-            let versionByte = (type === 'P2PKH') ? 0 : (type === 'P2SH') ? 8 : null;
-            if (versionByte === null) throw new Error('Invalid type: ' + type);
+        "encode": function(prefix, type, hash) {
+            let versionByte = (type === "P2PKH") ? 0 : (type === "P2SH") ? 8 : null;
+            if (versionByte === null) throw new Error("Invalid type: " + type);
 
-            const hashBits = hash.length * 8;
-            const sizeMap = {
-                160: 0,
-                192: 1,
-                224: 2,
-                256: 3,
-                320: 4,
-                384: 5,
-                448: 6,
-                512: 7
-            };
-            if (!(hashBits in sizeMap)) throw new Error('Invalid hash size');
+            const hashBits = hash.length * 8,
+                sizeMap = {
+                    160: 0,
+                    192: 1,
+                    224: 2,
+                    256: 3,
+                    320: 4,
+                    384: 5,
+                    448: 6,
+                    512: 7
+                };
+            if (!(hashBits in sizeMap)) throw new Error("Invalid hash size");
             versionByte |= sizeMap[hashBits];
 
             const versionAndHash = new Uint8Array(hash.length + 1);
             versionAndHash[0] = versionByte;
             versionAndHash.set(hash, 1);
 
-            const payload = convertBits(versionAndHash, 8, 5, true);
-            const checksum = createChecksum(prefix, payload);
-            const combined = new Uint8Array(payload.length + checksum.length);
+            const payload = convertBits(versionAndHash, 8, 5, true),
+                checksum = createChecksum(prefix, payload),
+                combined = new Uint8Array(payload.length + checksum.length);
             combined.set(payload);
             combined.set(checksum, payload.length);
 
-            let result = prefix + ':';
+            let result = prefix + ":";
             for (let i = 0; i < combined.length; i++) {
                 result += CHARSET[combined[i]];
             }
             return result;
         },
 
-        decode: function(address) {
+        "decode": function(address) {
             const lower = address.toLowerCase();
             if (address !== lower && address !== address.toUpperCase()) {
-                throw new Error('Mixed case address');
+                throw new Error("Mixed case address");
             }
-            const parts = lower.split(':');
-            if (parts.length !== 2) throw new Error('Missing prefix');
+            const parts = lower.split(":");
+            if (parts.length !== 2) throw new Error("Missing prefix");
 
-            const prefix = parts[0];
-            const payloadStr = parts[1];
-            const payload = new Uint8Array(payloadStr.length);
+            const prefix = parts[0],
+                payloadStr = parts[1],
+                payload = new Uint8Array(payloadStr.length);
             for (let i = 0; i < payloadStr.length; i++) {
                 const char = payloadStr[i];
-                if (!(char in CHARSET_MAP)) throw new Error('Invalid character: ' + char);
+                if (!(char in CHARSET_MAP)) throw new Error("Invalid character: " + char);
                 payload[i] = CHARSET_MAP[char];
             }
 
-            if (!verifyChecksum(prefix, payload)) throw new Error('Invalid checksum');
+            if (!verifyChecksum(prefix, payload)) throw new Error("Invalid checksum");
 
-            const data = payload.slice(0, -8);
-            const converted = convertBits(data, 5, 8, false);
-            const versionByte = converted[0];
-            const hash = converted.slice(1);
+            const data = payload.slice(0, -8),
+                converted = convertBits(data, 5, 8, false),
+                versionByte = converted[0],
+                hash = converted.slice(1);
 
             if (hash.length * 8 !== getHashSize(versionByte)) {
-                throw new Error('Invalid hash size');
+                throw new Error("Invalid hash size");
             }
 
             return {
-                prefix: prefix,
+                prefix,
                 type: getType(versionByte),
-                hash: hash
+                hash
             };
         }
     };
@@ -1336,7 +1230,9 @@ function bch_cashaddr(prefix, type, legacy) {
     }
 }
 
-// ** LNURL & Lightning: **
+// ============================================
+// LNURL & LIGHTNING
+// ============================================
 
 // Decodes a Bech32 encoded LNURL
 function lnurl_decodeb32(lnurl) {
@@ -1377,8 +1273,11 @@ function lnurl_decodeb32(lnurl) {
     };
 }
 
-// ** Mnemonic Functions: **
+// ============================================
+// MNEMONIC FUNCTIONS
+// ============================================
 
+// Cleans and normalizes mnemonic string
 function clean_string(words) {
     return normalize_string(join_words(split_words(words)));
 }
@@ -1419,7 +1318,9 @@ function mnemonic_to_binary_string(mnemonic) {
     return idx.join("");
 }
 
-// ** Encryption: **
+// ============================================
+// ENCRYPTION
+// ============================================
 
 // Encrypts data using AES-GCM
 function aes_enc(params, keyString) {
@@ -1451,7 +1352,9 @@ function aes_dec(content, keyst) {
     }
 }
 
-// ** Miscellaneous: **
+// ============================================
+// MISCELLANEOUS
+// ============================================
 
 // Encodes a Nimiq transaction hash for use with Nimiq.watch
 function nimiq_hash(tx) {
@@ -1460,38 +1363,34 @@ function nimiq_hash(tx) {
     }).join("")));
 }
 
+// ============================================
+// SCRIPTHASH
+// ============================================
+
 // Convert address to scripthash, with support for Bitcoin Cash addresses
 function address_to_scripthash(addr, currency) {
-    // Convert BCH address to legacy
     const address = (currency === "bitcoin-cash") ? bch_legacy(addr) : addr;
-    // Determine address type and create scriptPubKey
     let script_pub_key;
-    // Handle Bech32 addresses (BTC and LTC SegWit)
+
     if (address.startsWith("bc1") || address.startsWith("tb1") || address.startsWith("ltc1")) {
-        // For native SegWit and Taproot addresses (bech32/bech32m)
         try {
             const decoded = bech32_decode(address);
             if (!decoded) throw new Error("Invalid bech32 address");
-            // Convert the witness program from 5-bit words to bytes
             const program = convert5to8(decoded.data.slice(1));
             if (!program) throw new Error("Invalid witness program");
-            if (decoded.data[0] === 1) { // Taproot
-                // P2TR: OP_1 <32-byte public key>
+            if (decoded.data[0] === 1) {
                 if (program.length !== 32) {
                     throw new Error("Invalid Taproot program length: " + program.length);
                 }
                 script_pub_key = "5120" + program.map(function(b) {
                     return b.toString(16).padStart(2, "0");
                 }).join("");
-            } else if (decoded.data[0] === 0) { // SegWit v0
-                // P2WPKH/P2WSH: OP_0 <program length in bytes> <program>
+            } else if (decoded.data[0] === 0) {
                 if (program.length === 20) {
-                    // P2WPKH (20-byte pubkey hash)
                     script_pub_key = "0014" + program.map(function(b) {
                         return b.toString(16).padStart(2, "0");
                     }).join("");
                 } else if (program.length === 32) {
-                    // P2WSH (32-byte script hash)
                     script_pub_key = "0020" + program.map(function(b) {
                         return b.toString(16).padStart(2, "0");
                     }).join("");
@@ -1505,19 +1404,14 @@ function address_to_scripthash(addr, currency) {
             throw new Error("Invalid bech32 address: " + error.message);
         }
     } else {
-        // For legacy or P2SH addresses
         try {
             const decoded = b58check_decode(address),
                 version = decoded.slice(0, 2),
                 hash = decoded.slice(2);
 
-            // BTC versions: 00 (P2PKH), 05 (P2SH)
-            // LTC versions: 30 (P2PKH), 32 or 05 (P2SH)
             if (version === "00" || version === "30") {
-                // P2PKH: OP_DUP OP_HASH160 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
                 script_pub_key = "76a914" + hash + "88ac";
             } else if (version === "05" || version === "32") {
-                // P2SH: OP_HASH160 <scriptHash> OP_EQUAL
                 script_pub_key = "a914" + hash + "87";
             } else {
                 throw new Error("Unsupported address version: " + version);
@@ -1527,9 +1421,7 @@ function address_to_scripthash(addr, currency) {
         }
     }
 
-    // Calculate the SHA256 hash of the scriptPubKey
     const script_hash = hmacsha(script_pub_key, "sha256", "hex");
-    // Reverse the bytes for the expected format
     return {
         "script_pub_key": script_pub_key,
         "hash": script_hash.match(/.{2}/g).reverse().join("")
@@ -1557,44 +1449,16 @@ function convert5to8(data) {
     return acc;
 }
 
-/**
- * CryptoUtils - Standalone cryptocurrency utilities library
- * 
- * STANDALONE USAGE (outside Bitrequest):
- * ----------------------------------------
- * <script src="assets_js_lib_sjcl.js"></script>
- * <script src="assets_js_lib_crypto_utils.js"></script>
- * <script>
- *   // Use via namespace:
- *   const bytes = CryptoUtils.hex_to_bytes("deadbeef");
- *   const addr = CryptoUtils.pub_to_address_bech32("bc", pubkey);
- *   
- *   // Or use globals directly (backwards compatible):
- *   const bytes = hex_to_bytes("deadbeef");
- * </script>
- * 
- * FEATURES:
- * - Base58 / Base58Check encoding
- * - Bech32 / Bech32m encoding
- * - Secp256k1 elliptic curve operations
- * - SHA256, RIPEMD160, Hash160
- * - Bitcoin/Litecoin address generation
- * - Bitcoin Cash CashAddr support
- * - Ethereum address generation
- * - BIP39 mnemonic utilities
- * - AES encryption/decryption
- * - LNURL decoding
- * 
- * @license AGPL-3.0
- * @see https://github.com/bitrequest/bitrequest.github.io
- */
+// ============================================
+// MODULE EXPORT
+// ============================================
 
 const CryptoUtils = {
     // Library info
-    VERSION: "1.0.0",
+    VERSION: "1.1.0",
 
     // Curve parameters
-    secp: secp,
+    secp,
     CURVE: CURVE,
 
     // === Core Helpers ===
@@ -1644,7 +1508,7 @@ const CryptoUtils = {
     // === Bech32 ===
     to_words,
     from_words,
-    convert,
+    convert_bits,
     polymod,
     hrp_expand,
     verify_checksum,
@@ -1667,7 +1531,6 @@ const CryptoUtils = {
     egcd,
     invert,
     pow_mod,
-    xpow_mod,
     sqrt_mod,
 
     // === Key Operations ===
@@ -1706,3 +1569,6 @@ const CryptoUtils = {
     address_to_scripthash,
     convert5to8
 };
+
+// Make CryptoUtils globally available
+window.CryptoUtils = CryptoUtils;
