@@ -455,8 +455,8 @@ glob_config = {
                     "prefix": {
                         "pub": 0,
                         "pubx": 76067358,
-                        "privx": 76066276,
                         "pubz": 78792518,
+                        "privx": 76066276,
                         "privz": 78791436
                     },
                     "pk_vbytes": {
@@ -611,8 +611,8 @@ glob_config = {
                     "prefix": {
                         "pub": 48,
                         "pubx": 27108450,
-                        "privx": 27106558,
                         "pubz": 78792518,
+                        "privx": 27106558,
                         "privz": 78791436
                     },
                     "pk_vbytes": {

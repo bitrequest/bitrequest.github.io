@@ -378,7 +378,8 @@ const bip32_configs = {
             "pub": 0,
             "pubx": 76067358,
             "pubz": 78792518,
-            "privx": 76066276
+            "privx": 76066276,
+            "privz": 78791436
         },
         "pk_vbytes": {
             "wif": 128
@@ -390,7 +391,8 @@ const bip32_configs = {
             "pub": 48,
             "pubx": 27108450,
             "pubz": 78792518,
-            "privx": 27106558
+            "privx": 27106558,
+            "privz": 78791436
         },
         "pk_vbytes": {
             "wif": 176
@@ -411,8 +413,8 @@ const bip32_configs = {
         "root_path": "m/44'/5'/0'/0/",
         "prefix": {
             "pub": 76,
-            "pubx": 50221772,
-            "privx": 50221816
+            "pubx": 76067358,
+            "privx": 76066276
         },
         "pk_vbytes": {
             "wif": 204
