@@ -1081,6 +1081,3 @@ const XmrUtils = {
     extract_xmr_payment_id,
     decode_rct_amount
 };
-
-// Make XmrUtils globally available
-window.XmrUtils = XmrUtils;

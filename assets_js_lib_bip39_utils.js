@@ -566,6 +566,3 @@ const Bip39Utils = {
     // Testing
     test_bip39_derivation
 };
-
-// Make Bip39Utils globally available
-window.Bip39Utils = Bip39Utils;

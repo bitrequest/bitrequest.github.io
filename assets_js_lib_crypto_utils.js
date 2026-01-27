@@ -1569,6 +1569,3 @@ const CryptoUtils = {
     address_to_scripthash,
     convert5to8
 };
-
-// Make CryptoUtils globally available
-window.CryptoUtils = CryptoUtils;
