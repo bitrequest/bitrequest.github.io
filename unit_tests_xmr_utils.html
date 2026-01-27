@@ -270,6 +270,9 @@
         // Display version
         document.getElementById("version").textContent = XmrUtils.VERSION || "1.1.0";
 
+        // Shorthand reference to test constants from library
+        const TC = XmrUtils.xmr_utils_const;
+
         // Use CryptoUtils methods directly to avoid global conflicts
         // (xmr_utils.js may expose hex_to_bytes/bytes_to_hex globally)
 
@@ -278,13 +281,13 @@
         let passed = 0, failed = 0;
 
         // ============================================================
-        // TEST CONSTANTS
+        // TEST CONSTANTS (for interactive tools)
         // ============================================================
         
-        // Secret spend key derived from test mnemonic
-        const TEST_SSK = "007d984c3df532fdd86cd83bf42482a5c2e180a51ae1d0096e13048fba1fa108";
-        // Corresponding address (pre-computed for when keccak_256 unavailable)
-        const TEST_ADDRESS = "477h3C6E6C4VLMR36bQL3yLcA8Aq3jts1AHLzm5QXipDdXVCYPnKEvUKykh2GTYqkkeQoTEhWpzvVQ4rMgLM1YpeD6qdHbS";
+        // Secret spend key for interactive tools (different from TC.test_spend_key)
+        const TEST_SSK = TC.test_spend_key;
+        // Corresponding address
+        const TEST_ADDRESS = TC.test_address;
 
         function test(name, fn) {
             tests.push({ name, fn });
@@ -310,6 +313,55 @@
             if (e.stack) console.error("Stack:", e.stack);
             console.groupEnd();
         }
+
+        // ============================================================
+        // BUILT-IN LIBRARY TESTS
+        // ============================================================
+
+        test("XmrUtils.test_xmr_derivation: verify spend key → address derivation", () => {
+            assertTrue(XmrUtils.test_xmr_derivation() === true, "XMR derivation should work");
+        });
+
+        test("XmrUtils.test_xmr_keys: verify spend key → view key derivation", () => {
+            assertTrue(XmrUtils.test_xmr_keys() === true, "XMR key derivation should work");
+        });
+
+        test("XmrUtils.test_xmr_address: verify address generation", () => {
+            assertTrue(XmrUtils.test_xmr_address() === true, "XMR address generation should work");
+        });
+
+        test("XmrUtils.test_xmr_compatibility: full compatibility check", () => {
+            const results = XmrUtils.test_xmr_compatibility();
+            assertTrue(results.compatible === true, "XMR should be compatible");
+            assertTrue(results.crypto_api === true, "crypto API should be available");
+            assertTrue(results.bigint === true, "BigInt should be functional");
+            assertTrue(results.keys === true, "key derivation should work");
+            assertTrue(results.address === true, "address generation should work");
+        });
+
+        // ============================================================
+        // TEST CONSTANTS VALIDATION
+        // ============================================================
+
+        test("xmr_utils_const: test_spend_key produces test_address", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = CryptoUtils.hex_to_bytes(TC.test_spend_key);
+            const keys = XmrUtils.xmr_getpubs(ssk, 0);
+            assertEqual(keys.address, TC.test_address, "Should produce expected address");
+        });
+
+        test("xmr_utils_const: test_spend_key produces test_view_key", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = CryptoUtils.hex_to_bytes(TC.test_spend_key);
+            const keys = XmrUtils.xmr_getpubs(ssk, 0);
+            assertEqual(keys.svk, TC.test_view_key, "Should produce expected view key");
+        });
 
         // ============================================================
         // UNIT TESTS
@@ -535,8 +587,6 @@
         });
 
         test("base58_decode: function exists", () => {
-            console.log("base58_decode type:", typeof XmrUtils.base58_decode);
-            console.log("base58_decode value:", XmrUtils.base58_decode);
             assertTrue(typeof XmrUtils.base58_decode === "function", "base58_decode should be a function");
         });
 

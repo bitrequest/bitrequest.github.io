@@ -57,6 +57,24 @@ const secp = {},
 secp.CURVE = CURVE;
 
 // ============================================
+// TEST CONSTANTS
+// ============================================
+
+const crypto_utils_const = {
+    "version": "1.1.0",
+    // secp256k1 test: private key 1 = generator point G
+    "test_privkey": "0000000000000000000000000000000000000000000000000000000000000001",
+    "test_pubkey": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+    // Derived from test phrase "army van defense carry jealous true garbage claim echo media make crunch"
+    "test_pubkey_bech32": "03bb4a626f63436a64d7cf1e441713cc964c0d53289a5b17acb1b9c262be57cb17",
+    "test_address_bech32": "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5",
+    "test_pubkey_eth": "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
+    "test_address_eth": "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
+    "test_legacy_address": "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
+    "test_address_cashaddr": "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22"
+};
+
+// ============================================
 // CORE HELPERS
 // ============================================
 
@@ -1450,6 +1468,84 @@ function convert5to8(data) {
 }
 
 // ============================================
+// COMPATIBILITY TESTING
+// ============================================
+
+// Tests crypto.getRandomValues availability
+function test_crypto_api() {
+    try {
+        return !!(crypto && crypto.getRandomValues);
+    } catch (e) {
+        console.error("CryptoUtils test_crypto_api:", e.message);
+        return false;
+    }
+}
+
+// Tests BigInt functionality
+function test_bigint() {
+    try {
+        return typeof BigInt === "function" &&
+            BigInt("9007199254740991") + BigInt(1) === BigInt("9007199254740992");
+    } catch (e) {
+        console.error("CryptoUtils test_bigint:", e.message);
+        return false;
+    }
+}
+
+// Tests secp256k1 private key to public key derivation
+function test_secp256k1() {
+    try {
+        return get_publickey(crypto_utils_const.test_privkey) === crypto_utils_const.test_pubkey;
+    } catch (e) {
+        console.error("CryptoUtils test_secp256k1:", e.message);
+        return false;
+    }
+}
+
+// Tests bech32 address encoding
+function test_bech32() {
+    try {
+        return pub_to_address_bech32("bc", crypto_utils_const.test_pubkey_bech32) === crypto_utils_const.test_address_bech32;
+    } catch (e) {
+        console.error("CryptoUtils test_bech32:", e.message);
+        return false;
+    }
+}
+
+// Tests Bitcoin Cash cashaddr encoding
+function test_cashaddr() {
+    try {
+        return pub_to_cashaddr(crypto_utils_const.test_legacy_address) === crypto_utils_const.test_address_cashaddr;
+    } catch (e) {
+        console.error("CryptoUtils test_cashaddr:", e.message);
+        return false;
+    }
+}
+
+// Tests keccak256 / Ethereum address derivation
+function test_keccak256() {
+    try {
+        return pub_to_eth_address(crypto_utils_const.test_pubkey_eth) === crypto_utils_const.test_address_eth;
+    } catch (e) {
+        console.error("CryptoUtils test_keccak256:", e.message);
+        return false;
+    }
+}
+
+// Tests AES encryption round-trip
+function test_aes() {
+    try {
+        const test_data = "crypto_utils_test",
+            test_key = "0123456789abcdef0123456789abcdef",
+            encrypted = aes_enc(test_data, test_key);
+        return aes_dec(encrypted, test_key) === test_data;
+    } catch (e) {
+        console.error("CryptoUtils test_aes:", e.message);
+        return false;
+    }
+}
+
+// ============================================
 // MODULE EXPORT
 // ============================================
 
@@ -1567,5 +1663,17 @@ const CryptoUtils = {
 
     // === Validation ===
     address_to_scripthash,
-    convert5to8
+    convert5to8,
+
+    // === Constants ===
+    crypto_utils_const,
+
+    // === Testing ===
+    test_crypto_api,
+    test_bigint,
+    test_secp256k1,
+    test_bech32,
+    test_cashaddr,
+    test_keccak256,
+    test_aes
 };

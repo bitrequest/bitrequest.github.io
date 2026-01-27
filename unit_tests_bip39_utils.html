@@ -321,6 +321,9 @@
         // Display version
         document.getElementById("version").textContent = Bip39Utils.version || "1.1.0";
 
+        // Shorthand reference to test constants from library
+        const TC = Bip39Utils.bip39_utils_const;
+
         // Test framework
         const tests = [];
         let passed = 0, failed = 0;
@@ -351,13 +354,76 @@
         }
 
         // ============================================================
+        // BUILT-IN LIBRARY TESTS
+        // ============================================================
+
+        test("Bip39Utils.test_seed: verify mnemonic → seed derivation", () => {
+            assertTrue(Bip39Utils.test_seed() === true, "seed derivation should work");
+        });
+
+        test("Bip39Utils.test_derivation: verify BIP44 address derivation", () => {
+            assertTrue(Bip39Utils.test_derivation() === true, "address derivation should work");
+        });
+
+        test("Bip39Utils.test_xpub_support: verify xpub derivation", () => {
+            assertTrue(Bip39Utils.test_xpub_support() === true, "xpub derivation should work");
+        });
+
+        test("Bip39Utils.test_bip39_compatibility: full compatibility check", () => {
+            const results = Bip39Utils.test_bip39_compatibility();
+            assertTrue(results.compatible === true, "BIP39 should be compatible");
+            assertTrue(results.crypto_api === true, "crypto API should be available");
+            assertTrue(results.bigint === true, "BigInt should be functional");
+            assertTrue(results.secp256k1 === true, "secp256k1 should work");
+            assertTrue(results.seed === true, "seed derivation should work");
+            assertTrue(results.derivation === true, "address derivation should work");
+            assertTrue(results.xpub === true, "xpub derivation should work");
+        });
+
+        // ============================================================
+        // TEST CONSTANTS VALIDATION
+        // ============================================================
+
+        test("bip39_utils_const: test_phrase produces expected_seed", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
+            assertEqual(seed, TC.expected_seed, "Should produce expected seed");
+        });
+
+        test("bip39_utils_const: expected_seed produces expected_address", () => {
+            const root_key = Bip39Utils.get_rootkey(TC.expected_seed);
+            const derive_params = {
+                "dpath": "m/44'/0'/0'/0/0",
+                "key": root_key.slice(0, 64),
+                "cc": root_key.slice(64)
+            };
+            const derived_keys = Bip39Utils.derive_x(derive_params);
+            const bip32_config = Bip39Utils.get_bip32dat("bitcoin");
+            const derived_address = Bip39Utils.format_keys(TC.expected_seed, derived_keys, bip32_config, 0, "bitcoin");
+            assertEqual(derived_address.address, TC.expected_address, "Should produce expected address");
+        });
+
+        test("bip39_utils_const: test_xpub produces expected_address", () => {
+            const xpub_data = Bip39Utils.key_cc_xpub(TC.test_xpub);
+            const derive_params = {
+                "dpath": "M/0/0",
+                "key": xpub_data.key,
+                "cc": xpub_data.cc,
+                "vb": xpub_data.version
+            };
+            const derived_keys = Bip39Utils.derive_x(derive_params);
+            const bip32_config = Bip39Utils.get_bip32dat("bitcoin");
+            const derived_address = Bip39Utils.format_keys(null, derived_keys, bip32_config, 0, "bitcoin");
+            assertEqual(derived_address.address, TC.expected_address, "Xpub should produce expected address");
+        });
+
+        // ============================================================
         // UNIT TESTS
         // ============================================================
 
         // === Mnemonic Validation Tests ===
 
         test("validate_mnemonic: valid test phrase", () => {
-            const result = Bip39Utils.validate_mnemonic(Bip39Utils.test_phrase);
+            const result = Bip39Utils.validate_mnemonic(TC.test_phrase);
             assertEqual(result, true, "Test phrase should be valid");
         });
 
@@ -389,52 +455,52 @@
 
         test("validate_mnemonic: word 'true' works correctly", () => {
             // Test that the word "true" (which is in BIP39 wordlist) validates correctly
-            const result = Bip39Utils.validate_mnemonic(Bip39Utils.test_phrase);
+            const result = Bip39Utils.validate_mnemonic(TC.test_phrase);
             assertEqual(result, true, "Phrase with word 'true' should validate");
         });
 
         // === Mnemonic to Seed Tests ===
 
         test("mnemonic_to_seed: test phrase", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
-            assertEqual(seed, Bip39Utils.expected_seed, "Seed should match expected");
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
+            assertEqual(seed, TC.expected_seed, "Seed should match expected");
         });
 
         test("mnemonic_to_seed: output length (128 hex chars)", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             assertEqual(seed.length, 128, "Seed should be 64 bytes = 128 hex");
         });
 
         test("mnemonic_to_seed: deterministic", () => {
-            const seed1 = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
-            const seed2 = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed1 = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
+            const seed2 = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             assertEqual(seed1, seed2, "Same phrase should give same seed");
         });
 
         test("mnemonic_to_seed: with passphrase", () => {
-            const seedNoPass = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
-            const seedWithPass = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase, "password");
+            const seedNoPass = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
+            const seedWithPass = Bip39Utils.mnemonic_to_seed(TC.test_phrase, "password");
             assertTrue(seedNoPass !== seedWithPass, "Passphrase should change seed");
         });
 
         // === Root Key Tests ===
 
         test("get_rootkey: output length (128 hex chars)", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const rootkey = Bip39Utils.get_rootkey(seed);
             assertEqual(rootkey.length, 128, "Root key should be 128 hex chars");
         });
 
         test("get_rootkey: deterministic", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root1 = Bip39Utils.get_rootkey(seed);
             const root2 = Bip39Utils.get_rootkey(seed);
             assertEqual(root1, root2, "Should be deterministic");
         });
 
         test("get_rootkey: different seeds give different roots", () => {
-            const seed1 = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
-            const seed2 = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase, "password");
+            const seed1 = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
+            const seed2 = Bip39Utils.mnemonic_to_seed(TC.test_phrase, "password");
             const root1 = Bip39Utils.get_rootkey(seed1);
             const root2 = Bip39Utils.get_rootkey(seed2);
             assertTrue(root1 !== root2, "Different seeds give different roots");
@@ -443,7 +509,7 @@
         // === Key Derivation Tests ===
 
         test("derive_x: BIP44 path", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const derived = Bip39Utils.derive_x({
                 dpath: "m/44'/0'/0'/0/0",
@@ -455,7 +521,7 @@
         });
 
         test("derive_x: BIP84 path", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const derived = Bip39Utils.derive_x({
                 dpath: "m/84'/0'/0'/0/0",
@@ -467,7 +533,7 @@
         });
 
         test("derive_x: different indices give different keys", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const key0 = Bip39Utils.derive_x({
                 dpath: "m/84'/0'/0'/0/0",
@@ -483,7 +549,7 @@
         });
 
         test("derive_child_key: single derivation step", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const child = Bip39Utils.derive_child_key(
                 root.slice(0, 64),
@@ -499,7 +565,7 @@
         // === Address Generation Tests ===
 
         test("format_keys: Bitcoin legacy address", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const derived = Bip39Utils.derive_x({
                 dpath: "m/44'/0'/0'/0/0",
@@ -511,7 +577,7 @@
         });
 
         test("format_keys: Bitcoin SegWit address (BIP84)", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const derived = Bip39Utils.derive_x({
                 dpath: "m/84'/0'/0'/0/0",
@@ -523,7 +589,7 @@
         });
 
         test("format_keys: Ethereum address", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const derived = Bip39Utils.derive_x({
                 dpath: "m/44'/60'/0'/0/0",
@@ -536,7 +602,7 @@
         });
 
         test("format_keys: Litecoin SegWit address", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const derived = Bip39Utils.derive_x({
                 dpath: "m/84'/2'/0'/0/0",
@@ -548,7 +614,7 @@
         });
 
         test("format_keys: Dogecoin address", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const derived = Bip39Utils.derive_x({
                 dpath: "m/44'/3'/0'/0/0",
@@ -560,7 +626,7 @@
         });
 
         test("format_keys: expected Bitcoin address from test phrase", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const derived = Bip39Utils.derive_x({
                 dpath: "m/44'/0'/0'/0/0",
@@ -568,13 +634,13 @@
                 cc: root.slice(64)
             });
             const formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32dat("bitcoin"), 0, "bitcoin");
-            assertEqual(formatted.address, Bip39Utils.expected_address, "Should match expected address");
+            assertEqual(formatted.address, TC.expected_address, "Should match expected address");
         });
 
         // === xPub Tests ===
 
         test("key_cc_xpub: parse xpub structure", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const derived = Bip39Utils.derive_x({
                 dpath: "m/84'/0'/0'",
@@ -589,7 +655,7 @@
         });
 
         test("ext_keys: generate extended keys", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const derived = Bip39Utils.derive_x({
                 dpath: "m/84'/0'/0'",
@@ -606,7 +672,7 @@
         });
 
         test("xpub_obj: create xpub object", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             // xpub_obj signature: (coin_or_config, root_path, chain_code, key)
             const xpubObj = Bip39Utils.xpub_obj("bitcoin", "m/84'/0'/0'/0", root.slice(64), root.slice(0, 64));
@@ -646,7 +712,7 @@
 
         test("find_invalid_word: valid phrase returns undefined", () => {
             // find_invalid_word expects an array of words
-            const words = Bip39Utils.test_phrase.split(" ");
+            const words = TC.test_phrase.split(" ");
             const result = Bip39Utils.find_invalid_word(words);
             assertEqual(result, undefined, "Valid phrase should return undefined");
         });
@@ -700,13 +766,13 @@
 
         test("parse_seed: prepares mnemonic and passphrase for PBKDF2", () => {
             // parse_seed takes mnemonic and optional passphrase, returns bit arrays for PBKDF2
-            const parsed = Bip39Utils.parse_seed(Bip39Utils.test_phrase, "");
+            const parsed = Bip39Utils.parse_seed(TC.test_phrase, "");
             assertTrue(parsed.hasOwnProperty("mnemonic"), "Should have mnemonic bits");
             assertTrue(parsed.hasOwnProperty("passphrase"), "Should have passphrase bits (salted)");
         });
 
         test("objectify_extended: parse extended key", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const derived = Bip39Utils.derive_x({
                 dpath: "m/84'/0'/0'",
@@ -723,7 +789,7 @@
         // === keypair_array Tests ===
 
         test("keypair_array: derive multiple addresses", () => {
-            const seed = Bip39Utils.mnemonic_to_seed(Bip39Utils.test_phrase);
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
             const root = Bip39Utils.get_rootkey(seed);
             const config = Bip39Utils.get_bip32dat("bitcoin");
             const pairs = Bip39Utils.keypair_array(
@@ -744,28 +810,37 @@
         // === Test Constants ===
 
         test("test_phrase: is defined", () => {
-            assertTrue(typeof Bip39Utils.test_phrase === "string", "test_phrase should be string");
-            assertTrue(Bip39Utils.test_phrase.length > 0, "test_phrase should not be empty");
+            assertTrue(typeof TC.test_phrase === "string", "test_phrase should be string");
+            assertTrue(TC.test_phrase.length > 0, "test_phrase should not be empty");
         });
 
         test("expected_seed: is defined", () => {
-            assertTrue(typeof Bip39Utils.expected_seed === "string", "expected_seed should be string");
-            assertEqual(Bip39Utils.expected_seed.length, 128, "expected_seed should be 128 chars");
+            assertTrue(typeof TC.expected_seed === "string", "expected_seed should be string");
+            assertEqual(TC.expected_seed.length, 128, "expected_seed should be 128 chars");
         });
 
         test("expected_address: is defined", () => {
-            assertTrue(typeof Bip39Utils.expected_address === "string", "expected_address should be string");
-            assertTrue(Bip39Utils.expected_address.startsWith("1"), "expected_address should start with 1");
+            assertTrue(typeof TC.expected_address === "string", "expected_address should be string");
+            assertTrue(TC.expected_address.startsWith("1"), "expected_address should start with 1");
         });
 
         // === Integration Test ===
 
-        test("test_bip39_derivation: full derivation test", () => {
-            const result = Bip39Utils.test_bip39_derivation();
-            // test_bip39_derivation returns { success: boolean, tests: array }
-            assertTrue(typeof result === "object", "Should return result object");
-            assertTrue(result.hasOwnProperty("success"), "Should have success property");
-            assertEqual(result.success, true, "Full derivation test should pass");
+        test("full derivation flow: phrase → seed → address", () => {
+            // This test verifies the complete derivation chain
+            const seed = Bip39Utils.mnemonic_to_seed(TC.test_phrase);
+            assertEqual(seed, TC.expected_seed, "Seed should match");
+            
+            const root_key = Bip39Utils.get_rootkey(seed);
+            const derive_params = {
+                "dpath": "m/44'/0'/0'/0/0",
+                "key": root_key.slice(0, 64),
+                "cc": root_key.slice(64)
+            };
+            const derived_keys = Bip39Utils.derive_x(derive_params);
+            const bip32_config = Bip39Utils.get_bip32dat("bitcoin");
+            const result = Bip39Utils.format_keys(seed, derived_keys, bip32_config, 0, "bitcoin");
+            assertEqual(result.address, TC.expected_address, "Address should match expected");
         });
 
         // Run all tests
@@ -871,7 +946,7 @@
         }
 
         function useTestPhrase() {
-            document.getElementById("validate-input").value = Bip39Utils.test_phrase;
+            document.getElementById("validate-input").value = TC.test_phrase;
             validateMnemonic();
         }
 
@@ -908,7 +983,7 @@
         }
 
         function useTestPhraseForSeed() {
-            document.getElementById("seed-mnemonic").value = Bip39Utils.test_phrase;
+            document.getElementById("seed-mnemonic").value = TC.test_phrase;
             mnemonicToSeed();
         }
 
@@ -943,7 +1018,7 @@
         }
 
         function useTestSeed() {
-            document.getElementById("rootkey-seed").value = Bip39Utils.expected_seed;
+            document.getElementById("rootkey-seed").value = TC.expected_seed;
             seedToRootKey();
         }
 
@@ -1025,7 +1100,7 @@
         }
 
         function useTestRootKey() {
-            const seed = Bip39Utils.expected_seed,
+            const seed = TC.expected_seed,
                   root_key = Bip39Utils.get_rootkey(seed);
             document.getElementById("derive-key").value = root_key.slice(0, 64);
             document.getElementById("derive-chaincode").value = root_key.slice(64);
@@ -1107,7 +1182,7 @@
         }
 
         function useTestPhraseForBatch() {
-            document.getElementById("batch-mnemonic").value = Bip39Utils.test_phrase;
+            document.getElementById("batch-mnemonic").value = TC.test_phrase;
             batchDerive();
         }
 
@@ -1183,7 +1258,7 @@
         }
 
         function useTestPhraseForXpubs() {
-            document.getElementById("xpub-gen-mnemonic").value = Bip39Utils.test_phrase;
+            document.getElementById("xpub-gen-mnemonic").value = TC.test_phrase;
             generateAllXpubs();
         }
 

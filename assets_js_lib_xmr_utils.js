@@ -54,6 +54,19 @@ const l = 7237005577332262213973186563042994240857116359379907606001950938285454
 let xmr_I = null;
 
 // ============================================
+// TEST CONSTANTS
+// ============================================
+
+const xmr_utils_const = {
+    "version": "1.1.0",
+    // Derived from test phrase "army van defense carry jealous true garbage claim echo media make crunch"
+    // via BIP44 path m/44'/128'/0'/0/0 + sc_reduce32(fasthash(privkey))
+    "test_spend_key": "007d984c3df532fdd86cd83bf42482a5c2e180a51ae1d0096e13048fba1fa108",
+    "test_view_key": "e4d63789cdfa2ec48571e93e47520690b2c6e11386c90448e8b357d1cd917c00",
+    "test_address": "477h3C6E6C4VLMR36bQL3yLcA8Aq3jts1AHLzm5QXipDdXVCYPnKEvUKykh2GTYqkkeQoTEhWpzvVQ4rMgLM1YpeD6qdHbS"
+};
+
+// ============================================
 // MONERO BASE58 ENCODING
 // ============================================
 
@@ -1022,6 +1035,100 @@ function decode_rct_amount(rct, output_idx, shared_secret_hex) {
 }
 
 // ============================================
+// COMPATIBILITY TESTING
+// ============================================
+
+// Tests Secret Spend Key → Full Wallet Keys derivation
+// Can be called with custom spend_key/expected_address or uses defaults from xmr_utils_const
+function test_xmr_derivation(spend_key, expected_address) {
+    try {
+        const ssk = spend_key || hex_to_bytes(xmr_utils_const.test_spend_key),
+            expected = expected_address || xmr_utils_const.test_address,
+            derived = xmr_getpubs(ssk, 0);
+        return derived.address === expected;
+    } catch (e) {
+        console.error("XmrUtils test_xmr_derivation:", e.message);
+        return false;
+    }
+}
+
+// Tests XMR public key derivation from spend key
+function test_xmr_keys() {
+    try {
+        const spend_key = hex_to_bytes(xmr_utils_const.test_spend_key),
+            derived = xmr_getpubs(spend_key, 0);
+        return derived.svk === xmr_utils_const.test_view_key;
+    } catch (e) {
+        console.error("XmrUtils test_xmr_keys:", e.message);
+        return false;
+    }
+}
+
+// Tests XMR address generation
+function test_xmr_address() {
+    try {
+        const spend_key = hex_to_bytes(xmr_utils_const.test_spend_key),
+            derived = xmr_getpubs(spend_key, 0);
+        return derived.address === xmr_utils_const.test_address;
+    } catch (e) {
+        console.error("XmrUtils test_xmr_address:", e.message);
+        return false;
+    }
+}
+
+// Full compatibility test - calls CryptoUtils tests + XMR tests
+function test_xmr_compatibility() {
+    const start_time = typeof performance !== "undefined" ? performance.now() : Date.now(),
+        results = {
+            "compatible": false,
+            "crypto_api": false,
+            "bigint": false,
+            "keys": false,
+            "address": false,
+            "errors": [],
+            "timing_ms": 0
+        };
+
+    // Fail fast: Check crypto basics from CryptoUtils
+    results.crypto_api = CryptoUtils.test_crypto_api();
+    if (!results.crypto_api) {
+        results.errors.push("crypto API not available");
+        results.timing_ms = (typeof performance !== "undefined" ? performance.now() : Date.now()) - start_time;
+        console.error("XmrUtils: Compatibility test failed", results.errors);
+        return results;
+    }
+
+    results.bigint = CryptoUtils.test_bigint();
+    if (!results.bigint) {
+        results.errors.push("BigInt not functional");
+        results.timing_ms = (typeof performance !== "undefined" ? performance.now() : Date.now()) - start_time;
+        console.error("XmrUtils: Compatibility test failed", results.errors);
+        return results;
+    }
+
+    // Test XMR key derivation
+    results.keys = test_xmr_keys();
+    if (!results.keys) {
+        results.errors.push("XMR key derivation failed");
+    }
+
+    // Test XMR address generation
+    results.address = test_xmr_address();
+    if (!results.address) {
+        results.errors.push("XMR address generation failed");
+    }
+
+    results.compatible = results.keys && results.address;
+    results.timing_ms = (typeof performance !== "undefined" ? performance.now() : Date.now()) - start_time;
+
+    if (results.errors.length > 0) {
+        console.error("XmrUtils: Compatibility test failed", results.errors);
+    }
+
+    return results;
+}
+
+// ============================================
 // MODULE EXPORT
 // ============================================
 
@@ -1079,5 +1186,14 @@ const XmrUtils = {
     // === Transaction Parsing ===
     parse_xmr_tx_hex,
     extract_xmr_payment_id,
-    decode_rct_amount
+    decode_rct_amount,
+
+    // === Constants ===
+    xmr_utils_const,
+
+    // === Testing ===
+    test_xmr_derivation,
+    test_xmr_keys,
+    test_xmr_address,
+    test_xmr_compatibility
 };

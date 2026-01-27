@@ -140,75 +140,80 @@ $(document).ready(function() {
 
 // Validates BIP39 implementation, crypto support, and address derivation for multiple cryptocurrencies
 function test_bip39() {
-    if (!crypto) { // test for window.crypto
-        disable_bip39_support();
-        return
-    }
-    if (glob_const.has_bigint === false) { // test for js BigInt
-        disable_bip39_support();
-        return
-    }
-    const key_string = bip39_const.expected_seed.slice(0, 32),
-        encrypted_test = aes_enc(bip39_const.test_phrase, key_string),
-        decrypted_test = aes_dec(encrypted_test, key_string);
-    if (bip39_const.test_phrase !== decrypted_test) { // test encryption
-        disable_bip39_support();
-        return
-    }
-    if (mnemonic_to_seed(bip39_const.test_phrase) !== bip39_const.expected_seed || test_derivation() === false) {
+    const start_time = typeof performance !== "undefined" ? performance.now() : Date.now();
+
+    // Test 1: Core BIP39 compatibility (includes crypto_api, bigint, secp256k1, seed, derivation)
+    const bip39_results = Bip39Utils.test_bip39_compatibility();
+    if (!bip39_results.compatible) {
         disable_bip39_support();
         const failed_coins = ["bitcoin", "litecoin", "dogecoin", "dash", "ethereum", "bitcoin-cash", "monero", "nano"];
         mark_coins_non_derivable(failed_coins);
         failed_coins.forEach(coin => {
             bip39_const.c_derive[coin] = false;
         });
+        console.error("BIP39 core test failed:", bip39_results.errors);
+        return;
     }
+
+    // Test 2: AES encryption (app-specific test using app constants)
+    if (!CryptoUtils.test_aes()) {
+        disable_bip39_support();
+        console.error("AES encryption test failed");
+        return;
+    }
+
+    // Test 3: Coin-specific address format tests
     const coin_checks = [{
-            "check": bech32_check,
-            "coin": "bitcoin"
+            "check": CryptoUtils.test_bech32,
+            "coins": ["bitcoin", "litecoin"]
         },
         {
-            "check": bech32_check,
-            "coin": "litecoin"
+            "check": CryptoUtils.test_cashaddr,
+            "coins": ["bitcoin-cash"]
         },
         {
-            "check": cashaddr_check,
-            "coin": "bitcoin-cash"
-        },
-        {
-            "check": fasthash_check,
-            "coin": "ethereum"
+            "check": CryptoUtils.test_keccak256,
+            "coins": ["ethereum"]
         },
         {
             "check": nano_check,
-            "coin": "nano"
+            "coins": ["nano"]
         },
         {
             "check": xmr_check,
-            "coin": "monero"
+            "coins": ["monero"]
         }
     ];
+
     coin_checks.forEach(function({
         check,
-        coin
+        coins
     }) {
         if (check() === false) {
-            mark_coins_non_derivable([coin]);
-            bip39_const.c_derive[coin] = false;
+            mark_coins_non_derivable(coins);
+            coins.forEach(coin => {
+                bip39_const.c_derive[coin] = false;
+            });
         }
     });
-    // check xpub derivation
-    if (xpub_check() === false) { // test for btc xpub derivation
+
+    // Test 4: Xpub derivation
+    if (!bip39_results.xpub) {
         const xpub_failed = ["bitcoin", "litecoin", "dogecoin", "dash", "bitcoin-cash"];
         mark_coins_xpub_incompatible(xpub_failed);
         xpub_failed.forEach(coin => {
             bip39_const.can_xpub[coin] = false;
         });
     }
-    if (eth_xpub_check() === false) { // test for ethereum xpub derivation
+
+    // Test 5: Ethereum xpub (same as keccak256 test)
+    if (!CryptoUtils.test_keccak256()) {
         mark_coins_xpub_incompatible(["ethereum"]);
         bip39_const.can_xpub.ethereum = false;
     }
+
+    const timing = (typeof performance !== "undefined" ? performance.now() : Date.now()) - start_time;
+    console.log("BIP39 compatibility tests completed in " + timing.toFixed(2) + "ms");
 }
 
 // Marks interface as BIP39 incompatible and disables derivation testing
@@ -279,114 +284,24 @@ function validate_trial_status() {
 
 // ** BIP39 Test Functions: **
 
-// Validates Bitcoin address derivation using BIP44 path against expected test vector
-function test_derivation() {
-    try {
-        const coin = "bitcoin",
-            root_key = get_rootkey(bip39_const.expected_seed),
-            bip32_config = get_bip32dat(coin),
-            derive_params = {
-                "dpath": "m/44'/0'/0'/0/0",
-                "key": root_key.slice(0, 64),
-                "cc": root_key.slice(64)
-            },
-            derived_keys = derive_x(derive_params),
-            derived_address = format_keys(bip39_const.expected_seed, derived_keys, bip32_config, 0, coin);
-        return derived_address.address === bip39_const.expected_address;
-    } catch (e) {
-        console.error(e.name, e.message);
-        return false
-    }
-}
-
-// Validates Bech32 address format derivation against known test public key
-function bech32_check() {
-    try {
-        const test_pubkey = "03bb4a626f63436a64d7cf1e441713cc964c0d53289a5b17acb1b9c262be57cb17",
-            derived_address = pub_to_address_bech32("bc", test_pubkey);
-        return glob_const.test_address.bitcoin === derived_address;
-    } catch (e) {
-        console.error(e.name, e.message);
-        return false
-    }
-}
-
-// Validates conversion from legacy to CashAddr format for Bitcoin Cash addresses
-function cashaddr_check() {
-    try {
-        const legacy_address = "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
-            cash_address = pub_to_cashaddr(legacy_address);
-        return glob_const.test_address["bitcoin-cash"] === cash_address;
-    } catch (e) {
-        console.error(e.name, e.message);
-        return false
-    }
-}
-
-// Validates keccak256 conversion
-function fasthash_check() {
-    try {
-        const test_pubkey = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
-            eth_address = pub_to_eth_address(test_pubkey);
-        return glob_const.test_address.ethereum === eth_address;
-    } catch (e) {
-        console.error(e.name, e.message);
-        return false
-    }
-}
-
 // Validates Nano address derivation from seed using NanocurrencyWeb library
 function nano_check() {
     try {
         return glob_const.test_address.nano === NanocurrencyWeb.wallet.accounts(bip39_const.expected_seed, 0, 0)[0].address;
     } catch (e) {
-        console.error(e.name, e.message);
-        return false
+        console.error("nano_check:", e.message);
+        return false;
     }
 }
 
-// Validates Monero address derivation from spend key using Coinomi test vector
-function xmr_check() { // https://coinomi.github.io/tools/bip39/
+// Validates Monero full chain: seed → spend key → view key → address
+function xmr_check() {
     try {
-        const spend_key = get_ssk(bip39_const.expected_seed, true),
-            derived_keys = xmr_getpubs(spend_key, 0);
-        return glob_const.test_address.monero === derived_keys.address;
+        const spend_key = get_ssk(bip39_const.expected_seed, true);
+        return XmrUtils.test_xmr_derivation(spend_key, glob_const.test_address.monero);
     } catch (e) {
-        console.error(e.name, e.message);
-        return false
-    }
-}
-
-// Validates Bitcoin xpub derivation against known addresses using both regular and Bech32 formats
-function xpub_check() {
-    try {
-        const coin = "bitcoin",
-            xpub_data = key_cc_xpub("xpub6Cy7dUR4ZKF22HEuVq7epRgRsoXfL2MK1RE81CSvp1ZySySoYGXk5PUY9y9Cc5ExpnSwXyimQAsVhyyPDNDrfj4xjDsKZJNYgsHXoEPNCYQ"),
-            derive_params = {
-                "dpath": "M/0/0",
-                "key": xpub_data.key,
-                "cc": xpub_data.cc,
-                "vb": xpub_data.version
-            },
-            derived_keys = derive_x(derive_params),
-            bip32_config = get_bip32dat(coin),
-            derived_address = format_keys(null, derived_keys, bip32_config, 0, coin);
-        return derived_address.address === bip39_const.expected_address;
-    } catch (e) {
-        console.error(e.name, e.message);
-        return false
-    }
-}
-
-// Validates Ethereum xpub derivation by checking public key to address conversion
-function eth_xpub_check() {
-    try {
-        const test_pubkey = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
-            derived_address = pub_to_eth_address(test_pubkey);
-        return glob_const.test_address["ethereum"] === derived_address;
-    } catch (e) {
-        console.error(e.name, e.message);
-        return false
+        console.error("xmr_check:", e.message);
+        return false;
     }
 }
 

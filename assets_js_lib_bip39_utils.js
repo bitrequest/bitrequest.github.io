@@ -36,7 +36,8 @@ const bip39_utils_const = {
     "version": "1.1.0",
     "test_phrase": "army van defense carry jealous true garbage claim echo media make crunch",
     "expected_seed": "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570",
-    "expected_address": "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm"
+    "expected_address": "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm",
+    "test_xpub": "xpub6Cy7dUR4ZKF22HEuVq7epRgRsoXfL2MK1RE81CSvp1ZySySoYGXk5PUY9y9Cc5ExpnSwXyimQAsVhyyPDNDrfj4xjDsKZJNYgsHXoEPNCYQ"
 };
 
 // ============================================
@@ -460,37 +461,24 @@ function shuffle_array(array) {
 }
 
 // ============================================
-// TEST FUNCTIONS
+// COMPATIBILITY TESTING
 // ============================================
 
-// Validates complete BIP39/BIP32 implementation using test vectors
-function test_bip39_derivation() {
-    const results = {
-            "success": true,
-            "tests": []
-        },
-        seed = mnemonic_to_seed(bip39_utils_const.test_phrase),
-        seed_test = {
-            "name": "Mnemonic to Seed",
-            "expected": bip39_utils_const.expected_seed,
-            "actual": seed,
-            "pass": seed === bip39_utils_const.expected_seed
-        };
-    results.tests.push(seed_test);
-    if (!seed_test.pass) results.success = false;
-
-    const is_valid = validate_mnemonic(bip39_utils_const.test_phrase),
-        validate_test = {
-            "name": "Validate Mnemonic",
-            "expected": true,
-            "actual": is_valid,
-            "pass": is_valid === true
-        };
-    results.tests.push(validate_test);
-    if (!validate_test.pass) results.success = false;
-
+// Tests mnemonic to seed derivation
+function test_seed() {
     try {
-        const root_key = get_rootkey(seed),
+        return mnemonic_to_seed(bip39_utils_const.test_phrase) === bip39_utils_const.expected_seed;
+    } catch (e) {
+        console.error("Bip39Utils test_seed:", e.message);
+        return false;
+    }
+}
+
+// Tests BIP44 address derivation
+function test_derivation() {
+    try {
+        const seed = bip39_utils_const.expected_seed,
+            root_key = get_rootkey(seed),
             bip32_config = get_bip32dat("bitcoin"),
             derive_params = {
                 "dpath": "m/44'/0'/0'/0/0",
@@ -499,23 +487,100 @@ function test_bip39_derivation() {
             },
             derived_keys = derive_x(derive_params),
             derived_address = format_keys(seed, derived_keys, bip32_config, 0, "bitcoin");
-
-        const address_test = {
-            "name": "BIP44 Address Derivation",
-            "expected": bip39_utils_const.expected_address,
-            "actual": derived_address.address,
-            "pass": derived_address.address === bip39_utils_const.expected_address
-        };
-        results.tests.push(address_test);
-        if (!address_test.pass) results.success = false;
+        return derived_address.address === bip39_utils_const.expected_address;
     } catch (e) {
-        results.tests.push({
-            "name": "BIP44 Address Derivation",
-            "expected": bip39_utils_const.expected_address,
-            "actual": "Error: " + e.message,
-            "pass": false
-        });
-        results.success = false;
+        console.error("Bip39Utils test_derivation:", e.message);
+        return false;
+    }
+}
+
+// Tests xpub address derivation
+function test_xpub_support() {
+    try {
+        const xpub_data = key_cc_xpub(bip39_utils_const.test_xpub),
+            derive_params = {
+                "dpath": "M/0/0",
+                "key": xpub_data.key,
+                "cc": xpub_data.cc,
+                "vb": xpub_data.version
+            },
+            derived_keys = derive_x(derive_params),
+            bip32_config = get_bip32dat("bitcoin"),
+            derived_address = format_keys(null, derived_keys, bip32_config, 0, "bitcoin");
+        return derived_address.address === bip39_utils_const.expected_address;
+    } catch (e) {
+        console.error("Bip39Utils test_xpub:", e.message);
+        return false;
+    }
+}
+
+// Full compatibility test - calls CryptoUtils tests + BIP39 tests
+function test_bip39_compatibility() {
+    const start_time = typeof performance !== "undefined" ? performance.now() : Date.now(),
+        results = {
+            "compatible": false,
+            "crypto_api": false,
+            "bigint": false,
+            "secp256k1": false,
+            "seed": false,
+            "derivation": false,
+            "xpub": false,
+            "errors": [],
+            "timing_ms": 0
+        };
+
+    // Fail fast: Check crypto basics from CryptoUtils
+    results.crypto_api = CryptoUtils.test_crypto_api();
+    if (!results.crypto_api) {
+        results.errors.push("crypto API not available");
+        results.timing_ms = (typeof performance !== "undefined" ? performance.now() : Date.now()) - start_time;
+        console.error("Bip39Utils: Compatibility test failed", results.errors);
+        return results;
+    }
+
+    results.bigint = CryptoUtils.test_bigint();
+    if (!results.bigint) {
+        results.errors.push("BigInt not functional");
+        results.timing_ms = (typeof performance !== "undefined" ? performance.now() : Date.now()) - start_time;
+        console.error("Bip39Utils: Compatibility test failed", results.errors);
+        return results;
+    }
+
+    // Test secp256k1 (required for key derivation)
+    results.secp256k1 = CryptoUtils.test_secp256k1();
+    if (!results.secp256k1) {
+        results.errors.push("secp256k1 failed");
+        results.timing_ms = (typeof performance !== "undefined" ? performance.now() : Date.now()) - start_time;
+        console.error("Bip39Utils: Compatibility test failed", results.errors);
+        return results;
+    }
+
+    // Test seed derivation
+    results.seed = test_seed();
+    if (!results.seed) {
+        results.errors.push("seed derivation failed");
+        results.timing_ms = (typeof performance !== "undefined" ? performance.now() : Date.now()) - start_time;
+        console.error("Bip39Utils: Compatibility test failed", results.errors);
+        return results;
+    }
+
+    // Test BIP44 address derivation
+    results.derivation = test_derivation();
+    if (!results.derivation) {
+        results.errors.push("address derivation failed");
+    }
+
+    // Test xpub derivation
+    results.xpub = test_xpub_support();
+    if (!results.xpub) {
+        results.errors.push("xpub derivation failed");
+    }
+
+    results.compatible = results.seed && results.derivation;
+    results.timing_ms = (typeof performance !== "undefined" ? performance.now() : Date.now()) - start_time;
+
+    if (results.errors.length > 0) {
+        console.error("Bip39Utils: Compatibility test failed", results.errors);
     }
 
     return results;
@@ -529,10 +594,14 @@ const Bip39Utils = {
     // Version
     version: bip39_utils_const.version,
 
-    // Test constants
+    // Constants object (for consistency with CryptoUtils/XmrUtils)
+    bip39_utils_const,
+
+    // Test constants (also exposed directly for convenience)
     test_phrase: bip39_utils_const.test_phrase,
     expected_seed: bip39_utils_const.expected_seed,
     expected_address: bip39_utils_const.expected_address,
+    test_xpub: bip39_utils_const.test_xpub,
 
     // Mnemonic functions
     mnemonic_to_seed,
@@ -564,5 +633,8 @@ const Bip39Utils = {
     shuffle_array,
 
     // Testing
-    test_bip39_derivation
+    test_seed,
+    test_derivation,
+    test_xpub_support,
+    test_bip39_compatibility
 };
