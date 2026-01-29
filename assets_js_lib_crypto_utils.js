@@ -57,6 +57,8 @@ secp.CURVE = CURVE;
 
 // ============================================
 // TEST CONSTANTS
+// bip39 (All addresses / xpubs in this app are test addresses derived from the following testphrase, taken from https://github.com/bitcoinbook/bitcoinbook/blob/f8b883dcd4e3d1b9adf40fed59b7e898fbd9241f/ch05.asciidoc)
+// "army van defense carry jealous true garbage claim echo media make crunch"
 // ============================================
 
 const crypto_utils_const = {

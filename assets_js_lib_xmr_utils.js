@@ -59,7 +59,8 @@ let xmr_I = null;
 
 const xmr_utils_const = {
     "version": "1.1.0",
-    // Derived from test phrase "army van defense carry jealous true garbage claim echo media make crunch"
+    // bip39 (All addresses / xpubs in this app are test addresses derived from the following testphrase, taken from https://github.com/bitcoinbook/bitcoinbook/blob/f8b883dcd4e3d1b9adf40fed59b7e898fbd9241f/ch05.asciidoc)
+    // "army van defense carry jealous true garbage claim echo media make crunch"
     // via BIP44 path m/44'/128'/0'/0/0 + sc_reduce32(fasthash(privkey))
     "test_spend_key": "007d984c3df532fdd86cd83bf42482a5c2e180a51ae1d0096e13048fba1fa108",
     "test_view_key": "e4d63789cdfa2ec48571e93e47520690b2c6e11386c90448e8b357d1cd917c00",
