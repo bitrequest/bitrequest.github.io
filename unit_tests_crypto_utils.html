@@ -345,7 +345,7 @@
         document.getElementById("version").textContent = CryptoUtils.VERSION || "1.1.0";
 
         // Shorthand reference to test constants from library
-        const TC = CryptoUtils.crypto_utils_const;
+        const TestVector = CryptoUtils.crypto_utils_const;
 
         // Test framework
         const tests = [];
@@ -757,17 +757,17 @@
         });
 
         test("pub_to_address_bech32: generate native segwit", () => {
-            const address = CryptoUtils.pub_to_address_bech32("bc", TC.test_pubkey);
+            const address = CryptoUtils.pub_to_address_bech32("bc", TestVector.test_pubkey);
             assertEqual(address, "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4", "Known address");
         });
 
         test("pub_to_address_bech32: known test vector", () => {
-            const address = CryptoUtils.pub_to_address_bech32("bc", TC.test_pubkey_bech32);
-            assertEqual(address, TC.test_address_bech32, "Known bech32 address");
+            const address = CryptoUtils.pub_to_address_bech32("bc", TestVector.test_pubkey_bech32);
+            assertEqual(address, TestVector.test_address_bech32, "Known bech32 address");
         });
 
         test("pub_to_address_bech32: Litecoin", () => {
-            const address = CryptoUtils.pub_to_address_bech32("ltc", TC.test_pubkey);
+            const address = CryptoUtils.pub_to_address_bech32("ltc", TestVector.test_pubkey);
             assertTrue(address.startsWith("ltc1q"), "Litecoin segwit prefix");
         });
 
@@ -818,8 +818,8 @@
         });
 
         test("get_publickey: derive from private key (compressed)", () => {
-            const pubkey = CryptoUtils.get_publickey(TC.test_privkey);
-            assertEqual(pubkey, TC.test_pubkey, "Known G point");
+            const pubkey = CryptoUtils.get_publickey(TestVector.test_privkey);
+            assertEqual(pubkey, TestVector.test_pubkey, "Known G point");
         });
 
         test("get_publickey: key 2", () => {
@@ -829,26 +829,26 @@
         });
 
         test("get_publickey: uncompressed", () => {
-            const pubkey = CryptoUtils.get_publickey(TC.test_privkey, false);
+            const pubkey = CryptoUtils.get_publickey(TestVector.test_privkey, false);
             assertTrue(pubkey.startsWith("04"), "Uncompressed starts with 04");
             assertEqual(pubkey.length, 130, "65 bytes = 130 hex");
         });
 
         test("expand_pub: decompress public key", () => {
-            const expanded = CryptoUtils.expand_pub(TC.test_pubkey);
+            const expanded = CryptoUtils.expand_pub(TestVector.test_pubkey);
             assertTrue(expanded.startsWith("04"), "Should start with 04");
             assertEqual(expanded.length, 130, "Should be 65 bytes");
         });
 
         test("expand_pub: already uncompressed", () => {
-            const uncompressed = CryptoUtils.get_publickey(TC.test_privkey, false);
+            const uncompressed = CryptoUtils.get_publickey(TestVector.test_privkey, false);
             const expanded = CryptoUtils.expand_pub(uncompressed);
             assertEqual(expanded, uncompressed, "Returns same");
         });
 
         test("priv_to_pub: alias for get_publickey", () => {
-            const pubkey = CryptoUtils.priv_to_pub(TC.test_privkey);
-            assertEqual(pubkey, TC.test_pubkey, "Same as get_publickey");
+            const pubkey = CryptoUtils.priv_to_pub(TestVector.test_privkey);
+            assertEqual(pubkey, TestVector.test_pubkey, "Same as get_publickey");
         });
 
         test("normalize_privatekey: hex string", () => {
@@ -880,7 +880,7 @@
         });
 
         test("hash160: SHA256 + RIPEMD160", () => {
-            const hash = CryptoUtils.hash160(TC.test_pubkey);
+            const hash = CryptoUtils.hash160(TestVector.test_pubkey);
             assertEqual(hash, "751e76e8199196d454941c45d1b3a323f1433bd6", "Known hash160");
         });
 
@@ -909,17 +909,17 @@
         // === Address Generation Tests ===
 
         test("pub_to_address: legacy Bitcoin address", () => {
-            const address = CryptoUtils.pub_to_address("00", TC.test_pubkey);
+            const address = CryptoUtils.pub_to_address("00", TestVector.test_pubkey);
             assertEqual(address, "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH", "Known address");
         });
 
         test("pub_to_address: Litecoin legacy", () => {
-            const address = CryptoUtils.pub_to_address("30", TC.test_pubkey);
+            const address = CryptoUtils.pub_to_address("30", TestVector.test_pubkey);
             assertTrue(address.startsWith("L"), "Litecoin starts with L");
         });
 
         test("pub_to_address: Dogecoin", () => {
-            const address = CryptoUtils.pub_to_address("1e", TC.test_pubkey);
+            const address = CryptoUtils.pub_to_address("1e", TestVector.test_pubkey);
             assertTrue(address.startsWith("D"), "Dogecoin starts with D");
         });
 
@@ -930,15 +930,15 @@
         });
 
         test("pub_to_eth_address: Ethereum address", () => {
-            const pubkey = CryptoUtils.get_publickey(TC.test_privkey, false);
+            const pubkey = CryptoUtils.get_publickey(TestVector.test_privkey, false);
             const address = CryptoUtils.pub_to_eth_address(pubkey);
             assertTrue(address.startsWith("0x"), "Should start with 0x");
             assertEqual(address.length, 42, "Should be 42 chars");
         });
 
         test("pub_to_eth_address: known test vector", () => {
-            const address = CryptoUtils.pub_to_eth_address(TC.test_pubkey_eth);
-            assertEqual(address, TC.test_address_eth, "Known ETH address");
+            const address = CryptoUtils.pub_to_eth_address(TestVector.test_pubkey_eth);
+            assertEqual(address, TestVector.test_address_eth, "Known ETH address");
         });
 
         test("to_checksum_address: EIP-55", () => {
@@ -963,8 +963,8 @@
         });
 
         test("pub_to_cashaddr: known test vector", () => {
-            const address = CryptoUtils.pub_to_cashaddr(TC.test_legacy_address);
-            assertEqual(address, TC.test_address_cashaddr, "Known cashaddr");
+            const address = CryptoUtils.pub_to_cashaddr(TestVector.test_legacy_address);
+            assertEqual(address, TestVector.test_address_cashaddr, "Known cashaddr");
         });
 
         test("bch_legacy: CashAddr to legacy", () => {
@@ -976,17 +976,17 @@
         // === WIF Tests ===
 
         test("privkey_wif: Bitcoin mainnet compressed", () => {
-            const wif = CryptoUtils.privkey_wif("80", TC.test_privkey, true);
+            const wif = CryptoUtils.privkey_wif("80", TestVector.test_privkey, true);
             assertEqual(wif, "KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgd9M7rFU73sVHnoWn", "Known WIF");
         });
 
         test("privkey_wif: Bitcoin mainnet uncompressed", () => {
-            const wif = CryptoUtils.privkey_wif("80", TC.test_privkey, false);
+            const wif = CryptoUtils.privkey_wif("80", TestVector.test_privkey, false);
             assertTrue(wif.startsWith("5"), "Uncompressed WIF starts with 5");
         });
 
         test("privkey_wif: Litecoin", () => {
-            const wif = CryptoUtils.privkey_wif("b0", TC.test_privkey, true);
+            const wif = CryptoUtils.privkey_wif("b0", TestVector.test_privkey, true);
             assertTrue(wif.startsWith("T"), "Litecoin WIF starts with T");
         });
 

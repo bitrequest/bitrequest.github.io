@@ -907,8 +907,8 @@ function parse_xmr_tx_hex(tx_hex) {
                 view_tag = bytes_to_hex(read_bytes(1));
             output.target = {
                 tagged_key: {
-                    "key": key,
-                    "view_tag": view_tag
+                    key,
+                    view_tag
                 }
             };
         }

@@ -4,9 +4,9 @@
 // Load order: sjcl.js → crypto_utils.js → bip39_utils.js → bip39.js
 //
 const bip39_const = {
-    "test_phrase": bip39_utils_const.test_phrase, // random phrase used for test derive
-    "expected_seed": bip39_utils_const.expected_seed, // expected seed used for test derive
-    "expected_address": bip39_utils_const.expected_address, // expected addres used for test derive
+    "test_phrase": bip39_utils_test_vectors.test_phrase, // random phrase used for test derive
+    "expected_seed": bip39_utils_test_vectors.expected_seed, // expected seed used for test derive
+    "expected_address": bip39_utils_test_vectors.expected_address, // expected addres used for test derive
     "c_derive": {
         "bitcoin": true,
         "litecoin": true,

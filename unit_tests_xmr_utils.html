@@ -271,7 +271,7 @@
         document.getElementById("version").textContent = XmrUtils.VERSION || "1.1.0";
 
         // Shorthand reference to test constants from library
-        const TC = XmrUtils.xmr_utils_const;
+        const TestVector = XmrUtils.xmr_utils_const;
 
         // Use CryptoUtils methods directly to avoid global conflicts
         // (xmr_utils.js may expose hex_to_bytes/bytes_to_hex globally)
@@ -284,10 +284,10 @@
         // TEST CONSTANTS (for interactive tools)
         // ============================================================
         
-        // Secret spend key for interactive tools (different from TC.test_spend_key)
-        const TEST_SSK = TC.test_spend_key;
+        // Secret spend key for interactive tools (different from TestVector.test_spend_key)
+        const TEST_SSK = TestVector.test_spend_key;
         // Corresponding address
-        const TEST_ADDRESS = TC.test_address;
+        const TEST_ADDRESS = TestVector.test_address;
 
         function test(name, fn) {
             tests.push({ name, fn });
@@ -348,9 +348,9 @@
                 console.log("Skipping: keccak_256 not available");
                 return;
             }
-            const ssk = CryptoUtils.hex_to_bytes(TC.test_spend_key);
+            const ssk = CryptoUtils.hex_to_bytes(TestVector.test_spend_key);
             const keys = XmrUtils.xmr_getpubs(ssk, 0);
-            assertEqual(keys.address, TC.test_address, "Should produce expected address");
+            assertEqual(keys.address, TestVector.test_address, "Should produce expected address");
         });
 
         test("xmr_utils_const: test_spend_key produces test_view_key", () => {
@@ -358,9 +358,9 @@
                 console.log("Skipping: keccak_256 not available");
                 return;
             }
-            const ssk = CryptoUtils.hex_to_bytes(TC.test_spend_key);
+            const ssk = CryptoUtils.hex_to_bytes(TestVector.test_spend_key);
             const keys = XmrUtils.xmr_getpubs(ssk, 0);
-            assertEqual(keys.svk, TC.test_view_key, "Should produce expected view key");
+            assertEqual(keys.svk, TestVector.test_view_key, "Should produce expected view key");
         });
 
         // ============================================================
