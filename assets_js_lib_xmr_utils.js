@@ -654,26 +654,25 @@ function words_to_secret_spend_key(mnemonic) {
     }
 
     // Decode 24 words (8 groups of 3) back to 32 bytes
-    const ssk = new Uint8Array(32);
-    const n = xmr_words.length; // 1626
+    const ssk = new Uint8Array(32),
+        n = xmr_words.length; // 1626
 
     for (let i = 0; i < 8; i++) {
-        const w1 = indices[i * 3];
-        const w2 = indices[i * 3 + 1];
-        const w3 = indices[i * 3 + 2];
+        const w1 = indices[i * 3],
+            w2 = indices[i * 3 + 1],
+            w3 = indices[i * 3 + 2];
 
         // Reverse the encoding: recover w0 from w1, w2, w3
-        const y = (w2 - w1 + n) % n;        // floor(w0 / n)
-        const x = (w3 - w2 + n) % n;        // floor(w0 / n²)
-        const w0 = x * n * n + y * n + w1;
+        const y = (w2 - w1 + n) % n, // floor(w0 / n)
+            x = (w3 - w2 + n) % n, // floor(w0 / n²)
+            w0 = x * n * n + y * n + w1;
 
         // Convert to 4 bytes (little-endian)
-        ssk[i * 4]     = w0 & 0xFF;
+        ssk[i * 4] = w0 & 0xFF;
         ssk[i * 4 + 1] = (w0 >>> 8) & 0xFF;
         ssk[i * 4 + 2] = (w0 >>> 16) & 0xFF;
         ssk[i * 4 + 3] = (w0 >>> 24) & 0xFF;
     }
-
     return ssk;
 }
 

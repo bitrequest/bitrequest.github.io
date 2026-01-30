@@ -3542,6 +3542,14 @@ function validate_address(addr_data, view_key) {
         popnotify("error", tl("confirmpkownership"));
         return
     }
+    glob_let.new_address = parsed_addr + currency;
+    addr_data.address = parsed_addr,
+        addr_data.label = clean_label,
+        addr_data.a_id = token_symbol + index,
+        addr_data.vk = view_key,
+        addr_data.checked = true;
+    append_address(currency, addr_data);
+    save_addresses(currency, true);
     if (index === 1) {
         if (is_erc20 === true) {
             buildpage(addr_data, true);
@@ -3557,14 +3565,6 @@ function validate_address(addr_data, view_key) {
             loadpage("?p=" + currency);
         }
     }
-    glob_let.new_address = parsed_addr + currency;
-    addr_data.address = parsed_addr,
-        addr_data.label = clean_label,
-        addr_data.a_id = token_symbol + index,
-        addr_data.vk = view_key,
-        addr_data.checked = true;
-    append_address(currency, addr_data);
-    save_addresses(currency, true);
     currency_check(currency);
     canceldialog();
     canceloptions();
