@@ -629,6 +629,54 @@ function secret_spend_key_to_words(ssk) {
     return seed.join(" ");
 }
 
+// Converts a 25-word Monero mnemonic back to a 32-byte secret spend key
+function words_to_secret_spend_key(mnemonic) {
+    const words = mnemonic.toLowerCase().trim().split(/\s+/);
+    if (words.length !== 25) {
+        throw new Error("Monero mnemonic must be exactly 25 words");
+    }
+
+    // Get indices for all words
+    const indices = words.map((word, i) => {
+        const idx = xmr_words.indexOf(word);
+        if (idx === -1) throw new Error(`Invalid word at position ${i + 1}: "${word}"`);
+        return idx;
+    });
+
+    // Verify checksum (25th word should match word at position CRC32 % 24)
+    let for_checksum = "";
+    for (let i = 0; i < 24; i++) {
+        for_checksum += words[i].substring(0, 3);
+    }
+    const expected_checksum_idx = crc_32(for_checksum) % 24;
+    if (indices[24] !== indices[expected_checksum_idx]) {
+        throw new Error("Checksum mismatch");
+    }
+
+    // Decode 24 words (8 groups of 3) back to 32 bytes
+    const ssk = new Uint8Array(32);
+    const n = xmr_words.length; // 1626
+
+    for (let i = 0; i < 8; i++) {
+        const w1 = indices[i * 3];
+        const w2 = indices[i * 3 + 1];
+        const w3 = indices[i * 3 + 2];
+
+        // Reverse the encoding: recover w0 from w1, w2, w3
+        const y = (w2 - w1 + n) % n;        // floor(w0 / n)
+        const x = (w3 - w2 + n) % n;        // floor(w0 / n²)
+        const w0 = x * n * n + y * n + w1;
+
+        // Convert to 4 bytes (little-endian)
+        ssk[i * 4]     = w0 & 0xFF;
+        ssk[i * 4 + 1] = (w0 >>> 8) & 0xFF;
+        ssk[i * 4 + 2] = (w0 >>> 16) & 0xFF;
+        ssk[i * 4 + 3] = (w0 >>> 24) & 0xFF;
+    }
+
+    return ssk;
+}
+
 // Derives a Monero secret spend key from either a BIP39 mnemonic phrase or its seed
 function get_ssk(bip39, seed) {
     const p_rootkey = (seed === true) ? get_rootkey(bip39) : get_rootkey(mnemonic_to_seed(bip39)),
@@ -776,17 +824,6 @@ function base58_encode(data) {
 // ============================================
 // VIEW KEY MANAGEMENT
 // ============================================
-
-// Retrieves cached view key data for a Monero address from storage
-function get_vk(address) {
-    const ad_li = filter_addressli("monero", "address", address),
-        ad_dat = (ad_li.length) ? ad_li.data() : {},
-        ad_vk = ad_dat.vk;
-    if (ad_vk && ad_vk != "") {
-        return vk_obj(ad_vk);
-    }
-    return false
-}
 
 // Parses view key string into structured account and key data
 function vk_obj(vk) {
@@ -1165,10 +1202,10 @@ const XmrUtils = {
     // === Mnemonic ===
     mn_random,
     secret_spend_key_to_words,
+    words_to_secret_spend_key,
 
     // === Address Operations ===
     pub_keys_to_address,
-    get_vk,
     vk_obj,
     share_vk,
     get_spend_pubkey_from_address,

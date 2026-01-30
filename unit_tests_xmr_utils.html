@@ -183,6 +183,19 @@
         <div class="output" id="mnemonic-output"></div>
     </div>
 
+    <!-- Mnemonic to Secret Spend Key -->
+    <div class="test-section">
+        <h4>Mnemonic Words → Secret Spend Key</h4>
+        <div class="test-row">
+            <textarea id="mnemonic-words" placeholder="Enter 25-word Monero mnemonic" rows="3"></textarea>
+        </div>
+        <div class="test-row">
+            <button onclick="testKeyFromMnemonic()">Mnemonic → Key</button>
+        </div>
+        <div class="note">Converts a 25-word Monero mnemonic back to the secret spend key (with checksum verification)</div>
+        <div class="output" id="mnemonic-to-key-output"></div>
+    </div>
+
     <!-- Payment ID -->
     <div class="test-section">
         <h4>Payment ID Generation & Validation</h4>
@@ -730,6 +743,75 @@
             assertTrue(e1 !== e2, "Should be random");
         });
 
+        test("words_to_secret_spend_key: convert mnemonic to SSK", () => {
+            const sskHex = "b3d515f5ca66c1228d62e6c0d8b3bb92e52c8fbdc05e2f23ed0b2c262a9e8903";
+            const sskBytes = CryptoUtils.hex_to_bytes(sskHex);
+            const words = XmrUtils.secret_spend_key_to_words(sskBytes);
+            const recoveredSsk = XmrUtils.words_to_secret_spend_key(words);
+            const recoveredHex = CryptoUtils.bytes_to_hex(recoveredSsk);
+            assertEqual(recoveredHex, sskHex, "Should recover original SSK");
+        });
+
+        test("words_to_secret_spend_key: roundtrip with random key", () => {
+            const randomHex = XmrUtils.mn_random(256);
+            const randomBytes = CryptoUtils.hex_to_bytes(randomHex);
+            const words = XmrUtils.secret_spend_key_to_words(randomBytes);
+            const recoveredSsk = XmrUtils.words_to_secret_spend_key(words);
+            const recoveredHex = CryptoUtils.bytes_to_hex(recoveredSsk);
+            assertEqual(recoveredHex, randomHex, "Roundtrip should preserve key");
+        });
+
+        test("words_to_secret_spend_key: case insensitive", () => {
+            const sskHex = "b3d515f5ca66c1228d62e6c0d8b3bb92e52c8fbdc05e2f23ed0b2c262a9e8903";
+            const sskBytes = CryptoUtils.hex_to_bytes(sskHex);
+            const words = XmrUtils.secret_spend_key_to_words(sskBytes);
+            const upperWords = words.toUpperCase();
+            const recoveredSsk = XmrUtils.words_to_secret_spend_key(upperWords);
+            const recoveredHex = CryptoUtils.bytes_to_hex(recoveredSsk);
+            assertEqual(recoveredHex, sskHex, "Should handle uppercase");
+        });
+
+        test("words_to_secret_spend_key: rejects wrong word count", () => {
+            let threw = false;
+            try {
+                XmrUtils.words_to_secret_spend_key("abbey abbey abbey");
+            } catch (e) {
+                threw = true;
+                assertTrue(e.message.includes("25 words"), "Error should mention word count");
+            }
+            assertTrue(threw, "Should throw for wrong word count");
+        });
+
+        test("words_to_secret_spend_key: rejects invalid words", () => {
+            const fakeWords = "abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey invalidword";
+            let threw = false;
+            try {
+                XmrUtils.words_to_secret_spend_key(fakeWords);
+            } catch (e) {
+                threw = true;
+                assertTrue(e.message.includes("Invalid word"), "Error should mention invalid word");
+            }
+            assertTrue(threw, "Should throw for invalid word");
+        });
+
+        test("words_to_secret_spend_key: rejects bad checksum", () => {
+            const sskHex = "b3d515f5ca66c1228d62e6c0d8b3bb92e52c8fbdc05e2f23ed0b2c262a9e8903";
+            const sskBytes = CryptoUtils.hex_to_bytes(sskHex);
+            const words = XmrUtils.secret_spend_key_to_words(sskBytes);
+            const wordArray = words.split(" ");
+            // Swap the checksum word with a different word
+            wordArray[24] = wordArray[24] === "abbey" ? "abort" : "abbey";
+            const badChecksum = wordArray.join(" ");
+            let threw = false;
+            try {
+                XmrUtils.words_to_secret_spend_key(badChecksum);
+            } catch (e) {
+                threw = true;
+                assertTrue(e.message.includes("Checksum"), "Error should mention checksum");
+            }
+            assertTrue(threw, "Should throw for bad checksum");
+        });
+
         // === Elliptic Curve Tests ===
 
         test("xmod: modular arithmetic", () => {
@@ -889,6 +971,29 @@
                 });
                 
                 output.innerHTML = "<span class='info'>Mnemonic (25 words):</span>\n\n" + wordGrid;
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testKeyFromMnemonic() {
+            const mnemonic = document.getElementById("mnemonic-words").value.trim();
+            const output = document.getElementById("mnemonic-to-key-output");
+            try {
+                if (!mnemonic) {
+                    output.innerHTML = "<span class='info'>Enter a 25-word Monero mnemonic</span>";
+                    return;
+                }
+                const sskBytes = XmrUtils.words_to_secret_spend_key(mnemonic);
+                
+                // xmr_getpubs derives everything from the secret spend key
+                const pubs = XmrUtils.xmr_getpubs(sskBytes, 0);
+                
+                output.innerHTML = "<span class='success'>✓ Checksum valid</span>\n\n" +
+                    "<span class='info'>Secret Spend Key:</span>\n" + pubs.ssk + "\n\n" +
+                    "<span class='info'>Secret View Key:</span>\n" + pubs.svk + "\n\n" +
+                    "<span class='info'>Primary Address:</span>\n" + pubs.address;
             } catch (e) {
                 logError("interactive tool", e);
                 output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";

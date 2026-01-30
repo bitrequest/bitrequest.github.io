@@ -314,6 +314,7 @@ let request = null,
 //get_aws_icon_url
 //visibility_change
 //visible_tab
+//get_vk
 
 // ** Device & Platform Detection: **
 //detect_device_type
@@ -960,6 +961,17 @@ function visible_tab() {
         return false
     }
     return true
+}
+
+// Retrieves cached view key data for a Monero address from storage
+function get_vk(address) {
+    const ad_li = filter_addressli("monero", "address", address),
+        ad_dat = (ad_li.length) ? ad_li.data() : {},
+        ad_vk = ad_dat.vk;
+    if (ad_vk && ad_vk != "") {
+        return vk_obj(ad_vk);
+    }
+    return false
 }
 
 // ** Device & Platform Detection: **

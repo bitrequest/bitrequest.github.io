@@ -630,7 +630,7 @@ function filter_incoming_transactions(rpc_data, view_key, spend_pubkey) {
 
 // Polls the Monero RPC for a specific transaction hash to confirm its details.
 function poll_monero_rpc(rd, api_data, rdo) {
-    const viewkey = rd.viewkey,
+    const viewkey = rd.viewkey || get_vk(rd.address),
         tx_hash = rd.txhash,
         vk = viewkey.vk,
         spk = get_spend_pubkey_from_address(rd.address),

@@ -1025,7 +1025,8 @@ function process_alchemy_transactions(rd, api_data, rdo, ctract, block_height) {
 
 // Scan monero transactions using monero_lws RPC / Poll transactions using node RPC
 function monero_lws_login(rd, api_data, rdo) {
-    const view_key = q_obj(rd, "viewkey.vk");
+    const vk_object = rd.viewkey || get_vk(rd.address),
+        view_key = vk_object ? vk_object.vk : false;
     if (!view_key) return
     if (rdo.pending === "polling") { // assets_js_bitrequest_polling.js
         poll_monero_rpc(rd, api_data, rdo); // use xmr node for tx lookup
