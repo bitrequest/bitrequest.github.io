@@ -3542,6 +3542,12 @@ function validate_address(addr_data, view_key) {
         popnotify("error", tl("confirmpkownership"));
         return
     }
+    const first_index = index === 1;
+    if (first_index && is_erc20) {
+        buildpage(addr_data, true);
+        append_coinsetting(currency, compress_layer2_config(currency));
+        save_cc_settings(currency);
+    }
     glob_let.new_address = parsed_addr + currency;
     addr_data.address = parsed_addr,
         addr_data.label = clean_label,
@@ -3550,12 +3556,7 @@ function validate_address(addr_data, view_key) {
         addr_data.checked = true;
     append_address(currency, addr_data);
     save_addresses(currency, true);
-    if (index === 1) {
-        if (is_erc20 === true) {
-            buildpage(addr_data, true);
-            append_coinsetting(currency, compress_layer2_config(currency));
-            save_cc_settings(currency);
-        }
+    if (first_index) {
         if (!set_up()) {
             save_settings();
             const page_url = "?p=home&payment=" + currency + "&uoa=" + token_symbol + "&amount=0" + "&address=" + parsed_addr;
