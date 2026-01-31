@@ -329,7 +329,7 @@ function route_crypto_api(rd, api_data, rdo) {
         return
     }
     if (rd.payment === "monero") {
-        monero_lws_login(rd, api_data, rdo);
+        init_monero_scan(rd, api_data, rdo);
         return
     }
     finalize_request_state(rdo);
@@ -350,7 +350,7 @@ function route_blockchain_rpc(rd, api_data, rdo) {
         return
     }
     if (rd.payment === "monero") {
-        monero_lws_login(rd, api_data, rdo);
+        init_monero_scan(rd, api_data, rdo);
         return
     }
     finalize_request_state(rdo);

@@ -7,6 +7,7 @@
 //get_alchemy_block_height
 //process_alchemy_transactions
 //monero_lws_login
+//init_monero_scan
 //set_monero_lws_node_access
 //monero_lws_node_access
 //monero_lws_get_address_txs
@@ -1023,24 +1024,32 @@ function process_alchemy_transactions(rd, api_data, rdo, ctract, block_height) {
     });
 }
 
-// Scan monero transactions using monero_lws RPC / Poll transactions using node RPC
-function monero_lws_login(rd, api_data, rdo) {
-    const vk_object = rd.viewkey || get_vk(rd.address),
-        view_key = vk_object ? vk_object.vk : false;
-    if (!view_key) return
+// Checks if sevret viewkey is available and sets monitor flow based on scanning / polling (only scanning requires xmr-lws)
+function init_monero_scan(rd, api_data, rdo) {
+    const view_key = q_obj(rd, "viewkey.vk");
+    if (!view_key) {
+        finalize_request_state(rdo);
+        return
+    }
     if (rdo.pending === "polling") { // assets_js_bitrequest_polling.js
         poll_monero_rpc(rd, api_data, rdo); // use xmr node for tx lookup
         return
     }
-    const viewkey = rd.viewkey,
+    monero_lws_login(rd, api_data, rdo);
+}
+
+// Scan monero transactions using monero_lws RPC
+function monero_lws_login(rd, api_data, rdo) {
+    const vk_object = rd.viewkey,
+        view_key = vk_object.vk,
         xmr_settings = active_coinsettings("monero"),
         set_lws_host = q_obj(xmr_settings, "apis.lws_selected.url"),
         lws_host = set_lws_host || lws_proxy;
     if (monero_lws_node_access(lws_host, view_key)) {
-        monero_lws_get_address_txs(rd, api_data, rdo, viewkey, lws_host);
+        monero_lws_get_address_txs(rd, api_data, rdo, vk_object, lws_host);
         return
     }
-    const wallet_address = viewkey.account || rd.address,
+    const wallet_address = vk_object.account || rd.address,
         data = {
             "address": wallet_address,
             "view_key": view_key,
@@ -1067,7 +1076,7 @@ function monero_lws_login(rd, api_data, rdo) {
             const new_address = api_result.new_address;
             if (new_address === true || new_address === false) { // confirm response
                 set_monero_lws_node_access(lws_host, view_key);
-                monero_lws_get_address_txs(rd, api_data, rdo, viewkey, lws_host);
+                monero_lws_get_address_txs(rd, api_data, rdo, vk_object, lws_host);
                 return
             }
         }
@@ -1109,14 +1118,14 @@ function monero_lws_node_access(host, view_key) {
 }
 
 // Look up incoming transactions using monero_lws RPC
-function monero_lws_get_address_txs(rd, api_data, rdo, viewkey, lws_host) {
+function monero_lws_get_address_txs(rd, api_data, rdo, vk_object, lws_host) {
     const local_lws = (lws_host === lws_proxy),
         url_base = local_lws ? br_proxy : lws_host,
         api_url = local_lws ? url_base + "/monero-lws/" : url_base + "/get_address_txs",
-        wallet_address = viewkey.account || rd.address,
+        wallet_address = vk_object.account || rd.address,
         request_payload = {
             "address": wallet_address,
-            "view_key": viewkey.vk,
+            "view_key": vk_object.vk,
             "limit": 10
         };
     api_proxy({
