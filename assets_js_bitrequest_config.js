@@ -1442,13 +1442,29 @@ glob_config = {
             "wallets": {
                 "wallet_download_page": "https://www.kaspa.org",
                 "wallets": [{
-                    "name": "wallet.kaspanet.io",
-                    "website": "https://wallet.kaspanet.io",
-                    "appstore": null,
-                    "playstore": null,
-                    "desktop": "https://wallet.kaspanet.io",
-                    "seed": false
-                }]
+                        "name": "kaspa-ng.org",
+                        "website": "https://kaspa-ng.org",
+                        "appstore": null,
+                        "playstore": null,
+                        "desktop": "https://kaspa-ng.org",
+                        "seed": true
+                    },
+                    {
+                        "name": "kaspium",
+                        "website": "https://kaspium.io",
+                        "appstore": "https://itunes.apple.com/app/id1671845538",
+                        "playstore": "https://play.google.com/store/apps/details?id=io.kaspium.kaspiumwallet",
+                        "seed": true
+                    },
+                    {
+                        "name": "kasware",
+                        "website": "https://www.kasware.xyz",
+                        "appstore": null,
+                        "playstore": null,
+                        "desktop": "https://www.kasware.xyz",
+                        "seed": true
+                    }
+                ]
             },
             "settings": {
                 "confirmations": {
