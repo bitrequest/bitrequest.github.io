@@ -5,41 +5,96 @@
 * [Privacy / Disclaimer](https://github.com/bitrequest/bitrequest.github.io/wiki/Privacy)
 * [Terms and conditions](https://github.com/bitrequest/bitrequest.github.io/wiki/Terms-and-conditions)
 
+---
+
 ## Bitrequest
 
-Create and share payment requests for cryptocurrencies. Non-custodial, client-side PWA with real-time monitoring.
+Create and share cryptocurrency payment requests. Non-custodial, privacy-focused app for accepting crypto payments — in-store or online.
 
-## Use cases
+**[Try it now → bitrequest.io](https://bitrequest.io)**
 
-* Point of Sale (POS) with instant feedback.
-* Send cryptocurrency payment requests to friends via URL sharing.
-* Integrate in your webshop for e-commerce checkouts.
+---
+
+## Use Cases
+
+### Point of Sale
+Accept crypto payments at your shop, market stall, or business. Get instant payment notifications and generate receipts.
+
+### Share Payment Requests
+Send payment requests to friends or customers via link, QR code, or NFC. Lock amounts to fiat value to avoid volatility.
+
+### E-commerce
+Integrate crypto checkout into your online store.
+
+---
+
+## Supported Cryptocurrencies
+
+- **Bitcoin** — Including Lightning Network (LND, LNbits, LNURL, Boltcard/NFC)
+- **Ethereum** — Plus L2 networks: Base, Arbitrum, Polygon, BSC, and ERC-20 tokens
+- **Litecoin**
+- **Monero** — Private payments with view-key scanning
+- **Kaspa**
+- **Bitcoin Cash**
+- **Dogecoin**
+- **Dash** — With InstantSend
+- **Nano** — Instant and feeless
+- **Nimiq**
+
+---
 
 ## Features
 
-#### Requests
-* __Create__ payment requests by entering amount in crypto or fiat (170 currencies).
-* __Share__ pegged to fiat to reduce volatility; auto-shortens URLs (Firebase/Bitly/Native).
-* Get __instant payment feedback__ via WebSocket/polling on public explorers/nodes.
-* Supports __multiple cryptocurrencies__ (Bitcoin, Lightning, Nano, Litecoin, Dogecoin, Dash, Ethereum + ERC20/L2, Bitcoin-cash, Monero, Nimiq, Kaspa).
-* __Manage requests__ (Monitor status, view details/tx history, archive/unarchive, receipts, CSV export).
+### Requests
+- Create payment requests in crypto or fiat (170+ currencies)
+- Share via URL, QR code, or NFC
+- Real-time payment notifications
+- Request history, receipts, and CSV export
 
-#### Addresses
-* __BIP44/Xpub__ key derivations from BIP39 seeds.
-* __Manage multiple addresses__ (Arrange via drag-drop, view details/PK/VK, random selection).
-* Set preferred number of __confirmations__ (zero-conf/instant-lock support).
+### Addresses
+- Manage multiple wallet addresses per currency
+- Generate addresses from seed phrase
+- Random address selection for privacy
 
-#### Settings
-* __Real-time exchange rates for 170 fiat currencies__, updated every 10 minutes.
-* __Real-time/historical crypto rates__ (CoinMarketCap/CoinPaprika/CoinGecko) for volatility checks.
-* __BIP39__ mnemonic seed with whitelists for security.
-* Set __PIN code__ for admin access (cashier/view-only mode).
-* Export CSV.
-* __Backup/Restore__ (JSON download or Google Drive sync).
-* Use/Manage __personal API keys/proxies__ (TOR support, multi-fallbacks).
-* Connect to __personal (remote) nodes__ (Electrum/Infura/LND/LNbits).
-* __Permissions:__ Admin or Cashier mode.  
-* __Team invite:__ Invite members for restricted (cashier) access to shared addresses.  
-* __Lightning:__ LND/LNbits nodes, LNURL/Boltcard/NFC integration.  
-* __Ethereum L2:__ Base, Arbitrum one, Polygon pos, Binance Smart Chain support.  
-* __QR Scanner:__ For addresses, viewkeys, nodes, LN connects.
+### Settings
+- Real-time exchange rates (170+ fiat currencies)
+- PIN protection with Admin/Cashier modes
+- Team invites for shared access
+- Backup to file or Google Drive
+- Connect your own nodes for full control
+
+---
+
+## Privacy & Security
+
+- **Non-custodial** — Your keys stay on your device
+- **No account required** — Works offline after install
+- **Open source** — Fully auditable code
+- **TOR support** — Optional privacy routing
+
+---
+
+## Install
+
+- **Web:** Visit [bitrequest.io](https://bitrequest.io) and install as app
+- **iOS:** [App Store](https://apps.apple.com/app/id1484815377)
+- **Android:** [Google Play](https://play.google.com/store/apps/details?id=io.bitrequest.app)
+
+---
+
+## Related
+
+- [Wiki & Documentation](https://github.com/bitrequest/bitrequest.github.io/wiki)
+- [bip39-utils-js](https://github.com/bitrequest/bip39-utils-js) — HD wallet library
+- [crypto-utils-js](https://github.com/bitrequest/crypto-utils-js) — Crypto utilities
+- [xmr-utils-js](https://github.com/bitrequest/xmr-utils-js) — Monero utilities
+
+---
+
+## License
+
+AGPL-3.0
+
+---
+
+*Lightweight crypto payments for everyone — [bitrequest.io](https://bitrequest.io)*
