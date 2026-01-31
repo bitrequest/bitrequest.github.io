@@ -3614,7 +3614,7 @@ function adjust_object(object, seedobj) {
         let xpub, xpubid;
         if (seedid && bip32dat.active) {
             const root_path = bip32dat.root_path,
-                xpubdat = xpub_obj(currency, root_path, cc, key);
+                xpubdat = br_xpub_obj(currency, root_path, cc, key);
             xpub = xpubdat.xpub;
             xpubid = xpubdat.xpubid;
         }
@@ -3796,7 +3796,7 @@ function check_teaminvite(ro) {
                     cd_format = countdown_format(cd),
                     bpdat_seedid = q_obj(br_dat, "bitrequest_cashier.seedid"),
                     update = (bpdat_seedid == glob_let.cashier_seedid) && (bpdat_seedid !== false),
-                    master_account = (bpdat_seedid == glob_let.bipid) && (bpdat_seedid !== false),
+                    master_account = (bpdat_seedid === glob_let.bipid) && (bpdat_seedid !== false),
                     teamid = br_get_local("teamid", true),
                     teamid_arr = get_default_object(teamid),
                     is_installed = teamid_arr.includes(ro),

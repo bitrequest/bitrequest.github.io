@@ -72,7 +72,9 @@ const crypto_utils_const = {
     "test_pubkey_eth": "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
     "test_address_eth": "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
     "test_legacy_address": "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
-    "test_address_cashaddr": "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22"
+    "test_address_cashaddr": "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22",
+    "test_pubkey_kaspa": "035bed9ca853f2539607e6688059d6616c5acd86cd34ac987927be3c4b62065135",
+    "test_address_kaspa": "kaspa:qpd7m89g20e989s8ue5gqkwkv9k94nvxe562exrey7lrcjmzqegn2wspgcke4"
 };
 
 // ============================================
@@ -501,6 +503,93 @@ function pub_to_address_bech32(hrp, pubkey) {
         step3 = step2.match(/.{1,5}/g),
         step4 = bech32_dec_array(step3);
     return bech32_encode(hrp, step4);
+}
+
+// ============================================
+// KASPA BECH32 (8-character checksum variant)
+// ============================================
+
+// Kaspa uses a modified bech32 with 8-character checksum (40-bit)
+// Generator polynomial split into high 8 bits and low 32 bits for JavaScript compatibility
+const KASPA_GENERATOR1 = [0x98, 0x79, 0xf3, 0xae, 0x1e];
+const KASPA_GENERATOR2 = [0xf2bc8e61, 0xb76d99e2, 0x3e5fb3c4, 0x2eabe2a8, 0x4f43e470];
+
+// Kaspa polymod - handles 40-bit values using two 32-bit integers
+function kaspa_polymod(data) {
+    // Treat c as 8 bits (c0) + 32 bits (c1)
+    let c0 = 0,
+        c1 = 1,
+        C = 0;
+    for (var j = 0; j < data.length; j++) {
+        C = c0 >>> 3;
+        c0 &= 0x07;
+        c0 <<= 5;
+        c0 |= c1 >>> 27;
+        c1 &= 0x07ffffff;
+        c1 <<= 5;
+        c1 ^= data[j];
+        for (var i = 0; i < KASPA_GENERATOR1.length; ++i) {
+            if (C & (1 << i)) {
+                c0 ^= KASPA_GENERATOR1[i];
+                c1 ^= KASPA_GENERATOR2[i];
+            }
+        }
+    }
+    c1 ^= 1;
+    if (c1 < 0) {
+        c1 ^= 1 << 31;
+        c1 += (1 << 30) * 2;
+    }
+    return c0 * (1 << 30) * 4 + c1;
+}
+
+// Kaspa prefix expansion: only low 5 bits of each char, then 0
+// Different from standard bech32 which uses high bits + 0 + low bits
+function kaspa_prefix_expand(prefix) {
+    const result = [];
+    for (let i = 0; i < prefix.length; i++) {
+        result.push(prefix.charCodeAt(i) & 31);
+    }
+    result.push(0);
+    return result;
+}
+
+// Convert checksum number to 8-element array
+function kaspa_checksum_to_array(checksum) {
+    const result = [];
+    for (let i = 0; i < 8; ++i) {
+        result.push(checksum & 31);
+        checksum /= 32;
+    }
+    return result.reverse();
+}
+
+// Create 8-character checksum for Kaspa addresses
+function kaspa_create_checksum(prefix, data) {
+    const prefixData = kaspa_prefix_expand(prefix),
+        checksumData = prefixData.concat(data).concat([0, 0, 0, 0, 0, 0, 0, 0]);
+    return kaspa_checksum_to_array(kaspa_polymod(checksumData));
+}
+
+// Converts a compressed public key to a Kaspa address
+function pub_to_kaspa_address(pubkey) {
+    // Extract x-only pubkey (32 bytes) from compressed pubkey (33 bytes)
+    const x_only = pubkey.slice(2),
+        pubkey_bytes = [];
+    for (let i = 0; i < x_only.length; i += 2) {
+        pubkey_bytes.push(parseInt(x_only.substr(i, 2), 16));
+    }
+    // Version 0x00 = schnorr pubkey
+    const version = 0x00,
+        data_bytes = [version].concat(pubkey_bytes),
+        words = to_words(data_bytes),
+        checksum = kaspa_create_checksum("kaspa", words),
+        combined = words.concat(checksum);
+    let address = "kaspa:";
+    for (let i = 0; i < combined.length; i++) {
+        address += b32ab.charAt(combined[i]);
+    }
+    return address;
 }
 
 // ============================================
@@ -1533,6 +1622,15 @@ function test_keccak256() {
     }
 }
 
+// Tests Kaspa address encoding
+function test_kaspa() {
+    const generated = pub_to_kaspa_address(crypto_utils_const.test_pubkey_kaspa);
+    if (generated === crypto_utils_const.test_address_kaspa) {
+        return true;
+    }
+    return false;
+}
+
 // Tests AES encryption round-trip
 function test_aes() {
     try {
@@ -1615,6 +1713,8 @@ const CryptoUtils = {
     bech32_decode,
     bech32_dec_array,
     lnurl_decodeb32,
+    kaspa_polymod,
+    kaspa_create_checksum,
 
     // === Byte/Hex Conversion ===
     hex_to_bytes,
@@ -1649,6 +1749,7 @@ const CryptoUtils = {
     // === Address Generation ===
     pub_to_address,
     pub_to_address_bech32,
+    pub_to_kaspa_address,
     hash160_to_address,
     pub_to_eth_address,
     to_checksum_address,
@@ -1676,5 +1777,6 @@ const CryptoUtils = {
     test_bech32,
     test_cashaddr,
     test_keccak256,
+    test_kaspa,
     test_aes
 };

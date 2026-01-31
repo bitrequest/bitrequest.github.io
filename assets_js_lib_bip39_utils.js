@@ -430,6 +430,8 @@ function format_keys(seed, key_data, bip32_config, index, coin) {
     } else if (coin === "bitcoin-cash") {
         const legacy_address = pub_to_address(version_bytes, pubkey);
         formatted_keys.address = pub_to_cashaddr(legacy_address);
+    } else if (coin === "kaspa") {
+        formatted_keys.address = pub_to_kaspa_address(pubkey);
     } else {
         formatted_keys.address = pub_to_address(version_bytes, pubkey);
     }

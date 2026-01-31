@@ -17,7 +17,7 @@ const bip39_const = {
         "ethereum": true,
         "bitcoin-cash": true,
         "nimiq": false,
-        "kaspa": false
+        "kaspa": true
     },
     "can_xpub": {
         "bitcoin": true,
@@ -29,7 +29,7 @@ const bip39_const = {
         "ethereum": true,
         "bitcoin-cash": true,
         "nimiq": false,
-        "kaspa": false
+        "kaspa": true
     }
 }
 
@@ -98,12 +98,12 @@ $(document).ready(function() {
     // ** Key Derivation Core: **
     //hmac_encrypt
 
-    // ** BIP32 Derivation: **
-    //keypair_array
-    //ext_keys
-    //xpub_obj
-    //b58c_x_payload
-    //format_keys
+    // ** BIP32 Key Derivation Core: **
+    //br_keypair_array
+    //br_ext_keys
+    //br_xpub_obj
+    //br_b58c_x_payload
+    //br_format_keys
     //xpub_prefix
 
     // ** Address Generation: **
@@ -146,7 +146,7 @@ function test_bip39() {
     const bip39_results = Bip39Utils.test_bip39_compatibility();
     if (!bip39_results.compatible) {
         disable_bip39_support();
-        const failed_coins = ["bitcoin", "litecoin", "dogecoin", "dash", "ethereum", "bitcoin-cash", "monero", "nano"];
+        const failed_coins = ["bitcoin", "litecoin", "dogecoin", "dash", "ethereum", "bitcoin-cash", "monero", "nano", "kaspa"];
         mark_coins_non_derivable(failed_coins);
         failed_coins.forEach(coin => {
             bip39_const.c_derive[coin] = false;
@@ -182,6 +182,10 @@ function test_bip39() {
         {
             "check": xmr_check,
             "coins": ["monero"]
+        },
+        {
+            "check": CryptoUtils.test_kaspa,
+            "coins": ["kaspa"]
         }
     ];
 
@@ -992,19 +996,9 @@ function pin_to_encryption_key(pin, seed_id) {
 }
 
 // ** Key Derivation Core: **
-// Note: Core BIP39/BIP32 functions are now provided by assets_js_lib_bip39_utils.js
-// These wrapper functions maintain backward compatibility
-
-// Constructor for HMAC SHA-512 encryptor (delegated to library)
-function hmac_encrypt(key) {
-    const hmac = new sjcl.misc.hmac(key, sjcl.hash.sha512);
-    this.encrypt = function() {
-        return hmac.encrypt.apply(hmac, arguments);
-    };
-}
 
 // Generates array of derived key pairs for given range
-function keypair_array(seed, indices, start_index, derive_path, bip32_config, key, chain_code, coin, version) {
+function br_keypair_array(seed, indices, start_index, derive_path, bip32_config, key, chain_code, coin, version) {
     const derived_pairs = [];
     $.each(indices, function(i) {
         const current_index = i + start_index,
@@ -1016,16 +1010,16 @@ function keypair_array(seed, indices, start_index, derive_path, bip32_config, ke
                 "vb": version
             },
             ext_keys = derive_x(derive_params),
-            formatted_keys = format_keys(seed, ext_keys, bip32_config, current_index, coin);
+            formatted_keys = br_format_keys(seed, ext_keys, bip32_config, current_index, coin);
         derived_pairs.push(formatted_keys);
     });
     return derived_pairs;
 }
 
 // Creates extended private and public keys from key object
-function ext_keys(key_data, coin) {
+function br_ext_keys(key_data, coin) {
     const ext_keys = {},
-        ext_payload = b58c_x_payload(key_data, coin),
+        ext_payload = br_b58c_x_payload(key_data, coin),
         private_key = key_data.key;
     ext_keys.ext_key = b58check_encode(ext_payload);
     if (key_data.xpub === false) {
@@ -1039,7 +1033,7 @@ function ext_keys(key_data, coin) {
                 "xpub": true,
                 "key": public_key
             },
-            pub_payload = b58c_x_payload(pub_data, coin),
+            pub_payload = br_b58c_x_payload(pub_data, coin),
             ext_pubkey = b58check_encode(pub_payload);
         ext_keys.ext_pub = ext_pubkey;
     }
@@ -1047,14 +1041,14 @@ function ext_keys(key_data, coin) {
 }
 
 // Builds xpub object containing key, id and prefix
-function xpub_obj(coin, root_path, chain_code, key) {
+function br_xpub_obj(coin, root_path, chain_code, key) {
     const derive_params = {
             "dpath": root_path.slice(0, -3),
             "key": key,
             "cc": chain_code
         },
         derived_keys = derive_x(derive_params),
-        extended_keys = ext_keys(derived_keys, coin),
+        extended_keys = br_ext_keys(derived_keys, coin),
         xpub_key = extended_keys.ext_pub,
         xpub_id = hmacsha(xpub_key, "sha256").slice(0, 8);
     return {
@@ -1065,7 +1059,7 @@ function xpub_obj(coin, root_path, chain_code, key) {
 }
 
 // Creates Base58Check payload for extended key encoding
-function b58c_x_payload(key_data, coin) {
+function br_b58c_x_payload(key_data, coin) {
     const xpub_config = get_bip32dat(coin);
     if (!xpub_config) {
         return false
@@ -1088,8 +1082,8 @@ function b58c_x_payload(key_data, coin) {
 }
 
 // Formats keys into currency-specific address formats
-function format_keys(seed, key_data, bip32_config, index, coin) {
-    const formatted_keys = {};
+function br_format_keys(seed, key_data, bip32_config, index, coin) {
+    // App-specific coins first
     if (coin === "nano") {
         if (seed) {
             const nano_account = NanocurrencyWeb.wallet.accounts(seed, index, index)[0];
@@ -1100,7 +1094,7 @@ function format_keys(seed, key_data, bip32_config, index, coin) {
                 "privkey": nano_account.privateKey
             }
         }
-        return formatted_keys;
+        return {};
     }
     if (coin === "monero") {
         if (seed) {
@@ -1112,56 +1106,9 @@ function format_keys(seed, key_data, bip32_config, index, coin) {
                 "vk": xmr_keys.svk
             }
         }
-        return formatted_keys;
+        return {};
     }
-    const purpose = key_data.purpose,
-        is_public = key_data.xpub,
-        raw_key = key_data.key,
-        pubkey = is_public ? raw_key : get_publickey(raw_key),
-        version_bytes = str_pad(dec_to_hex(bip32_config.prefix.pub), 2);
-    formatted_keys.index = index;
-    if (coin === "ethereum") {
-        formatted_keys.address = pub_to_eth_address(pubkey);
-    } else if (coin === "bitcoin") {
-        if (purpose === "84'") {
-            formatted_keys.address = pub_to_address_bech32("bc", pubkey);
-        } else {
-            const version = key_data.vb;
-            if (version === "04b24746") {
-                formatted_keys.address = pub_to_address_bech32("bc", pubkey);
-            } else {
-                formatted_keys.address = pub_to_address(version_bytes, pubkey);
-            }
-        }
-    } else if (coin === "litecoin") {
-        if (purpose === "84'") {
-            formatted_keys.address = pub_to_address_bech32("ltc", pubkey);
-        } else {
-            const version = key_data.vb;
-            if (version === "04b24746") {
-                formatted_keys.address = pub_to_address_bech32("ltc", pubkey);
-            } else {
-                formatted_keys.address = pub_to_address(version_bytes, pubkey);
-            }
-        }
-    } else if (coin === "bitcoin-cash") {
-        const legacy_address = pub_to_address(version_bytes, pubkey);
-        formatted_keys.address = pub_to_cashaddr(legacy_address);
-    } else if (coin === "kaspa") {
-        // waiting for pub to address script and more details about derivation path's
-    } else {
-        formatted_keys.address = pub_to_address(version_bytes, pubkey);
-    }
-    formatted_keys.pubkey = coin === "ethereum" ? "0x" + pubkey : pubkey;
-    if (is_public === false) {
-        if (coin === "ethereum") {
-            formatted_keys.privkey = "0x" + raw_key;
-        } else {
-            const pk_version = bip32_config.pk_vbytes.wif;
-            formatted_keys.privkey = privkey_wif(str_pad(dec_to_hex(pk_version), 2), raw_key, true);
-        }
-    }
-    return formatted_keys;
+    return format_keys(seed, key_data, bip32_config, index, coin);
 }
 
 // Gets xpub prefix for given currency
@@ -1173,7 +1120,7 @@ function xpub_prefix(coin) {
             "cc": root_key.slice(64)
         },
         derived_keys = derive_x(derive_params),
-        extended_keys = ext_keys(derived_keys, coin);
+        extended_keys = br_ext_keys(derived_keys, coin);
     return extended_keys.ext_pub.slice(0, 4);
 }
 
@@ -1316,7 +1263,7 @@ function derive_obj(key_source, key_data, coin_data, bip32_settings, add) {
                 "vb": version_bytes
             },
             derived_keys = derive_x(derive_params),
-            key_result = format_keys(seed_hex, derived_keys, bip32_settings, next_index, coin),
+            key_result = br_format_keys(seed_hex, derived_keys, bip32_settings, next_index, coin),
             address = key_result.address,
             coin_symbol = coin_data.ccsymbol,
             index_num = next_index || 0,
@@ -1505,9 +1452,9 @@ function phrase_info_pu(selected_coin) {
                 derive_list = "",
                 wallet_list = "",
                 start_index = 0,
-                derived_addresses = keypair_array(seed_hex, new Array(5), start_index, derive_path, bip32_config, master_key, chain_code, coin);
+                derived_addresses = br_keypair_array(seed_hex, new Array(5), start_index, derive_path, bip32_config, master_key, chain_code, coin);
             if (bip32_config.xpub) {
-                const xpub_data = xpub_obj(coin, derive_path, chain_code, master_key);
+                const xpub_data = br_xpub_obj(coin, derive_path, chain_code, master_key);
                 xpub_key = xpub_data.xpub;
             }
             $.each(derived_addresses, function(i, address_data) {
@@ -1709,7 +1656,7 @@ function derive_address_batch(trigger_element, is_prev) {
             version = key_data.versionbytes,
             line_break = coin === "nano" ? "<br/>" : " ",
             derive_path = key_data.xpub === true ? "M/0/" : bip32_config.root_path,
-            derived_addresses = keypair_array(key_data.seed, new Array(batch_size), start_index, derive_path, bip32_config, master_key, chain_code, coin, version);
+            derived_addresses = br_keypair_array(key_data.seed, new Array(batch_size), start_index, derive_path, bip32_config, master_key, chain_code, coin, version);
 
         address_list.html("");
         $.each(derived_addresses, function(i, address_data) {

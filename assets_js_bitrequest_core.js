@@ -1139,7 +1139,7 @@ function triggertx_function(trigger_elem) {
             saved_url = trigger_elem.data("url"),
             seed_id = address_data.seedid;
         if (seed_id) {
-            if (seed_id != glob_let.bipid) {
+            if (seed_id !== glob_let.bipid) {
                 if (!addr_whitelist(wallet_address)) {
                     const dialog_data = {
                             "currency": currency,
@@ -2002,7 +2002,7 @@ function escape_and_back() {
 // Manages keyboard input actions across app
 function keyup() {
     $(document).keyup(function(e) {
-        if (e.keyCode == 39) { // ArrowRight
+        if (e.keyCode === 39) { // ArrowRight
             if (glob_const.paymentdialogbox.find("input").is(":focus")) {
                 play_audio("funk");
                 return
@@ -2029,7 +2029,7 @@ function keyup() {
             glob_let.sa_timer = now_utc();
             return
         }
-        if (e.keyCode == 37) { // ArrowLeft
+        if (e.keyCode === 37) { // ArrowLeft
             if (glob_const.paymentdialogbox.find("input").is(":focus")) {
                 play_audio("funk");
                 return
@@ -2056,11 +2056,11 @@ function keyup() {
             glob_let.sa_timer = now_utc();
             return
         }
-        if (e.keyCode == 27) { // Escape
+        if (e.keyCode === 27) { // Escape
             escape_and_back();
             return
         }
-        if (e.keyCode == 13) { // Enter
+        if (e.keyCode === 13) { // Enter
             if ($("#popup").hasClass("active")) {
                 $("#popup #execute").trigger("click");
             }
@@ -2653,7 +2653,7 @@ function confirm_ms_newrequest() {
             key_confirmed = key_checkbox.data("checked"),
             save_checkbox = dialog_el.find("#dontshowwrap"),
             save_confirmed = save_checkbox.data("checked");
-        if (!key_confirmed == true) {
+        if (!key_confirmed) {
             popnotify("error", tl("confirmpkownership"));
             return
         }
@@ -2818,7 +2818,7 @@ function show_pk() {
                 "cc": key_data.cc
             },
             derived_keys = derive_x(derive_data),
-            key_object = format_keys(key_data.seed, derived_keys, addr_data.bip32dat, addr_data.derive_index, currency),
+            key_object = br_format_keys(key_data.seed, derived_keys, addr_data.bip32dat, addr_data.derive_index, currency),
             private_key = key_object.privkey;
         all_pinpanel({
             "func": show_pk_cb,

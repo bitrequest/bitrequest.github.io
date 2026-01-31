@@ -133,6 +133,7 @@
                 <option value="doge">Dogecoin</option>
                 <option value="eth">Ethereum</option>
                 <option value="bch">Bitcoin Cash</option>
+                <option value="kaspa">Kaspa</option>
             </select>
         </div>
         <div class="test-row">
@@ -181,6 +182,17 @@
         </div>
         <div class="note">Pre-filled with public key derived from the test mnemonic phrase</div>
         <div class="output" id="bch-output"></div>
+    </div>
+
+    <!-- Kaspa Address -->
+    <div class="test-section">
+        <h4>Public Key → Kaspa Address</h4>
+        <div class="test-row">
+            <input type="text" id="kaspa-pubkey-input" placeholder="Compressed public key (33 bytes hex)" value="">
+            <button onclick="testKaspaAddress()">Generate Kaspa Address</button>
+        </div>
+        <div class="note">Kaspa uses 8-character checksum (40-bit) bech32 variant with x-only pubkey. Pre-filled with test pubkey.</div>
+        <div class="output" id="kaspa-output"></div>
     </div>
 
     <!-- WIF -->
@@ -417,6 +429,10 @@
 
         test("CryptoUtils.test_aes: verify AES encryption", () => {
             assertTrue(CryptoUtils.test_aes() === true, "AES encryption should work");
+        });
+
+        test("CryptoUtils.test_kaspa: verify Kaspa address encoding", () => {
+            assertTrue(CryptoUtils.test_kaspa() === true, "Kaspa address encoding should work");
         });
 
         // ============================================================
@@ -771,6 +787,58 @@
             assertTrue(address.startsWith("ltc1q"), "Litecoin segwit prefix");
         });
 
+        // === Kaspa Bech32 Tests (8-character checksum variant) ===
+
+        test("kaspa_polymod: basic computation", () => {
+            // Test with simple data array
+            const result = CryptoUtils.kaspa_polymod([0, 1, 2, 3, 4]);
+            assertTrue(typeof result === "number", "Returns number");
+            assertTrue(result >= 0, "Non-negative result");
+        });
+
+        test("kaspa_polymod: empty array returns 0", () => {
+            // c1 starts at 1, then c1 ^= 1 at end = 0
+            const result = CryptoUtils.kaspa_polymod([]);
+            assertEqual(result, 0, "Empty array returns 0 after final XOR");
+        });
+
+        test("kaspa_create_checksum: returns 8 values", () => {
+            const testData = [0, 1, 2, 3, 4, 5, 6, 7];
+            const checksum = CryptoUtils.kaspa_create_checksum("kaspa", testData);
+            assertEqual(checksum.length, 8, "Checksum has 8 values");
+            checksum.forEach(v => {
+                assertTrue(v >= 0 && v < 32, "Each value in bech32 range");
+            });
+        });
+
+        test("pub_to_kaspa_address: generate valid address", () => {
+            const address = CryptoUtils.pub_to_kaspa_address(TestVector.test_pubkey_kaspa);
+            assertTrue(address.startsWith("kaspa:q"), "Starts with kaspa:q");
+            assertEqual(address.length, 67, "Kaspa address length (kaspa: prefix + 61 bech32 chars)");
+        });
+
+        test("pub_to_kaspa_address: known test vector", () => {
+            const address = CryptoUtils.pub_to_kaspa_address(TestVector.test_pubkey_kaspa);
+            assertEqual(address, TestVector.test_address_kaspa, "Known Kaspa address matches");
+        });
+
+        test("pub_to_kaspa_address: different pubkeys produce different addresses", () => {
+            const addr1 = CryptoUtils.pub_to_kaspa_address(TestVector.test_pubkey_kaspa);
+            const addr2 = CryptoUtils.pub_to_kaspa_address(TestVector.test_pubkey);
+            assertTrue(addr1 !== addr2, "Different pubkeys give different addresses");
+        });
+
+        test("pub_to_kaspa_address: x-only extraction", () => {
+            // Kaspa uses x-only pubkey (strips the 02/03 prefix)
+            const compressedPub = "02" + "0".repeat(64);
+            const address = CryptoUtils.pub_to_kaspa_address(compressedPub);
+            assertTrue(address.startsWith("kaspa:q"), "Handles 02 prefix");
+            
+            const compressedPub2 = "03" + "0".repeat(64);
+            const address2 = CryptoUtils.pub_to_kaspa_address(compressedPub2);
+            assertEqual(address, address2, "02 and 03 prefixed same x-coord give same address");
+        });
+
         // === Elliptic Curve Tests ===
 
         test("mod: positive modulo", () => {
@@ -1103,7 +1171,8 @@
             "dash":       "XDVVxNodPJT8WfWLvybQnn3YNabtVLrrfTEfmCoomqE8FAxLdcZh",   // m/44'/5'/0'/0/0
             "doge":       "QSpQ294N775doUjovSbUULyVigMUzfjX8FSmMPM5aAewbkKKXEdG",   // m/44'/3'/0'/0/0
             "eth":        "0x73bf21bf06769f98dabcfac16c2f74e852da823effed12794e56876ede02d45d", // m/44'/60'/0'/0/0
-            "bch":        "L5QtfxVwgwBESpcnZ1goY3wkxDqTQ57A6yxrzTaxNzQwKdTuYrCg"    // m/44'/145'/0'/0/0
+            "bch":        "L5QtfxVwgwBESpcnZ1goY3wkxDqTQ57A6yxrzTaxNzQwKdTuYrCg",   // m/44'/145'/0'/0/0
+            "kaspa":      "L5BSTjqYFfzij8bznWuJcEnZ1n5y8bLq2GMnZomPxqWUyrbQ65RP"   // m/44'/111111'/0'/0/0
         };
 
         // Helper to decode WIF to hex private key
@@ -1280,6 +1349,8 @@
                     document.getElementById("eth-pubkey-input").value = compressed;
                 } else if (selectedCoin === "bch") {
                     document.getElementById("bch-pubkey-input").value = compressed;
+                } else if (selectedCoin === "kaspa") {
+                    document.getElementById("kaspa-pubkey-input").value = compressed;
                 } else if (["btc-legacy", "btc-segwit", "ltc-legacy", "ltc-segwit", "dash", "doge"].includes(selectedCoin)) {
                     document.getElementById("pubkey-input").value = compressed;
                     document.getElementById("address-coin").value = selectedCoin;
@@ -1417,6 +1488,33 @@
                                    "\n\n<span class='info'>Legacy address:</span>\n" + legacyAddress + 
                                    "\n\n<span class='info'>CashAddr format:</span>\nbitcoincash:" + cashAddr + 
                                    "\n\n<span class='info'>Back to legacy:</span>\n" + legacy;
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testKaspaAddress() {
+            const rawPubkey = document.getElementById("kaspa-pubkey-input").value.replace(/\s/g, ""),
+                  output = document.getElementById("kaspa-output");
+            try {
+                if (!rawPubkey) {
+                    output.innerHTML = "";
+                    return;
+                }
+
+                const conversion = auto_hex_convert(rawPubkey),
+                      pubkey = conversion.hex;
+                
+                // Kaspa uses x-only pubkey (strips 02/03 prefix from compressed pubkey)
+                const xOnlyPubkey = pubkey.length === 66 ? pubkey.slice(2) : pubkey,
+                      address = CryptoUtils.pub_to_kaspa_address(pubkey);
+                
+                output.innerHTML = conversion.msg + 
+                                   "<span class='info'>Public key (compressed):</span>\n" + pubkey + 
+                                   "\n\n<span class='info'>X-only pubkey (32 bytes):</span>\n" + xOnlyPubkey + 
+                                   "\n\n<span class='warn'>═══ Kaspa ═══</span>\n" +
+                                   "<span class='info'>Address:</span>\n" + address;
             } catch (e) {
                 logError("interactive tool", e);
                 output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
@@ -1823,6 +1921,9 @@
             // Pre-populate BCH public key (compressed, derived from test mnemonic)
             const bchPubkey = derivePublicKey(TEST_KEYS["bch"], true);
             document.getElementById("bch-pubkey-input").value = bchPubkey;
+            
+            // Pre-populate Kaspa public key (use test vector from crypto_utils_const)
+            document.getElementById("kaspa-pubkey-input").value = TestVector.test_pubkey_kaspa;
             
             // Set default address coin to BTC SegWit and populate its public key
             document.getElementById("address-coin").value = "btc-segwit";

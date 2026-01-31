@@ -380,7 +380,7 @@ function display_xpub_details(currency, xpub_key) {
             "xpub": true,
             "versionbytes": version_bytes
         },
-        derived_keys = keypair_array(false, new Array(5), start_index, derivation_path, bip32_config, master_key, chain_code, currency, version_bytes),
+        derived_keys = br_keypair_array(false, new Array(5), start_index, derivation_path, bip32_config, master_key, chain_code, currency, version_bytes),
         address_list = derived_keys.map((key_data, index) => {
             const path_index = start_index + index;
             return "<li class='adbox der_li' data-index='" + path_index + "'><strong>" + derivation_path + path_index + "</strong> | <span class='mspace'>" + key_data.address + "</span></li>";
@@ -655,7 +655,7 @@ function generate_derived_addresses(currency, xpub_key) {
                 "xpub": true,
                 "versionbytes": version_bytes
             },
-            derived_keys = keypair_array(false, new Array(5), start_index, derivation_path, bip32_config, master_key, chain_code, currency, version_bytes),
+            derived_keys = br_keypair_array(false, new Array(5), start_index, derivation_path, bip32_config, master_key, chain_code, currency, version_bytes),
             address_list = derived_keys.map((key_data, index) => {
                 const path_index = start_index + index;
                 return "<li class='adbox der_li' data-index='" + path_index + "'><strong>" + derivation_path + path_index + "</strong> | <span class='mspace'>" + key_data.address + "</span></li>";

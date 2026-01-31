@@ -1505,8 +1505,8 @@ glob_config = {
                     "poll_fallback": true
                 },
                 "Xpub": {
-                    "active": false,
-                    "xpub": false,
+                    "active": true,
+                    "xpub": true,
                     "icon": "key",
                     "switch": true,
                     "custom_switch": true,
@@ -1515,12 +1515,16 @@ glob_config = {
                     "root_path": "m/44'/111111'/0'/0/",
                     "prefix": {
                         "pub": 0,
-                        "pubx": 76067358,
-                        "privx": 76066276
+                        "pubx": 59716398,
+                        "privx": 59715316
                     },
                     "pk_vbytes": {
                         "wif": 128
                     }
+                },
+                "Key derivations": {
+                    "icon": "cog",
+                    "selected": "compatiblewallets",
                 },
                 soundbytes
             }

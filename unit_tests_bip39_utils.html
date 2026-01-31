@@ -251,6 +251,7 @@
                 <option value="dash" data-path="m/44'/5'/0'/0/">Dash</option>
                 <option value="ethereum" data-path="m/44'/60'/0'/0/">Ethereum</option>
                 <option value="bitcoin-cash" data-path="m/44'/145'/0'/0/">Bitcoin Cash</option>
+                <option value="kaspa" data-path="m/44'/111111'/0'/0/">Kaspa</option>
             </select>
         </div>
         <div class="test-row">
@@ -276,6 +277,7 @@
                 <option value="dash">Dash</option>
                 <option value="ethereum">Ethereum</option>
                 <option value="bitcoin-cash">Bitcoin Cash</option>
+                <option value="kaspa">Kaspa</option>
             </select>
             <input type="number" id="batch-count" value="5" min="1" max="20" style="width: 80px;">
             <button onclick="batchDerive()">Derive Addresses</button>
@@ -323,6 +325,19 @@
 
         // Shorthand reference to test constants from library
         const TestVector = Bip39Utils.bip39_utils_test_vectors;
+
+        // Kaspa BIP32 configuration (for interactive tools)
+        const KASPA_CONFIG = {
+            "root_path": "m/44'/111111'/0'/0/",
+            "prefix": {
+                "pub": 0,
+                "pubx": 59716398,   // 0x038f332e → kpub
+                "privx": 59715316  // 0x038f2ef4 → kprv
+            },
+            "pk_vbytes": {
+                "wif": 128
+            }
+        };
 
         // Test framework
         const tests = [];
@@ -623,6 +638,74 @@
             });
             const formatted = Bip39Utils.format_keys(seed, derived, Bip39Utils.get_bip32_config("dogecoin"), 0, "dogecoin");
             assertTrue(formatted.address.startsWith("D"), "Dogecoin address starts with D");
+        });
+
+        // === Kaspa Address Derivation Tests ===
+
+        test("Kaspa address derivation: valid kaspa: address format", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(TestVector.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/44'/111111'/0'/0/0",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const pubkey = CryptoUtils.get_publickey(derived.key);
+            const address = CryptoUtils.pub_to_kaspa_address(pubkey);
+            assertTrue(address.startsWith("kaspa:q"), "Kaspa address starts with kaspa:q");
+            assertEqual(address.length, 67, "Kaspa address is 67 chars (kaspa: + 61 bech32)");
+        });
+
+        test("Kaspa address derivation: multiple indices produce different addresses", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(TestVector.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived0 = Bip39Utils.derive_x({
+                dpath: "m/44'/111111'/0'/0/0",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const derived1 = Bip39Utils.derive_x({
+                dpath: "m/44'/111111'/0'/0/1",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const addr0 = CryptoUtils.pub_to_kaspa_address(CryptoUtils.get_publickey(derived0.key));
+            const addr1 = CryptoUtils.pub_to_kaspa_address(CryptoUtils.get_publickey(derived1.key));
+            assertTrue(addr0 !== addr1, "Different indices produce different addresses");
+        });
+
+        test("Kaspa kpub generation: produces valid kpub", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(TestVector.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/44'/111111'/0'",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const ext_keys_result = Bip39Utils.ext_keys(derived, KASPA_CONFIG);
+            assertTrue(ext_keys_result.xpub.startsWith("kpub"), "Kaspa xpub starts with kpub");
+        });
+
+        test("Kaspa kpub parsing: can parse kpub and derive addresses", () => {
+            const seed = Bip39Utils.mnemonic_to_seed(TestVector.test_phrase);
+            const root = Bip39Utils.get_rootkey(seed);
+            const derived = Bip39Utils.derive_x({
+                dpath: "m/44'/111111'/0'",
+                key: root.slice(0, 64),
+                cc: root.slice(64)
+            });
+            const ext_keys_result = Bip39Utils.ext_keys(derived, KASPA_CONFIG);
+            const kpub = ext_keys_result.xpub;
+            
+            // Parse kpub and derive address
+            const parsed = Bip39Utils.key_cc_xpub(kpub);
+            const child_derived = Bip39Utils.derive_x({
+                dpath: "M/0/0",
+                key: parsed.key,
+                cc: parsed.cc
+            });
+            const address = CryptoUtils.pub_to_kaspa_address(child_derived.key);
+            assertTrue(address.startsWith("kaspa:q"), "Derived address from kpub is valid");
         });
 
         test("format_keys: expected Bitcoin address from test phrase", () => {
@@ -1043,8 +1126,13 @@
                         key: key,
                         cc: chaincode
                       }),
-                      config = Bip39Utils.get_bip32_config(baseCoin),
                       pubkey = CryptoUtils.get_publickey(derived.key);
+                
+                // Get config - use Kaspa fallback if needed
+                let config = Bip39Utils.get_bip32_config(baseCoin);
+                if (!config && baseCoin === "kaspa") {
+                    config = KASPA_CONFIG;
+                }
                 
                 // Generate address based on coin type
                 let address;
@@ -1052,6 +1140,8 @@
                     address = CryptoUtils.pub_to_address_bech32("bc", pubkey);
                 } else if (isSegwit && baseCoin === "litecoin") {
                     address = CryptoUtils.pub_to_address_bech32("ltc", pubkey);
+                } else if (baseCoin === "kaspa") {
+                    address = CryptoUtils.pub_to_kaspa_address(pubkey);
                 } else {
                     const formatted = Bip39Utils.format_keys(null, derived, config, 0, baseCoin);
                     address = formatted.address;
@@ -1127,8 +1217,13 @@
                       seed = Bip39Utils.mnemonic_to_seed(mnemonic),
                       root_key = Bip39Utils.get_rootkey(seed),
                       master_key = root_key.slice(0, 64),
-                      chain_code = root_key.slice(64),
-                      config = Bip39Utils.get_bip32_config(baseCoin);
+                      chain_code = root_key.slice(64);
+                
+                // Get config - use Kaspa fallback if needed
+                let config = Bip39Utils.get_bip32_config(baseCoin);
+                if (!config && baseCoin === "kaspa") {
+                    config = KASPA_CONFIG;
+                }
                 
                 // Determine the correct path based on segwit vs legacy
                 let root_path;
@@ -1140,6 +1235,8 @@
                     root_path = "m/44'/0'/0'/0/";
                 } else if (baseCoin === "litecoin") {
                     root_path = "m/44'/2'/0'/0/";
+                } else if (baseCoin === "kaspa") {
+                    root_path = "m/44'/111111'/0'/0/";
                 } else {
                     root_path = config.root_path;
                 }
@@ -1164,6 +1261,8 @@
                         address = CryptoUtils.pub_to_address_bech32("bc", pubkey);
                     } else if (isSegwit && baseCoin === "litecoin") {
                         address = CryptoUtils.pub_to_address_bech32("ltc", pubkey);
+                    } else if (baseCoin === "kaspa") {
+                        address = CryptoUtils.pub_to_kaspa_address(pubkey);
                     } else {
                         const formatted = Bip39Utils.format_keys(seed, derived, config, i, baseCoin);
                         address = formatted.address;
@@ -1212,7 +1311,8 @@
                         { name: "DOGE", path: "m/44'/3'/0'", coin: "dogecoin", use_zpub: false },
                         { name: "DASH", path: "m/44'/5'/0'", coin: "dash", use_zpub: false, use_bitcoin_prefix: true },
                         { name: "BCH", path: "m/44'/145'/0'", coin: "bitcoin-cash", use_zpub: false },
-                        { name: "ETH", path: "m/44'/60'/0'", coin: "ethereum", use_zpub: false }
+                        { name: "ETH", path: "m/44'/60'/0'", coin: "ethereum", use_zpub: false },
+                        { name: "KAS (kpub)", path: "m/44'/111111'/0'", coin: "kaspa", use_zpub: false, use_kaspa: true }
                       ];
                 
                 let result = "<span class='info'>Extended Public Keys:</span>\n\n";
@@ -1228,8 +1328,12 @@
                     // Get config and potentially override for zpub/xpub
                     let coin_config = Bip39Utils.get_bip32_config(cfg.coin);
                     
+                    // For Kaspa, use KASPA_CONFIG
+                    if (cfg.use_kaspa) {
+                        coin_config = KASPA_CONFIG;
+                    }
                     // For DASH, use Bitcoin xpub prefix to match common wallet formats
-                    if (cfg.use_bitcoin_prefix) {
+                    else if (cfg.use_bitcoin_prefix) {
                         coin_config = {
                             ...coin_config,
                             prefix: {
@@ -1278,7 +1382,8 @@
                         "04b24746": { name: "zpub (BTC/LTC SegWit)", coins: ["btc-segwit", "ltc-segwit"] },
                         "019da462": { name: "Ltub (LTC Legacy)", coins: ["ltc-legacy"] },
                         "02facafd": { name: "dgub (DOGE)", coins: ["doge"] },
-                        "02fe52cc": { name: "drkp (DASH)", coins: ["dash"] }
+                        "02fe52cc": { name: "drkp (DASH)", coins: ["dash"] },
+                        "038f332e": { name: "kpub (Kaspa)", coins: ["kaspa"] }
                       },
                       version_info = version_map[extended.version] || { name: "Unknown", coins: [] };
                 
@@ -1338,6 +1443,10 @@
                     // drkp - Dash
                     const dash_addr = CryptoUtils.pub_to_address("4c", child_pub_key);
                     result += "<span class='info'>DASH:</span> " + dash_addr + "\n";
+                } else if (extended.version === "038f332e") {
+                    // kpub - Kaspa
+                    const kaspa_addr = CryptoUtils.pub_to_kaspa_address(child_pub_key);
+                    result += "<span class='info'>KAS:</span> " + kaspa_addr + "\n";
                 } else {
                     // Unknown - try common formats
                     const legacy_addr = CryptoUtils.pub_to_address("00", child_pub_key);
