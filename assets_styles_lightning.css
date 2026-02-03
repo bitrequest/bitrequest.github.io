@@ -1,0 +1,213 @@
+/* General lightning styles */
+.drawer2 {
+  display: none;
+}
+
+.drawer2 p {
+  font-size: 16px !important;
+  color: #535353;
+}
+
+#add_proxy_drawer {
+  margin: 0;
+  padding: 1em 0;
+}
+
+#add_proxy_drawer p#lnurls_info {
+  font-size: 75% !important;
+}
+
+#add_proxy {
+  padding-right: 1em;
+  text-align: right;
+}
+
+#proxy_pw_input {
+  display: none;
+}
+
+/* No Lightning network styles */
+.noln #select_ln_node {
+  display: none;
+}
+
+.noln .noln_ref {
+  display: none !important;
+}
+
+.noln #ad_info_wrap > ul > li {
+  border-bottom: 1px solid rgba(204, 204, 204, 0);
+}
+
+/* Address and drawer styles */
+#adln_drawer {
+  margin-top: 1em;
+}
+
+.noln #adln_drawer {
+  display: block;
+}
+
+/* Invoice list and memo styles */
+.invoice_list {
+  padding-top: 1em;
+}
+
+.ivli {
+  border-bottom: 1px solid #e2e1e1;
+}
+
+.ivli:last-child {
+  border-bottom: 1px solid rgba(204, 204, 204, 0);
+}
+
+.invoice_memo {
+  padding: 0.5em;
+}
+
+.invoice_memo .iv_title {
+  float: left;
+  color: #708484;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.invoice_memo .iv_date {
+  float: right;
+  color: #96a4a4;
+  font-style: italic;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.invoice_body {
+  display: none;
+}
+
+#invoiceformbox .invoice_body {
+  display: block;
+}
+
+#invoiceformbox .icon-power:before {
+  color: #f5c243;
+}
+
+.inv_pb {
+  display: inline-block;
+  padding: 1em 0 0;
+  color: #979797;
+  font-size: 0.7em;
+  font-style: italic;
+}
+
+/* Preformatted text styles */
+pre,
+.pre {
+  width: 100%;
+  margin: 0;
+  padding: 10px 5px;
+  border-right: 15px solid #393838;
+  outline: 1px solid #ccc;
+  overflow: hidden;
+  color: #fff;
+  background: #393838;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  -khtml-user-select: text;
+}
+
+pre .string {
+  display: inline;
+  color: #b9c97e;
+  white-space: pre;
+  word-wrap: break-word;
+}
+
+pre .number,
+pre .boolean,
+pre .null {
+  color: #88a8c5;
+}
+
+pre .key {
+  color: #b9c97e;
+}
+
+/* Icons and specific elements */
+.lnd_icon {
+  width: 1em;
+}
+
+/* Lightning settings box */
+#lnsettingsbox .switch_wrap {
+  display: inline-block;
+  width: 100%;
+  padding: 0 0.5em 0.7em 0;
+  text-align: right;
+  color: #8d8d8d;
+  font-size: 1.1em;
+  font-weight: 800;
+}
+
+#lnsettingsbox #lnurl_proxy_drawer .switch_wrap {
+  text-align: left;
+}
+
+#lnsettingsbox .ln_info_wrap {
+  padding: 1em 0 0 0.3em;
+}
+
+#lnsettingsbox .ln_info_wrap .lni_dat {
+  float: left;
+  color: #535353;
+  font-size: 12px !important;
+}
+
+#lnsettingsbox .ln_info_wrap .lnurl_p {
+  float: right;
+  padding-right: 0.3em;
+  color: #8d8d8d;
+  font-size: 1em;
+  font-weight: 800;
+}
+
+#lnsettingsbox .noln_ref.lnurlclass .ln_info_wrap .lnurl_p {
+  display: none;
+}
+
+#lnsettingsbox .ln_info_wrap .lni_dat .locked_stat,
+#lnsettingsbox .ln_info_wrap .lni_dat .online_stat {
+  display: none;
+}
+
+#lnsettingsbox .ln_info_wrap.live .lni_dat .online_stat {
+  display: inline;
+}
+
+#lnsettingsbox .ln_info_wrap.locked .lni_dat .locked_stat {
+  display: inline;
+}
+
+#lnsettingsbox .ln_info_wrap.live .lni_dat .offline_stat,
+#lnsettingsbox .ln_info_wrap.locked .lni_dat .offline_stat {
+  display: none;
+}
+
+/* Conditional display for forms */
+#select_ln_node {
+  z-index: 3;
+}
+
+#lnsettingsbox .popform.haslnurls #lnd_credentials,
+#lnsettingsbox .popform.haslnurls #lnurl_proxy_drawer {
+  display: none;
+}
+
+#lnsettingsbox #lnd_credentials .lndcd {
+  display: none;
+}
+
+#lnsettingsbox .popform.nocam #lnd_credentials .qrscanner {
+  display: none;
+}

@@ -1,0 +1,113 @@
+/*
+ *  Aurora iOS Theme
+ *  A bright, modern, and tactile interface inspired by soft materials and pastel gradients.
+ */
+
+/* Body and base background */
+body {
+    background: linear-gradient(135deg, #d9d9f5, #d1fafa, #ffe8f0);
+    background-attachment: fixed;
+    color: #525b6a;
+}
+
+.requestlist>li.rqli,
+.requestlist>li .brmarker,
+.requestlist>li .brstatuspanel {
+    background-color: transparent;
+}
+
+#startscreen {
+    background-color: rgba(255, 255, 255, 0.4);
+    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+/* Header and navigation background */
+header,
+#fixednav {
+    background-color: rgba(255, 255, 255, 0.6);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+/* Heading styles */
+.heading {
+    padding-bottom: 1.3em;
+    color: #2c333a;
+}
+
+/* Request list item backgrounds - The "Claymorphic" elements */
+.requestlist>li.rqli {
+    background-color: #f7f7f7;
+    border-radius: 15px;
+    margin-bottom: 12px;
+    box-shadow: 5px 5px 10px rgba(180, 190, 200, 0.4),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.requestlist>li.rqli:hover {
+    transform: translateY(-2px);
+    box-shadow: 8px 8px 15px rgba(180, 190, 200, 0.5),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.8);
+}
+
+.requestlist>li.rqli:nth-child(odd) {
+    background-color: #f7f7f7;
+}
+
+.requestlist>li.requestoutgoing.visible_request,
+.requestlist>li.requestoutgoing.visible_request .brstatuspanel,
+.requestlist>li.requestoutgoing .brmarker {
+    background-color: rgba(230, 240, 230, 0.8);
+}
+
+.requestlist>li.requestlocal.visible_request,
+.requestlist>li.requestlocal.visible_request .brstatuspanel,
+.requestlist>li.requestlocal .brmarker {
+    background-color: rgba(230, 235, 245, 0.8);
+}
+
+/* Link and interactive element colors */
+#dialogbody h2:before,
+#toseed,
+#actions div,
+#dialog .customtrigger,
+#canceldialog,
+#backupcd,
+#backupactions .util_icon,
+.linkcolor,
+.selectarrows,
+.qrscanner,
+.ref {
+    color: #1ABC9C;
+}
+
+.button,
+.alias {
+    background: linear-gradient(45deg, #A9DFBF, #48C9B0);
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(72, 201, 176, 0.4);
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.button:hover,
+.alias:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(72, 201, 176, 0.5);
+}
+
+.currencylist .cmc_icon {
+    filter: grayscale(1) sepia(1) hue-rotate(120deg) saturate(5) brightness(1.1);
+}
+
+.currencylist .rq_icon:after {
+    color: #FFF;
+}

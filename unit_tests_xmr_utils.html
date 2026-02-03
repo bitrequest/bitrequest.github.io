@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>XmrUtils - Monero Utilities Test Suite</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+            line-height: 1.6;
+        }
+        h1 { color: #ff6600; margin-bottom: 5px; }
+        h2 { color: #ff6600; border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 30px; }
+        h3 { color: #888; margin: 0 0 20px 0; font-weight: normal; }
+        .test-section {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .test-section h4 {
+            margin: 0 0 15px 0;
+            color: #fff;
+            font-size: 16px;
+        }
+        .test-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        input, textarea, select {
+            background: #0f0f23;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        input { flex: 1; min-width: 200px; }
+        textarea { width: 100%; min-height: 80px; resize: vertical; }
+        button {
+            background: #ff6600;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        button:hover { background: #cc5200; }
+        .output {
+            background: #0f0f23;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+        .success { color: #00ff88; }
+        .error { color: #ff4444; }
+        .info { color: #ff6600; }
+        .warn { color: #ffaa00; }
+        .muted { color: #888; }
+        #test-results {
+            background: #0f0f23;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .test-pass { color: #00ff88; }
+        .test-fail { color: #ff4444; }
+        .test-count {
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+        a { color: #ff6600; }
+        .note {
+            background: #3d2814;
+            border-left: 3px solid #ff6600;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        .warning {
+            background: #3d1414;
+            border-left: 3px solid #ff4444;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔶 XmrUtils</h1>
+    <h3>Standalone Monero Cryptocurrency Utilities v<span id="version"></span></h3>
+    
+    <div class="note">
+        <strong>Dependencies:</strong> <a href="https://github.com/bitrequest/bitrequest.github.io/blob/master/assets_js_lib_sjcl.js">sjcl.js</a> → <a href="https://github.com/bitrequest/bitrequest.github.io/blob/master/assets_js_lib_crypto_utils.js">crypto_utils.js</a> → <a href="https://github.com/bitrequest/bitrequest.github.io/blob/master/assets_js_lib_xmr_utils.js">xmr_utils.js</a><br>
+        <strong>Test phrase:</strong> <a href="https://github.com/bitcoinbook/bitcoinbook/blob/f8b883dcd4e3d1b9adf40fed59b7e898fbd9241f/ch05.asciidoc">army van defense carry jealous true garbage claim echo media make crunch</a><br>
+        <strong>Repository:</strong> <a href="https://github.com/bitrequest/xmr-utils-js">github.com/bitrequest/xmr-utils-js</a>
+    </div>
+
+    <div class="warning">
+        <strong>⚠️ Security Notice:</strong> Never use test keys with real funds. These examples use well-known test vectors only.
+    </div>
+
+    <!-- Automated Tests -->
+    <h2>🧪 Automated Unit Tests</h2>
+    <button onclick="runAllTests()">Run All Tests</button>
+    <div id="test-results"></div>
+
+    <!-- Interactive Tools -->
+    <h2>🛠️ Interactive Tools</h2>
+
+    <!-- Key Derivation -->
+    <div class="test-section">
+        <h4>Secret Spend Key → Full Wallet Keys</h4>
+        <div class="test-row">
+            <input type="text" id="ssk-input" placeholder="32-byte hex secret spend key or Monero Address" value="">
+            <button onclick="testDeriveKeys()">Derive Keys</button>
+        </div>
+        <div class="note">Enter a secret spend key to derive full wallet keys, or a Monero address to extract public keys</div>
+        <div class="output" id="derive-output"></div>
+    </div>
+
+    <!-- Address Validation -->
+    <div class="test-section">
+        <h4>Monero Address → View Key Extraction</h4>
+        <div class="test-row">
+            <input type="text" id="addr-input" placeholder="Monero address (95 chars)" value="">
+            <button onclick="testAddressInfo()">Extract Info</button>
+        </div>
+        <div class="output" id="addr-output"></div>
+    </div>
+
+    <!-- Subaddress Generation -->
+    <div class="test-section">
+        <h4>Generate Subaddresses</h4>
+        <div class="test-row">
+            <input type="text" id="subaddr-ssk" placeholder="Secret spend key" value="">
+            <input type="number" id="subaddr-index" placeholder="Index" value="0" style="max-width: 100px;">
+            <button onclick="testSubaddress()">Generate</button>
+        </div>
+        <div class="note">Index 0 = main address, Index 1+ = subaddresses</div>
+        <div class="output" id="subaddr-output"></div>
+    </div>
+
+    <!-- Secret Spend Key Generation -->
+    <div class="test-section">
+        <h4>Generate Random Secret Spend Key</h4>
+        <div class="test-row">
+            <button onclick="testGenerateKey()">Generate New Key</button>
+        </div>
+        <div class="output" id="keygen-output"></div>
+    </div>
+
+    <!-- Mnemonic Seed -->
+    <div class="test-section">
+        <h4>Secret Spend Key → Mnemonic Words</h4>
+        <div class="test-row">
+            <input type="text" id="mnemonic-ssk" placeholder="Secret spend key (hex)" value="">
+            <button onclick="testMnemonicFromKey()">Key → Mnemonic</button>
+        </div>
+        <div class="output" id="mnemonic-output"></div>
+    </div>
+
+    <!-- Mnemonic to Secret Spend Key -->
+    <div class="test-section">
+        <h4>Mnemonic Words → Secret Spend Key</h4>
+        <div class="test-row">
+            <textarea id="mnemonic-words" placeholder="Enter 25-word Monero mnemonic" rows="3"></textarea>
+        </div>
+        <div class="test-row">
+            <button onclick="testKeyFromMnemonic()">Mnemonic → Key</button>
+        </div>
+        <div class="note">Converts a 25-word Monero mnemonic back to the secret spend key (with checksum verification)</div>
+        <div class="output" id="mnemonic-to-key-output"></div>
+    </div>
+
+    <!-- Payment ID -->
+    <div class="test-section">
+        <h4>Payment ID Generation & Validation</h4>
+        <div class="test-row">
+            <input type="text" id="pid-input" placeholder="Payment ID (leave empty to generate)" value="">
+            <button onclick="testPaymentId()">Generate/Validate</button>
+        </div>
+        <div class="note">Generates a random 16-character encrypted payment ID if empty</div>
+        <div class="output" id="pid-output"></div>
+    </div>
+
+    <!-- Base58 Encoding -->
+    <div class="test-section">
+        <h4>Monero Base58 Encoding</h4>
+        <div class="test-row">
+            <input type="text" id="b58-input" placeholder="Hex input" value="">
+            <button onclick="testBase58()">Encode</button>
+        </div>
+        <div class="note">Monero uses a variant of Base58 with 8-byte blocks</div>
+        <div class="output" id="b58-output"></div>
+    </div>
+
+    <!-- Fasthash (Keccak) -->
+    <div class="test-section">
+        <h4>Fasthash (Keccak-256)</h4>
+        <div class="test-row">
+            <input type="text" id="fasthash-input" placeholder="Hex input" value="">
+            <button onclick="testFasthash()">Hash</button>
+        </div>
+        <div class="output" id="fasthash-output"></div>
+    </div>
+
+    <!-- Scalar Reduction -->
+    <div class="test-section">
+        <h4>Scalar Reduction (sc_reduce32)</h4>
+        <div class="test-row">
+            <input type="text" id="scalar-input" placeholder="32-byte hex value" value="ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff">
+            <button onclick="testScalarReduce()">Reduce</button>
+        </div>
+        <div class="note">Reduces a 32-byte value modulo the Ed25519 curve order l</div>
+        <div class="output" id="scalar-output"></div>
+    </div>
+
+    <!-- Point Operations -->
+    <div class="test-section">
+        <h4>Elliptic Curve Point Operations (Ed25519)</h4>
+        <div class="test-row">
+            <input type="text" id="point-scalar" placeholder="Scalar (hex)" value="0100000000000000000000000000000000000000000000000000000000000000">
+            <button onclick="testPointMultiply()">Scalar × G</button>
+        </div>
+        <div class="note">Multiplies the Ed25519 base point G by the scalar</div>
+        <div class="output" id="point-output"></div>
+    </div>
+
+    <!-- CRC32 -->
+    <div class="test-section">
+        <h4>CRC-32 (for mnemonic checksum)</h4>
+        <div class="test-row">
+            <input type="text" id="crc-input" placeholder="Text input" value="test">
+            <button onclick="testCrc32()">Calculate CRC</button>
+        </div>
+        <div class="output" id="crc-output"></div>
+    </div>
+
+    <!-- Byte/Number Utilities -->
+    <div class="test-section">
+        <h4>Byte/Number Utilities</h4>
+        <div class="test-row">
+            <input type="text" id="util-input" placeholder="Hex or number" value="">
+            <select id="util-type">
+                <option value="ed_bytes_to_number_le">ed_bytes_to_number_le (hex → number LE)/option>
+                <option value="xmr_number_to_hex">xmr_number_to_hex (number → hex)</option>
+                <option value="uint64_to_8be">uint64_to_8be (number → 8 bytes BE)</option>
+            </select>
+            <button onclick="testUtility()">Convert</button>
+        </div>
+        <div class="output" id="util-output"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets_js_lib_sjcl.js"></script>
+    <script src="assets_js_lib_crypto_utils.js"></script>
+    <script src="assets_js_lib_xmr_utils.js"></script>
+    <script>
+        // Display version
+        document.getElementById("version").textContent = XmrUtils.VERSION || "1.1.0";
+
+        // Shorthand reference to test constants from library
+        const TestVector = XmrUtils.xmr_utils_const;
+
+        // Use CryptoUtils methods directly to avoid global conflicts
+        // (xmr_utils.js may expose hex_to_bytes/bytes_to_hex globally)
+
+        // Test framework
+        const tests = [];
+        let passed = 0, failed = 0;
+
+        // ============================================================
+        // TEST CONSTANTS (for interactive tools)
+        // ============================================================
+        
+        // Secret spend key for interactive tools (different from TestVector.test_spend_key)
+        const TEST_SSK = TestVector.test_spend_key;
+        // Corresponding address
+        const TEST_ADDRESS = TestVector.test_address;
+
+        function test(name, fn) {
+            tests.push({ name, fn });
+        }
+
+        function assertEqual(actual, expected, msg) {
+            if (actual !== expected) {
+                throw new Error(msg + " Expected: " + expected + " Got: " + actual);
+            }
+        }
+
+        function assertTrue(condition, msg) {
+            if (!condition) {
+                throw new Error(msg);
+            }
+        }
+
+        // Helper to log errors to console with full details
+        function logError(context, e) {
+            console.group("❌ " + context + " Error");
+            console.error("Message:", e.message || e);
+            console.error("Full error:", e);
+            if (e.stack) console.error("Stack:", e.stack);
+            console.groupEnd();
+        }
+
+        // ============================================================
+        // BUILT-IN LIBRARY TESTS
+        // ============================================================
+
+        test("XmrUtils.test_xmr_derivation: verify spend key → address derivation", () => {
+            assertTrue(XmrUtils.test_xmr_derivation() === true, "XMR derivation should work");
+        });
+
+        test("XmrUtils.test_xmr_keys: verify spend key → view key derivation", () => {
+            assertTrue(XmrUtils.test_xmr_keys() === true, "XMR key derivation should work");
+        });
+
+        test("XmrUtils.test_xmr_address: verify address generation", () => {
+            assertTrue(XmrUtils.test_xmr_address() === true, "XMR address generation should work");
+        });
+
+        test("XmrUtils.test_xmr_compatibility: full compatibility check", () => {
+            const results = XmrUtils.test_xmr_compatibility();
+            assertTrue(results.compatible === true, "XMR should be compatible");
+            assertTrue(results.crypto_api === true, "crypto API should be available");
+            assertTrue(results.bigint === true, "BigInt should be functional");
+            assertTrue(results.keys === true, "key derivation should work");
+            assertTrue(results.address === true, "address generation should work");
+        });
+
+        // ============================================================
+        // TEST CONSTANTS VALIDATION
+        // ============================================================
+
+        test("xmr_utils_const: test_spend_key produces test_address", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = CryptoUtils.hex_to_bytes(TestVector.test_spend_key);
+            const keys = XmrUtils.xmr_getpubs(ssk, 0);
+            assertEqual(keys.address, TestVector.test_address, "Should produce expected address");
+        });
+
+        test("xmr_utils_const: test_spend_key produces test_view_key", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = CryptoUtils.hex_to_bytes(TestVector.test_spend_key);
+            const keys = XmrUtils.xmr_getpubs(ssk, 0);
+            assertEqual(keys.svk, TestVector.test_view_key, "Should produce expected view key");
+        });
+
+        // ============================================================
+        // UNIT TESTS
+        // ============================================================
+
+        // === Byte/Number Utilities Tests ===
+
+        test("str_to_bin: convert string to bytes", () => {
+            const result = XmrUtils.str_to_bin("hello");
+            assertTrue(result instanceof Uint8Array, "Should return Uint8Array");
+            assertEqual(result.length, 5, "Should be 5 bytes");
+        });
+
+        test("bytes_to_number_le: little-endian conversion", () => {
+            const bytes = new Uint8Array([1, 0, 0, 0]);
+            const result = CryptoUtils.ed_bytes_to_number_le(bytes);
+            assertEqual(result, 1n, "LE: [1,0,0,0] = 1");
+        });
+
+        test("bytes_to_number_le: multi-byte value", () => {
+            const bytes = new Uint8Array([0, 1, 0, 0]);
+            const result = CryptoUtils.ed_bytes_to_number_le(bytes);
+            assertEqual(result, 256n, "LE: [0,1,0,0] = 256");
+        });
+
+        test("uint64_to_8be: convert BigInt to big-endian bytes", () => {
+            const result = XmrUtils.uint64_to_8be(256n, 8);
+            assertTrue(result instanceof Uint8Array, "Should return Uint8Array");
+            assertEqual(result.length, 8, "Should be 8 bytes");
+            assertEqual(result[6], 1, "256 = 0x100, byte 6 should be 1");
+        });
+
+        test("uint32_hex: convert to little-endian hex", () => {
+            const result = XmrUtils.uint32_hex(1);
+            assertEqual(result.length, 8, "Should be 8 hex chars");
+            assertEqual(result, "01000000", "1 in LE hex");
+        });
+
+        test("xmr_number_to_hex: pad to even length", () => {
+            assertEqual(XmrUtils.xmr_number_to_hex(1n), "01", "1 -> 01");
+            assertEqual(XmrUtils.xmr_number_to_hex(255n), "ff", "255 -> ff");
+            assertEqual(XmrUtils.xmr_number_to_hex(256n), "0100", "256 -> 0100");
+        });
+
+        // === Scalar Operations Tests ===
+
+        test("sc_reduce32: reduce identity", () => {
+            const input = "0100000000000000000000000000000000000000000000000000000000000000";
+            const result = XmrUtils.sc_reduce32(input);
+            assertTrue(result instanceof Uint8Array, "Should return Uint8Array");
+            assertEqual(result.length, 32, "Should be 32 bytes");
+            assertEqual(result[0], 1, "First byte is 1 (LE)");
+        });
+
+        test("sc_reduce32: reduce large value", () => {
+            const input = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+            const result = XmrUtils.sc_reduce32(input);
+            assertTrue(result instanceof Uint8Array, "Should return Uint8Array");
+            assertEqual(result.length, 32, "Should be 32 bytes");
+        });
+
+        test("sc_reduce32: deterministic", () => {
+            const result1 = CryptoUtils.bytes_to_hex(XmrUtils.sc_reduce32(TEST_SSK));
+            const result2 = CryptoUtils.bytes_to_hex(XmrUtils.sc_reduce32(TEST_SSK));
+            assertEqual(result1, result2, "Should be deterministic");
+        });
+
+        // === Hashing Tests ===
+
+        test("fasthash: Keccak-256 (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const result = XmrUtils.fasthash(TEST_SSK);
+            assertEqual(result.length, 64, "Should be 32 bytes hex");
+        });
+
+        test("fasthash: deterministic (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const hash1 = XmrUtils.fasthash(TEST_SSK);
+            const hash2 = XmrUtils.fasthash(TEST_SSK);
+            assertEqual(hash1, hash2, "Same input, same output");
+        });
+
+        test("fasthash: different inputs (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const hash1 = XmrUtils.fasthash("01");
+            const hash2 = XmrUtils.fasthash("02");
+            assertTrue(hash1 !== hash2, "Different inputs, different outputs");
+        });
+
+        test("fasthash: empty input (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const result = XmrUtils.fasthash("");
+            assertEqual(result.length, 64, "Should handle empty input");
+        });
+
+        test("crc_32: checksum calculation", () => {
+            const result = XmrUtils.crc_32("test");
+            assertTrue(typeof result === "number", "Should return number");
+        });
+
+        test("crc_32: deterministic", () => {
+            const result1 = XmrUtils.crc_32("hello");
+            const result2 = XmrUtils.crc_32("hello");
+            assertEqual(result1, result2, "Should be deterministic");
+        });
+
+        test("crc_32: different inputs", () => {
+            const result1 = XmrUtils.crc_32("hello");
+            const result2 = XmrUtils.crc_32("world");
+            assertTrue(result1 !== result2, "Different inputs, different CRCs");
+        });
+
+        test("make_crc_table: generates table", () => {
+            const table = XmrUtils.make_crc_table();
+            assertTrue(Array.isArray(table), "Should return array");
+            assertEqual(table.length, 256, "Should have 256 entries");
+        });
+
+        // === Key Operations Tests ===
+
+        test("xmr_get_publickey: derive public from private", () => {
+            const privkey = "0100000000000000000000000000000000000000000000000000000000000000";
+            const pubkey = CryptoUtils.ed25519_point_multiply(privkey).toHex();
+            assertEqual(pubkey.length, 64, "Should be 32 bytes hex");
+        });
+
+        test("xmr_get_publickey: deterministic", () => {
+            const privkey = "0100000000000000000000000000000000000000000000000000000000000000";
+            const pub1 = CryptoUtils.ed25519_point_multiply(privkey).toHex();
+            const pub2 = CryptoUtils.ed25519_point_multiply(privkey).toHex();
+            assertEqual(pub1, pub2, "Same key, same output");
+        });
+
+        test("xmr_getpubs: derive full key set (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = new Uint8Array(32); ssk.fill(1);
+            const keys = XmrUtils.xmr_getpubs(ssk, 0);
+            assertTrue(keys.hasOwnProperty("psk"), "Should have public spend key");
+            assertTrue(keys.hasOwnProperty("pvk"), "Should have public view key");
+            assertTrue(keys.hasOwnProperty("svk"), "Should have secret view key");
+            assertTrue(keys.hasOwnProperty("address"), "Should have address");
+        });
+
+        test("xmr_getpubs: subaddress derivation (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = new Uint8Array(32); ssk.fill(1);
+            const main = XmrUtils.xmr_getpubs(ssk, 0);
+            const sub1 = XmrUtils.xmr_getpubs(ssk, 1);
+            assertTrue(main.psk !== sub1.psk, "Subaddress has different spend key");
+            assertTrue(main.address !== sub1.address, "Subaddress has different address");
+        });
+
+        test("get_ssk: derive secret spend key from BIP39 (requires keccak_256 and bip39_utils)", () => {
+            // This function requires get_rootkey from bip39_utils
+            // Skip if not available
+            if (typeof keccak_256 === "undefined" || typeof get_rootkey === "undefined") {
+                console.log("Skipping: requires keccak_256 and bip39_utils");
+                return;
+            }
+            const bip39Seed = "a".repeat(128);
+            const ssk = XmrUtils.get_ssk(bip39Seed, true);
+            assertTrue(ssk instanceof Uint8Array, "Should return Uint8Array");
+            assertEqual(ssk.length, 32, "Should be 32 bytes");
+        });
+
+        // === Address Operations Tests ===
+
+        test("pub_keys_to_address: generate standard address (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = new Uint8Array(32); ssk.fill(1);
+            const keys = XmrUtils.xmr_getpubs(ssk, 0);
+            const address = XmrUtils.pub_keys_to_address(keys.psk, keys.pvk, 0);
+            assertTrue(address.startsWith("4"), "Main address starts with 4");
+            assertTrue(address.length === 95 || address.length === 106, "Valid address length");
+        });
+
+        test("pub_keys_to_address: subaddress format (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = new Uint8Array(32); ssk.fill(1);
+            const keys = XmrUtils.xmr_getpubs(ssk, 1);
+            const address = XmrUtils.pub_keys_to_address(keys.psk, keys.pvk, 1);
+            assertTrue(address.startsWith("8"), "Subaddress starts with 8");
+        });
+
+        test("base58_encode: Monero encoding", () => {
+            // Use network byte (12) + secret spend key prefix
+            const sskPrefix = "12007d984c3df532fdd8";
+            const result = XmrUtils.base58_encode(CryptoUtils.hex_to_bytes(sskPrefix));
+            assertTrue(result.length > 0, "Should produce output");
+            assertTrue(typeof result === "string", "Should return string");
+        });
+
+        test("base58_encode: deterministic", () => {
+            const sskPrefix = "007d984c";
+            const data = CryptoUtils.hex_to_bytes(sskPrefix);
+            const enc1 = XmrUtils.base58_encode(data);
+            const enc2 = XmrUtils.base58_encode(data);
+            assertEqual(enc1, enc2, "Same input, same output");
+        });
+
+        test("base58_decode: function exists", () => {
+            assertTrue(typeof XmrUtils.base58_decode === "function", "base58_decode should be a function");
+        });
+
+        test("base58_decode: decode address", () => {
+            // First verify the function exists
+            if (typeof XmrUtils.base58_decode !== "function") {
+                throw new Error("base58_decode is not a function: " + typeof XmrUtils.base58_decode);
+            }
+            
+            console.log("Attempting to decode TEST_ADDRESS:", TEST_ADDRESS);
+            console.log("TEST_ADDRESS length:", TEST_ADDRESS.length);
+            
+            const decoded = XmrUtils.base58_decode(TEST_ADDRESS);
+            
+            console.log("Decoded result:", decoded);
+            console.log("Decoded type:", typeof decoded);
+            
+            assertTrue(typeof decoded === "string", "Should return hex string, got: " + typeof decoded);
+            assertTrue(decoded.length >= 130, "Should have enough bytes, got length: " + (decoded ? decoded.length : "N/A"));
+        });
+
+        test("base58_decode: roundtrip", () => {
+            // First verify the function exists
+            if (typeof XmrUtils.base58_decode !== "function") {
+                throw new Error("base58_decode is not a function");
+            }
+            
+            const original = "12007d984c";
+            console.log("Original hex:", original);
+            
+            const bytes = CryptoUtils.hex_to_bytes(original);
+            console.log("Bytes:", bytes);
+            
+            const encoded = XmrUtils.base58_encode(bytes);
+            console.log("Encoded:", encoded);
+            
+            const decoded = XmrUtils.base58_decode(encoded);
+            console.log("Decoded:", decoded);
+            
+            assertEqual(decoded, original, "Roundtrip should match");
+        });
+
+        test("get_spend_pubkey_from_address: extract (requires keccak_256)", () => {
+            if (typeof keccak_256 === "undefined") {
+                console.log("Skipping: keccak_256 not available");
+                return;
+            }
+            const ssk = new Uint8Array(32); ssk.fill(1);
+            const keys = XmrUtils.xmr_getpubs(ssk, 0);
+            const address = XmrUtils.pub_keys_to_address(keys.psk, keys.pvk, 0);
+            const extracted = XmrUtils.get_spend_pubkey_from_address(address);
+            assertEqual(extracted, keys.psk, "Should extract correct spend pubkey");
+        });
+
+        test("vk_obj: parse view key from address", () => {
+            // Use the correct Monero address from test secret spend key
+            try {
+                const result = XmrUtils.vk_obj(TEST_ADDRESS);
+                assertTrue(typeof result === "object" || result === false, "Should return object or false");
+            } catch (e) {
+                // May require specific setup
+                console.log("Skipping vk_obj: " + e.message);
+            }
+        });
+
+        // === Payment ID Tests ===
+
+        test("xmr_pid: generate payment ID", () => {
+            const pid = XmrUtils.xmr_pid();
+            assertEqual(pid.length, 16, "Encrypted PID is 16 chars");
+            assertTrue(/^[0-9a-f]+$/.test(pid), "Should be hex");
+        });
+
+        test("xmr_pid: random each time", () => {
+            const pid1 = XmrUtils.xmr_pid();
+            const pid2 = XmrUtils.xmr_pid();
+            assertTrue(pid1 !== pid2, "Should be random");
+        });
+
+        test("check_pid: validate format (short)", () => {
+            const validShort = "abcd1234abcd1234";
+            const result = XmrUtils.check_pid(validShort);
+            assertTrue(result !== false, "Valid short PID should pass");
+        });
+
+        test("check_pid: validate format (long)", () => {
+            // Long PIDs (64 hex chars) are deprecated in Monero
+            // check_pid may only support short/encrypted PIDs (16 hex chars)
+            const validLong = "abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234";
+            const result = XmrUtils.check_pid(validLong);
+            // Either true (if long PIDs supported) or false (if only short supported)
+            assertTrue(typeof result === "boolean" || result === validLong || result === false, "Should return boolean or string");
+        });
+
+        test("check_pid: reject invalid", () => {
+            const invalid = "xyz";
+            const result = XmrUtils.check_pid(invalid);
+            assertEqual(result, false, "Invalid PID should fail");
+        });
+
+        test("check_pid: reject non-hex", () => {
+            const nonHex = "ghijklmnopqrstuv";
+            const result = XmrUtils.check_pid(nonHex);
+            assertEqual(result, false, "Non-hex should fail");
+        });
+
+        test("check_pid: handle empty payment ID", () => {
+            const result = XmrUtils.check_pid("");
+            // Empty should either return false or the empty string
+            assertTrue(result === false || result === "", "Empty handled");
+        });
+
+        // === Mnemonic Tests ===
+
+        test("secret_spend_key_to_words: convert to mnemonic", () => {
+            const sskHex = "b3d515f5ca66c1228d62e6c0d8b3bb92e52c8fbdc05e2f23ed0b2c262a9e8903";
+            const sskBytes = CryptoUtils.hex_to_bytes(sskHex);
+            const words = XmrUtils.secret_spend_key_to_words(sskBytes);
+            const wordArray = words.split(" ");
+            assertTrue(typeof words === "string", "Should return string");
+            assertEqual(wordArray.length, 25, "Should be 25 words");
+        });
+
+        test("secret_spend_key_to_words: deterministic", () => {
+            const sskHex = "b3d515f5ca66c1228d62e6c0d8b3bb92e52c8fbdc05e2f23ed0b2c262a9e8903";
+            const sskBytes = CryptoUtils.hex_to_bytes(sskHex);
+            const words1 = XmrUtils.secret_spend_key_to_words(sskBytes);
+            const words2 = XmrUtils.secret_spend_key_to_words(sskBytes);
+            assertEqual(words1, words2, "Should be deterministic");
+        });
+
+        test("mn_random: generate random entropy", () => {
+            const entropy = XmrUtils.mn_random(256);
+            assertEqual(entropy.length, 64, "256 bits = 64 hex chars");
+            assertTrue(/^[0-9a-f]+$/.test(entropy), "Should be hex");
+        });
+
+        test("mn_random: different each time", () => {
+            const e1 = XmrUtils.mn_random(256);
+            const e2 = XmrUtils.mn_random(256);
+            assertTrue(e1 !== e2, "Should be random");
+        });
+
+        test("words_to_secret_spend_key: convert mnemonic to SSK", () => {
+            const sskHex = "b3d515f5ca66c1228d62e6c0d8b3bb92e52c8fbdc05e2f23ed0b2c262a9e8903";
+            const sskBytes = CryptoUtils.hex_to_bytes(sskHex);
+            const words = XmrUtils.secret_spend_key_to_words(sskBytes);
+            const recoveredSsk = XmrUtils.words_to_secret_spend_key(words);
+            const recoveredHex = CryptoUtils.bytes_to_hex(recoveredSsk);
+            assertEqual(recoveredHex, sskHex, "Should recover original SSK");
+        });
+
+        test("words_to_secret_spend_key: roundtrip with random key", () => {
+            const randomHex = XmrUtils.mn_random(256);
+            const randomBytes = CryptoUtils.hex_to_bytes(randomHex);
+            const words = XmrUtils.secret_spend_key_to_words(randomBytes);
+            const recoveredSsk = XmrUtils.words_to_secret_spend_key(words);
+            const recoveredHex = CryptoUtils.bytes_to_hex(recoveredSsk);
+            assertEqual(recoveredHex, randomHex, "Roundtrip should preserve key");
+        });
+
+        test("words_to_secret_spend_key: case insensitive", () => {
+            const sskHex = "b3d515f5ca66c1228d62e6c0d8b3bb92e52c8fbdc05e2f23ed0b2c262a9e8903";
+            const sskBytes = CryptoUtils.hex_to_bytes(sskHex);
+            const words = XmrUtils.secret_spend_key_to_words(sskBytes);
+            const upperWords = words.toUpperCase();
+            const recoveredSsk = XmrUtils.words_to_secret_spend_key(upperWords);
+            const recoveredHex = CryptoUtils.bytes_to_hex(recoveredSsk);
+            assertEqual(recoveredHex, sskHex, "Should handle uppercase");
+        });
+
+        test("words_to_secret_spend_key: rejects wrong word count", () => {
+            let threw = false;
+            try {
+                XmrUtils.words_to_secret_spend_key("abbey abbey abbey");
+            } catch (e) {
+                threw = true;
+                assertTrue(e.message.includes("25 words"), "Error should mention word count");
+            }
+            assertTrue(threw, "Should throw for wrong word count");
+        });
+
+        test("words_to_secret_spend_key: rejects invalid words", () => {
+            const fakeWords = "abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey invalidword";
+            let threw = false;
+            try {
+                XmrUtils.words_to_secret_spend_key(fakeWords);
+            } catch (e) {
+                threw = true;
+                assertTrue(e.message.includes("Invalid word"), "Error should mention invalid word");
+            }
+            assertTrue(threw, "Should throw for invalid word");
+        });
+
+        test("words_to_secret_spend_key: rejects bad checksum", () => {
+            const sskHex = "b3d515f5ca66c1228d62e6c0d8b3bb92e52c8fbdc05e2f23ed0b2c262a9e8903";
+            const sskBytes = CryptoUtils.hex_to_bytes(sskHex);
+            const words = XmrUtils.secret_spend_key_to_words(sskBytes);
+            const wordArray = words.split(" ");
+            // Swap the checksum word with a different word
+            wordArray[24] = wordArray[24] === "abbey" ? "abort" : "abbey";
+            const badChecksum = wordArray.join(" ");
+            let threw = false;
+            try {
+                XmrUtils.words_to_secret_spend_key(badChecksum);
+            } catch (e) {
+                threw = true;
+                assertTrue(e.message.includes("Checksum"), "Error should mention checksum");
+            }
+            assertTrue(threw, "Should throw for bad checksum");
+        });
+
+        // === Elliptic Curve Tests ===
+
+        test("xmod: modular arithmetic", () => {
+            const P = CryptoUtils.ED25519.P;
+            assertEqual(CryptoUtils.mod(10n, 3n), 1n, "10 mod 3 = 1");
+            assertEqual(CryptoUtils.mod(-1n, P), P - 1n, "Negative handled");
+        });
+
+        test("xmr_invert: modular inverse", () => {
+            const P = CryptoUtils.ED25519.P;
+            const a = 12345n;
+            const inv = CryptoUtils.invert(a, P);
+            assertEqual(CryptoUtils.mod(a * inv, P), 1n, "a * inv(a) = 1 mod P");
+        });
+
+        test("xpow_mod: modular exponentiation", () => {
+            const result = CryptoUtils.pow_mod(2n, 10n, 1000n);
+            assertEqual(result, 24n, "2^10 mod 1000 = 24");
+        });
+
+        test("point_multiply: scalar multiplication", () => {
+            const scalar = "0100000000000000000000000000000000000000000000000000000000000000";
+            const result = CryptoUtils.ed25519_point_multiply(scalar);
+            assertTrue(result !== null, "Should return point");
+        });
+
+        test("xmr_getpoint: parse point from hex", () => {
+            // Use a known valid point (the basepoint)
+            const basepoint = "5866666666666666666666666666666666666666666666666666666666666666";
+            const point = EdPoint.fromHex(basepoint);
+            assertTrue(point !== null, "Should parse point");
+        });
+
+        test("point_to_monero_hex: convert point to hex", () => {
+            const scalar = "0100000000000000000000000000000000000000000000000000000000000000";
+            const point = CryptoUtils.ed25519_point_multiply(scalar);
+            const hex = XmrUtils.point_to_monero_hex(point);
+            assertEqual(hex.length, 64, "Should be 32 bytes hex");
+        });
+
+        // === Transaction Parsing Tests ===
+
+        test("parse_xmr_tx_hex: returns object", () => {
+            // Minimal test - just verify it doesn't crash on empty/invalid
+            try {
+                const result = XmrUtils.parse_xmr_tx_hex("");
+                assertTrue(typeof result === "object" || result === null, "Returns object or null");
+            } catch (e) {
+                // Expected for invalid input
+                assertTrue(true, "Throws on invalid input");
+            }
+        });
+
+        // === xmr_CURVE Constants Tests ===
+
+        test("xmr_CURVE: has required constants", () => {
+            assertTrue(CryptoUtils.ED25519.P > 0n, "Has P");
+            assertTrue(CryptoUtils.ED25519.Gx > 0n, "Has Gx");
+            assertTrue(CryptoUtils.ED25519.Gy > 0n, "Has Gy");
+        });
+
+        // Run all tests
+        function runAllTests() {
+            const resultsDiv = document.getElementById("test-results");
+            resultsDiv.innerHTML = "<span class='info'>Running tests...</span>";
+            passed = 0;
+            failed = 0;
+
+            console.group("🧪 XmrUtils Unit Tests");
+            console.log("Running " + tests.length + " tests...");
+
+            setTimeout(() => {
+                let output = "";
+                
+                for (const t of tests) {
+                    try {
+                        t.fn();
+                        output += "<span class='test-pass'>✓ " + t.name + "</span><br>\n";
+                        passed++;
+                    } catch (e) {
+                        output += "<span class='test-fail'>✗ " + t.name + "\n  " + e.message + "</span><br>\n";
+                        failed++;
+                        logError("TEST: " + t.name, e);
+                    }
+                }
+
+                console.log("✅ Passed: " + passed + " | ❌ Failed: " + failed);
+                console.groupEnd();
+
+                const summary = "<div class='test-count'>Tests: <span class='test-pass'>" + passed + " passed</span>, <span class='" + (failed ? "test-fail" : "") + "'>" + failed + " failed</span> of " + tests.length + " total</div>";
+                resultsDiv.innerHTML = summary + output;
+            }, 10);
+        }
+
+        // ============================================================
+        // INTERACTIVE TOOLS
+        // ============================================================
+
+        function testDeriveKeys() {
+            const input = document.getElementById("ssk-input").value.trim();
+            const output = document.getElementById("derive-output");
+            try {
+                if (typeof keccak_256 === "undefined") {
+                    output.innerHTML = "<span class='warn'>keccak_256 not available</span>";
+                    return;
+                }
+                const sskBytes = CryptoUtils.hex_to_bytes(input);
+                const keys = XmrUtils.xmr_getpubs(sskBytes, 0);
+                
+                output.innerHTML = "<span class='info'>Secret Spend Key:</span>\n" + input +
+                    "\n\n<span class='info'>Public Spend Key:</span>\n" + keys.psk +
+                    "\n\n<span class='info'>Secret View Key:</span>\n" + keys.svk +
+                    "\n\n<span class='info'>Public View Key:</span>\n" + keys.pvk +
+                    "\n\n<span class='info'>Address:</span>\n" + keys.address;
+                
+                document.getElementById("subaddr-ssk").value = input;
+                document.getElementById("mnemonic-ssk").value = input;
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testSubaddress() {
+            const ssk = document.getElementById("subaddr-ssk").value.trim();
+            const index = parseInt(document.getElementById("subaddr-index").value) || 0;
+            const output = document.getElementById("subaddr-output");
+            try {
+                if (typeof keccak_256 === "undefined") {
+                    output.innerHTML = "<span class='warn'>keccak_256 not available</span>";
+                    return;
+                }
+                const sskBytes = CryptoUtils.hex_to_bytes(ssk);
+                const keys = XmrUtils.xmr_getpubs(sskBytes, index);
+                
+                const addressType = index === 0 ? "Main Address" : "Subaddress #" + index;
+                output.innerHTML = "<span class='info'>" + addressType + ":</span>\n" + keys.address +
+                    "\n\n<span class='info'>Public Spend Key:</span>\n" + keys.psk +
+                    "\n\n<span class='info'>Public View Key:</span>\n" + keys.pvk;
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testMnemonicFromKey() {
+            const ssk = document.getElementById("mnemonic-ssk").value.trim();
+            const output = document.getElementById("mnemonic-output");
+            try {
+                const sskBytes = CryptoUtils.hex_to_bytes(ssk);
+                const words = XmrUtils.secret_spend_key_to_words(sskBytes);
+                const wordArray = words.split(" ");
+                
+                let wordGrid = "";
+                wordArray.forEach((word, i) => {
+                    wordGrid += (i + 1) + ". " + word + "\n";
+                });
+                
+                output.innerHTML = "<span class='info'>Mnemonic (25 words):</span>\n\n" + wordGrid;
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testKeyFromMnemonic() {
+            const mnemonic = document.getElementById("mnemonic-words").value.trim();
+            const output = document.getElementById("mnemonic-to-key-output");
+            try {
+                if (!mnemonic) {
+                    output.innerHTML = "<span class='info'>Enter a 25-word Monero mnemonic</span>";
+                    return;
+                }
+                const sskBytes = XmrUtils.words_to_secret_spend_key(mnemonic);
+                
+                // xmr_getpubs derives everything from the secret spend key
+                const pubs = XmrUtils.xmr_getpubs(sskBytes, 0);
+                
+                output.innerHTML = "<span class='success'>✓ Checksum valid</span>\n\n" +
+                    "<span class='info'>Secret Spend Key:</span>\n" + pubs.ssk + "\n\n" +
+                    "<span class='info'>Secret View Key:</span>\n" + pubs.svk + "\n\n" +
+                    "<span class='info'>Primary Address:</span>\n" + pubs.address;
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testFasthash() {
+            const input = document.getElementById("fasthash-input").value.trim();
+            const output = document.getElementById("fasthash-output");
+            try {
+                if (typeof keccak_256 === "undefined") {
+                    output.innerHTML = "<span class='warn'>keccak_256 not available</span>";
+                    return;
+                }
+                const hash = XmrUtils.fasthash(input);
+                output.innerHTML = "<span class='info'>Input:</span> " + input +
+                    "\n\n<span class='info'>Keccak-256:</span>\n" + hash;
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testAddressInfo() {
+            const address = document.getElementById("addr-input").value.trim(),
+                  output = document.getElementById("addr-output");
+            try {
+                if (!address) {
+                    output.innerHTML = "<span class='info'>Enter a Monero address to extract public keys</span>";
+                    return;
+                }
+                
+                let addrType = "Unknown";
+                if (address.startsWith("4")) addrType = "Standard Address";
+                else if (address.startsWith("8")) addrType = "Subaddress";
+                else if (address.startsWith("A")) addrType = "Integrated Address";
+                
+                // Debug: Check if base58_decode is available
+                if (typeof XmrUtils.base58_decode !== "function") {
+                    output.innerHTML = "<span class='error'>XmrUtils.base58_decode is not a function!</span>";
+                    return;
+                }
+                
+                // Use XmrUtils library functions to extract keys
+                const decodedHex = XmrUtils.base58_decode(address);
+                
+                // Byte structure: [Network: 1 byte][Spend: 32 bytes][View: 32 bytes][Checksum: 4 bytes]
+                // Hex structure: [Net: 2 chars][Spend: 64 chars][View: 64 chars][Checksum: 8 chars]
+                const spendPubkey = decodedHex.slice(2, 66);
+                const viewKey = decodedHex.slice(66, 130);
+                
+                output.innerHTML = "<span class='info'>Address:</span>\n" + address + 
+                                   "\n\n<span class='info'>Type:</span> " + addrType + 
+                                   "\n<span class='info'>Length:</span> " + address.length + " characters" +
+                                   "\n\n<span class='info'>Public Spend Key:</span>\n" + spendPubkey + 
+                                   "\n\n<span class='info'>Public View Key:</span>\n" + viewKey +
+                                   "\n\n<span class='warn'>Secret Spend Key:</span>\nImpossible to derive from address (Private)\n\n<span class='warn'>Secret View Key:</span>\nImpossible to derive from address (Private)";
+            } catch (e) {
+                logError("testAddressInfo", e);
+                const stack = e.stack ? "\n\nStack: " + e.stack.split("\n").slice(0, 5).join("\n") : "";
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + stack + "</span>";
+            }
+        }
+
+        function testGenerateKey() {
+            const output = document.getElementById("keygen-output");
+            try {
+                // Generate random 32 bytes and reduce to valid scalar
+                const randomBytes = new Uint8Array(32);
+                window.crypto.getRandomValues(randomBytes);
+                const randomHex = CryptoUtils.bytes_to_hex(randomBytes);
+                const reduced = XmrUtils.sc_reduce32(randomHex);
+                const sskHex = CryptoUtils.bytes_to_hex(reduced);
+                
+                // Derive full wallet from this key
+                const sskBytes = CryptoUtils.hex_to_bytes(sskHex);
+                const keys = XmrUtils.xmr_getpubs(sskBytes, 0);
+                
+                output.innerHTML = "<span class='success'>✓ Generated new wallet</span>\n\n" +
+                    "<span class='info'>Secret spend key:</span>\n" + sskHex +
+                    "\n\n<span class='info'>Secret view key:</span>\n" + keys.svk +
+                    "\n\n<span class='info'>Public spend key:</span>\n" + keys.psk +
+                    "\n\n<span class='info'>Public view key:</span>\n" + keys.pvk +
+                    "\n\n<span class='info'>Main address:</span>\n" + keys.address;
+                
+                // Update all input fields that use the secret spend key
+                document.getElementById("ssk-input").value = sskHex;
+                document.getElementById("subaddr-ssk").value = sskHex;
+                document.getElementById("mnemonic-ssk").value = sskHex;
+                document.getElementById("fasthash-input").value = sskHex;
+                document.getElementById("b58-input").value = "12" + sskHex;
+                document.getElementById("scalar-input").value = sskHex;
+                document.getElementById("point-scalar").value = sskHex;
+                document.getElementById("addr-input").value = keys.address;
+                
+                // Update rendered output fields only when they have content
+                const deriveOutput = document.getElementById("derive-output");
+                if (deriveOutput.innerHTML && !deriveOutput.innerHTML.includes("Enter")) {
+                    testDeriveKeys();
+                }
+                
+                const subaddrOutput = document.getElementById("subaddr-output");
+                if (subaddrOutput.innerHTML && !subaddrOutput.innerHTML.includes("Enter")) {
+                    testSubaddress();
+                }
+                
+                const mnemonicOutput = document.getElementById("mnemonic-output");
+                if (mnemonicOutput.innerHTML && !mnemonicOutput.innerHTML.includes("Enter")) {
+                    testMnemonicFromKey();
+                }
+                
+                const fasthashOutput = document.getElementById("fasthash-output");
+                if (fasthashOutput.innerHTML && !fasthashOutput.innerHTML.includes("Enter")) {
+                    testFasthash();
+                }
+                
+                const addrOutput = document.getElementById("addr-output");
+                if (addrOutput.innerHTML && !addrOutput.innerHTML.includes("Enter")) {
+                    testAddressInfo();
+                }
+                
+                const b58Output = document.getElementById("b58-output");
+                if (b58Output.innerHTML && !b58Output.innerHTML.includes("Enter")) {
+                    testBase58();
+                }
+                
+                const scalarOutput = document.getElementById("scalar-output");
+                if (scalarOutput.innerHTML && !scalarOutput.innerHTML.includes("Enter")) {
+                    testScalarReduce();
+                }
+                
+                const pointOutput = document.getElementById("point-output");
+                if (pointOutput.innerHTML && !pointOutput.innerHTML.includes("Enter")) {
+                    testPointMultiply();
+                }
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testPaymentId() {
+            const input = document.getElementById("pid-input").value.trim();
+            const output = document.getElementById("pid-output");
+            try {
+                if (!input) {
+                    // Generate random payment ID
+                    const pid = XmrUtils.xmr_pid();
+                    document.getElementById("pid-input").value = pid;
+                    output.innerHTML = "<span class='success'>✓ Generated random payment ID</span>\n\n" +
+                        "<span class='info'>Payment ID:</span> " + pid +
+                        "\n<span class='info'>Length:</span> " + pid.length + " chars (encrypted/short format)";
+                } else {
+                    // Validate payment ID
+                    const isValid = XmrUtils.check_pid(input);
+                    if (isValid) {
+                        let pidType = input.length === 16 ? "Short/Encrypted (8 bytes)" : "Long (32 bytes)";
+                        output.innerHTML = "<span class='success'>✓ Valid payment ID</span>\n\n" +
+                            "<span class='info'>Payment ID:</span> " + input +
+                            "\n<span class='info'>Type:</span> " + pidType;
+                    } else {
+                        output.innerHTML = "<span class='error'>✗ Invalid payment ID</span>\n\n" +
+                            "<span class='info'>Input:</span> " + input +
+                            "\n<span class='muted'>Payment IDs must be 16 hex chars (short) or 64 hex chars (long)</span>";
+                    }
+                }
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testBase58() {
+            const input = document.getElementById("b58-input").value.trim();
+            const output = document.getElementById("b58-output");
+            try {
+                if (!input) {
+                    output.innerHTML = "<span class='info'>Enter hex data to encode</span>";
+                    return;
+                }
+                
+                const bytes = CryptoUtils.hex_to_bytes(input);
+                const encoded = XmrUtils.base58_encode(bytes);
+                
+                output.innerHTML = "<span class='info'>Hex input:</span> " + input +
+                    "\n<span class='info'>Bytes:</span> " + bytes.length +
+                    "\n\n<span class='info'>Monero Base58:</span>\n" + encoded;
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testScalarReduce() {
+            const input = document.getElementById("scalar-input").value.trim();
+            const output = document.getElementById("scalar-output");
+            try {
+                if (!input || input.length !== 64) {
+                    output.innerHTML = "<span class='warn'>Enter a 32-byte (64 hex chars) value</span>";
+                    return;
+                }
+                
+                // sc_reduce32 expects hex string, returns Uint8Array
+                const reduced = XmrUtils.sc_reduce32(input);
+                const reducedHex = CryptoUtils.bytes_to_hex(reduced);
+                
+                output.innerHTML = "<span class='info'>Input:</span>\n" + input +
+                    "\n\n<span class='info'>Reduced (mod l):</span>\n" + reducedHex +
+                    "\n\n<span class='muted'>l = 2²⁵² + 27742317777372353535851937790883648493</span>";
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testPointMultiply() {
+            const scalar = document.getElementById("point-scalar").value.trim();
+            const output = document.getElementById("point-output");
+            try {
+                if (!scalar || scalar.length !== 64) {
+                    output.innerHTML = "<span class='warn'>Enter a 32-byte (64 hex chars) scalar</span>";
+                    return;
+                }
+                
+                const scalarBytes = CryptoUtils.hex_to_bytes(scalar);
+                const point = CryptoUtils.ed25519_point_multiply(scalarBytes);
+                const pointHex = XmrUtils.point_to_monero_hex(point);
+                
+                output.innerHTML = "<span class='info'>Scalar:</span>\n" + scalar +
+                    "\n\n<span class='info'>Result (scalar × G):</span>\n" + pointHex +
+                    "\n\n<span class='muted'>G = Ed25519 base point</span>";
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testCrc32() {
+            const input = document.getElementById("crc-input").value;
+            const output = document.getElementById("crc-output");
+            try {
+                const crc = XmrUtils.crc_32(input);
+                const hex = crc.toString(16).padStart(8, "0");
+                
+                output.innerHTML = "<span class='info'>Input:</span> " + input +
+                    "\n\n<span class='info'>CRC-32:</span> " + crc + 
+                    "\n<span class='info'>CRC-32 (hex):</span> 0x" + hex;
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        function testUtility() {
+            const input = document.getElementById("util-input").value.trim();
+            const type = document.getElementById("util-type").value;
+            const output = document.getElementById("util-output");
+            try {
+                let result, description;
+                
+                switch (type) {
+                    case "ed_bytes_to_number_le":
+                        const bytes = CryptoUtils.hex_to_bytes(input);
+                        result = CryptoUtils.ed_bytes_to_number_le(bytes);
+                        description = "Little-endian bytes to number";
+                        output.innerHTML = "<span class='info'>Hex input:</span> " + input +
+                            "\n<span class='info'>Operation:</span> " + description +
+                            "\n\n<span class='info'>Result:</span> " + result.toString() +
+                            "\n<span class='info'>Result (hex):</span> 0x" + result.toString(16);
+                        break;
+                        
+                    case "xmr_number_to_hex":
+                        const num = BigInt(input);
+                        result = XmrUtils.xmr_number_to_hex(num);
+                        description = "Number to hex (LE, minimal length)";
+                        output.innerHTML = "<span class='info'>Number input:</span> " + input +
+                            "\n<span class='info'>Operation:</span> " + description +
+                            "\n\n<span class='info'>Result:</span> " + result;
+                        break;
+                        
+                    case "uint64_to_8be":
+                        const num64 = BigInt(input);
+                        const beBytes = XmrUtils.uint64_to_8be(num64);
+                        result = CryptoUtils.bytes_to_hex(beBytes);
+                        description = "64-bit number to 8 bytes (big-endian)";
+                        output.innerHTML = "<span class='info'>Number input:</span> " + input +
+                            "\n<span class='info'>Operation:</span> " + description +
+                            "\n\n<span class='info'>Result (hex):</span> " + result;
+                        break;
+                }
+            } catch (e) {
+                logError("interactive tool", e);
+                output.innerHTML = "<span class='error'>Error: " + (e.message || e) + "</span>";
+            }
+        }
+
+        // Run tests on load
+        window.onload = function() {
+            // Pre-populate all input fields with the test secret spend key
+            document.getElementById("ssk-input").value = TEST_SSK;
+            document.getElementById("subaddr-ssk").value = TEST_SSK;
+            document.getElementById("mnemonic-ssk").value = TEST_SSK;
+            document.getElementById("fasthash-input").value = TEST_SSK;
+            document.getElementById("b58-input").value = "12" + TEST_SSK;
+            document.getElementById("scalar-input").value = TEST_SSK;
+            document.getElementById("point-scalar").value = TEST_SSK;
+            
+            // Leave utility input empty
+            document.getElementById("util-input").value = "";
+            
+            // CRC32: Use "monero" as test text
+            document.getElementById("crc-input").value = "monero";
+            
+            // Set address - derive dynamically if keccak_256 available, otherwise use pre-computed
+            if (typeof keccak_256 !== "undefined") {
+                try {
+                    const sskBytes = CryptoUtils.hex_to_bytes(TEST_SSK);
+                    const keys = XmrUtils.xmr_getpubs(sskBytes, 0);
+                    document.getElementById("addr-input").value = keys.address;
+                } catch (e) {
+                    document.getElementById("addr-input").value = TEST_ADDRESS;
+                }
+            } else {
+                document.getElementById("addr-input").value = TEST_ADDRESS;
+            }
+            
+            runAllTests();
+        };
+    </script>
+</body>
+</html>

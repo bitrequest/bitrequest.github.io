@@ -1,0 +1,189 @@
+/*
+ *  Malignant Glare
+ *  An aggressive, cyberpunk-inspired interface.
+ */
+
+
+/* Keyframe Animations */
+@keyframes scanline {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+@keyframes cyber-flicker {
+
+    0%,
+    75%,
+    100% {
+        text-shadow: 0 0 5px #ff00c1, 0 0 10px #ff00c1;
+        transform: translate(0, 0) skewX(0);
+    }
+
+    76% {
+        text-shadow: 0 0 5px #ff00c1, 0 0 10px #ff00c1, -1px 0 2px #00ffff;
+    }
+
+    77% {
+        text-shadow: 0 0 5px #ff00c1, 0 0 10px #ff00c1, -2px 1px 3px #00ffff, 2px -1px 3px #e81c67;
+        transform: translate(1px, -2px) skewX(-5deg);
+    }
+
+    78% {
+        text-shadow: 0 0 5px #ff00c1, 0 0 10px #ff00c1, 1px -1px 3px #00ffff, -1px 1px 3px #e81c67;
+        transform: translate(-1px, 1px) skewX(5deg);
+    }
+
+    79% {
+        text-shadow: 0 0 5px #ff00c1, 0 0 10px #ff00c1;
+        transform: translate(0, 0) skewX(0);
+    }
+}
+
+@keyframes glitch-skew {
+    0% {
+        transform: skewX(0);
+    }
+
+    25% {
+        transform: skewX(-4deg);
+    }
+
+    50% {
+        transform: skewX(4deg);
+    }
+
+    75% {
+        transform: skewX(-2deg);
+    }
+
+    100% {
+        transform: skewX(0);
+    }
+}
+
+/* Body and base background */
+body {
+    background-color: #0d011a;
+    color: #b3b3b3;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Scanline Overlay */
+body::after {
+    content: ' ';
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 200%;
+    background: repeating-linear-gradient(to bottom,
+            rgba(255, 255, 255, 0.05),
+            rgba(255, 255, 255, 0.05) 1px,
+            transparent 1px,
+            transparent 4px);
+    animation: scanline 8s infinite linear;
+    pointer-events: none;
+    z-index: 2147483647;
+}
+
+#startscreen {
+    background-color: rgba(13, 1, 26, 0.7);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    border: 1px solid #ff00c1;
+    box-shadow: inset 0 0 15px rgba(255, 0, 193, 0.3), 0 0 15px rgba(255, 0, 193, 0.3);
+}
+
+/* Header and navigation background */
+header,
+#fixednav {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: rgba(13, 1, 26, 1);
+    border-bottom: 2px solid #ff00c1;
+    box-shadow: 0 0 20px rgba(255, 0, 193, 0.5);
+}
+
+/* Heading styles */
+.heading {
+    font-family: 'Courier New', Courier, monospace;
+    padding-bottom: 1.3em;
+    color: #ffffff;
+    animation: cyber-flicker 4s infinite linear;
+}
+
+/* Request list item backgrounds */
+.requestlist>li.rqli {
+    background-color: rgba(29, 9, 48, 0.4);
+    margin-bottom: 2px;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 90%);
+    transition: all 0.2s ease-in-out;
+}
+
+.requestlist>li.rqli:hover {
+    background-color: rgba(29, 9, 48, 0.7);
+    border-color: rgba(0, 255, 255, 0.8);
+}
+
+.requestlist>li.rqli:nth-child(odd) {
+    background-color: rgba(29, 9, 48, 0.5);
+}
+
+.requestlist>li.requestoutgoing.visible_request,
+.requestlist>li.requestlocal.visible_request {
+    border-left: 4px solid #ff00c1;
+}
+
+/* Text color inside list items */
+.liwrap {
+    font-family: 'Courier New', Courier, monospace;
+    color: #b3b3b3;
+}
+
+/* Link and interactive element colors */
+#dialogbody h2:before,
+#toseed,
+#actions div,
+#dialog .customtrigger,
+#canceldialog,
+#backupcd,
+#backupactions .util_icon,
+.linkcolor,
+.selectarrows,
+.qrscanner,
+.ref {
+    color: #ff00c1;
+}
+
+.button,
+.alias {
+    background-color: #ff00c1;
+    border: 1px solid #ff00c1;
+    border: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+    box-shadow: 0 0 15px rgba(255, 0, 193, 0.6);
+    transition: all 0.2s;
+    border-radius: inherit;
+}
+
+.button:hover {
+    background-color: #ffffff;
+    color: #ff00c1;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.8);
+    animation: glitch-skew 0.35s ease-in-out both;
+    border: 1px solid #ff00c1;
+}
+
+/* Icon Filter */
+.currencylist .cmc_icon {
+    filter: grayscale(1) sepia(1) hue-rotate(240deg) saturate(8) brightness(0.9);
+}
