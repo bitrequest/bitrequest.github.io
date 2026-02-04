@@ -897,7 +897,7 @@ glob_config = {
                     glob_multi_wallets.coinomi,
                     glob_multi_wallets.trezor,
                     glob_multi_wallets.ledger,
-                    glob_multi_wallets.trust,
+                    glob_multi_wallets.trustwallet,
                     glob_multi_wallets.stackwallet,
                     {
                         "name": "electron-cash",
