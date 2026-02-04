@@ -39,12 +39,12 @@ const glob_multi_wallets = {
         "desktop": "https://keepkey.com/get-started",
         "seed": true
     },
-    "atomicwallet": {
-        "name": "atomicwallet",
-        "website": "https://atomicwallet.io",
-        "appstore": "https://apps.apple.com/app/id1478257827",
-        "playstore": "https://play.google.com/store/apps/details?id=io.atomicwallet",
-        "desktop": "https://atomicwallet.io/#download-section-anchor",
+    "trustwallet": {
+        "name": "trustwallet",
+        "website": "https://trustwallet.com",
+        "appstore": "https://apps.apple.com/app/id1288339409",
+        "playstore": "https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp",
+        "desktop": "https://trustwallet.com/download",
         "seed": true
     },
     "cakewallet": {
@@ -897,7 +897,7 @@ glob_config = {
                     glob_multi_wallets.coinomi,
                     glob_multi_wallets.trezor,
                     glob_multi_wallets.ledger,
-                    glob_multi_wallets.atomicwallet,
+                    glob_multi_wallets.trust,
                     glob_multi_wallets.stackwallet,
                     {
                         "name": "electron-cash",
@@ -1582,7 +1582,7 @@ glob_config = {
             "wallets": {
                 "wallet_download_page": "https://www.nimiq.com",
                 "wallets": [
-                    glob_multi_wallets.atomicwallet,
+                    glob_multi_wallets.trustwallet,
                     {
                         "name": "wallet.nimiq.com",
                         "website": "https://wallet.nimiq.com",
