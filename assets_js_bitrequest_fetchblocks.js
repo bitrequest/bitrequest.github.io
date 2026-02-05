@@ -1699,8 +1699,9 @@ function scan_kaspa_transactions(rd, api_data, rdo, blue_score) {
             "search": "addresses/" + rd.address + "/full-transactions",
             "cachetime": rdo.cachetime,
             "cachefolder": "1h",
-            "proxy": true,
+            "proxy": false,
             "params": {
+                "cache": true,
                 "method": "GET"
             }
         }).done(function(response) {
