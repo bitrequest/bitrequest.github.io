@@ -1,8 +1,5 @@
 // Initialize the application when the document is ready
 $(document).ready(function() {
-    $.ajaxSetup({
-        "cache": false
-    });
     close_startscreen();
     if (get_urlparameters().xss) return
     build_settings(); // build settings first

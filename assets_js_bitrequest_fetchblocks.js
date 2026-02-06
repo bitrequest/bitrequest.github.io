@@ -1701,7 +1701,6 @@ function scan_kaspa_transactions(rd, api_data, rdo, blue_score) {
             "cachefolder": "1h",
             "proxy": false,
             "params": {
-                "cache": true,
                 "method": "GET"
             }
         }).done(function(response) {
