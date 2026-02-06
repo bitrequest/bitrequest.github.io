@@ -582,8 +582,8 @@ function extract_error_details(error_obj, string) {
             "errormessage": error_obj
         }
     }
-    const errorcode = error_obj.code ?? error_obj.status ?? error_obj.error_obj_code ?? error_obj.error?.code ?? error_obj.error ?? 0,
-        errormessage = error_obj.message ?? error_obj.error_obj_message ?? error_obj.responseText ?? error_obj.statusText ?? error_obj.type ?? error_obj.error_obj ?? error_obj.result ?? error_obj.error?.message ?? error_obj.error ?? null,
+    const errorcode = error_obj.code ?? error_obj.status ?? error_obj.error_obj_code ?? error_obj.error?.code ?? error_obj.error?.status ?? error_obj.error ?? 0,
+        errormessage = error_obj.message ?? error_obj.error_obj_message ?? error_obj.responseText ?? error_obj.statusText ?? error_obj.type ?? error_obj.error_obj ?? error_obj.result ?? error_obj.error?.responseJSON?.detail[0]?.msg ?? error_obj.error?.message ?? error_obj.error ?? null,
         api_key_check = (errormessage && typeof errormessage === "string") ? (errormessage.indexOf("API Key") > -1 || errormessage.indexOf("API calls limits have been reached") > -1 || errormessage.indexOf("Limits reached") > -1) : false,
         api_key = (
             errorcode === 101 || // fixer
