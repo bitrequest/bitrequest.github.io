@@ -715,6 +715,7 @@ function init_fetch_l2_contracts(callback) {
         l2_contacts = br_get_local("eth_l2_contracts", true);
     if (l2_contacts) {
         const currency_contracts = objectkey_from_array(l2_contacts, "currency", currency);
+        console.log(currency_contracts);
         if (currency_contracts) {
             const timestamp = currency_contracts.timestamp, // check if it is expired
                 cache_age = now_utc() - timestamp,
@@ -728,8 +729,6 @@ function init_fetch_l2_contracts(callback) {
                 fetch_contracts_callback(callback, contracts);
                 return
             }
-            play_audio("funk");
-            return
         }
         fetch_l2_contracts(currency, l2_contacts, callback);
         return
@@ -751,9 +750,9 @@ function fetch_l2_contracts(currency, l2_contacts, callback) {
                 "search": "v2/cryptocurrency/info?id=" + cmcid,
                 "cachetime": 604000,
                 "cachefolder": "1w",
+                "proxy": true,
                 "params": {
-                    "method": "GET",
-                    "cache": true
+                    "method": "GET"
                 }
             }).done(function(resp) {
                 const data = br_result(resp).result,

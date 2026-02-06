@@ -1699,7 +1699,7 @@ function scan_kaspa_transactions(rd, api_data, rdo, blue_score) {
             "search": "addresses/" + rd.address + "/full-transactions",
             "cachetime": rdo.cachetime,
             "cachefolder": "1h",
-            "proxy": false,
+            "proxy": true,
             "params": {
                 "method": "GET"
             }

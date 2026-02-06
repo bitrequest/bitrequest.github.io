@@ -3099,8 +3099,7 @@ function json_check_apikey(keylength, ref, payload, keyval, last_input) {
             base_url = api_data.base_url,
             method = (ref === "bitly") ? "POST" : "GET",
             params = {
-                "method": method,
-                "cache": true
+                method
             };
         let search = payload + keyval;
         if (ref === "bitly") {

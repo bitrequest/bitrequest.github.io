@@ -1183,8 +1183,7 @@ function get_cc_exchangerates(api_list, selected_api) {
         "cachetime": 90,
         "cachefolder": "1h",
         "params": {
-            "method": "GET",
-            "cache": true
+            "method": "GET"
         },
     };
     if (selected_api === "coinmarketcap") {
