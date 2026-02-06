@@ -76,7 +76,7 @@ function edit_rpcnode() {
                 </div>" : "",
             current_node = item_data.selected,
             node_name = current_node.name,
-            node_url = current_node.url,
+            node_url = current_node.url || node_name,
             url_trunc = truncate_middle(node_url),
             node_title = (node_name === "electrum" || node_name === "mempool.space" || node_name === "xmr_node" || node_name === "lws" || node_name === "infura") ? url_trunc : node_name || url_trunc,
             dialog_html = "<div class='formbox' id='settingsbox' data-id='" + glob_let.ap_id + "'>\
@@ -94,9 +94,10 @@ function edit_rpcnode() {
         popdialog(dialog_html, "triggersubmit");
         const api_list = $("#api_list").find(".options");
         $.each(predefined_nodes, function(node_id, node_config) {
-            if (node_config.display === true) {
-                const is_selected = (node_config.url === node_url),
-                    this_node_name = node_config.name;
+            if (node_config.display) {
+                const this_node_name = node_config.name,
+                    this_node_url = node_config.url || this_node_name,
+                    is_selected = (this_node_url === node_url);
                 if (currency_name === "nano" || this_node_name === "electrum" || this_node_name === "mempool.space" || this_node_name === "infura" || this_node_name === "xmr_node" || this_node_name === "lws") {
                     validate_and_add_rpc_node(currency_name, api_list, node_id, node_config, is_selected);
                 } else {
@@ -681,7 +682,7 @@ function create_rpc_node_element(api_list, is_live, node_id, node_config, is_sel
         selected_class = is_selected ? " rpc_selected" : "",
         node_name = node_config.name,
         custom = node_config.custom,
-        node_url = node_config.url,
+        node_url = node_config.url || node_name,
         stripped_url = custom && (node_name === "alchemy" || node_name === "infura") ? strip_key_from_url(node_url) : node_url,
         vendor = node_config.vendor,
         vendor_string = (vendor) ? "<span class='v'> (" + vendor.slice(5) + ")</span>" : "",

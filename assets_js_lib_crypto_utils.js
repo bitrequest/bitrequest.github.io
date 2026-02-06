@@ -1464,17 +1464,6 @@ function aes_dec(content, keyst) {
 }
 
 // ============================================
-// MISCELLANEOUS
-// ============================================
-
-// Encodes a Nimiq transaction hash for use with Nimiq.watch
-function nimiq_hash(tx) {
-    return encodeURIComponent(btoa(tx.match(/\w{2}/g).map(function(a) {
-        return String.fromCharCode(parseInt(a, 16));
-    }).join("")));
-}
-
-// ============================================
 // SCRIPTHASH
 // ============================================
 
@@ -2220,7 +2209,6 @@ const CryptoUtils = {
     keccak_256,
     hash160,
     blake2b,
-    nimiq_hash,
 
     // === Address Generation ===
     pub_to_address,

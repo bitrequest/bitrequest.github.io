@@ -1619,7 +1619,7 @@ glob_config = {
                 "blockexplorers": {
                     "icon": "eye",
                     "selected": "nimiq.watch",
-                    "options": ["nimiq.watch", "mopsus.com"]
+                    "options": ["nimiq.watch", "mopsus.com", "nimiqscan.com"]
                 },
                 "apis": {
                     "icon": "sphere",
@@ -1634,9 +1634,14 @@ glob_config = {
                             "display": true
                         },
                         {
+                            "name": "nimiqscan.com",
+                            "api": true,
+                            "display": false
+                        },
+                        {
                             "name": "mopsus.com",
                             "api": true,
-                            "display": true
+                            "display": false
                         }
                     ]
                 },
@@ -2202,6 +2207,13 @@ glob_config = {
             "sign_up": null
         },
         {
+            "name": "nimiqscan.com",
+            "base_url": "https://api.nimiqscan.com/",
+            "key_param": null,
+            "api_key": "no_key",
+            "sign_up": null
+        },
+        {
             "name": "mopsus.com",
             "base_url": "https://nimiq.mopsus.com/api/",
             "key_param": null,
@@ -2354,6 +2366,13 @@ glob_config = {
             "prefix": null,
             "tx_prefix": "#",
             "address_prefix": "#"
+        },
+        {
+            "name": "nimiqscan.com",
+            "url": "https://nimiqscan.com/",
+            "prefix": null,
+            "tx_prefix": "transaction/",
+            "address_prefix": "account/"
         },
         {
             "name": "mopsus.com",

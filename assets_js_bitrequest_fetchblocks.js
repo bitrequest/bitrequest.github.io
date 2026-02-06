@@ -67,6 +67,7 @@
 //monero_lws_tx_data
 //xmr_tx_data
 //nimiq_scan_data
+//nimiqscan_scan_data
 //kaspa_scan_data
 //kaspa_poll_fyi_data
 //kaspa_ws_data
@@ -335,7 +336,7 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                 "method": "GET"
             }
         }).done(function(response) {
-            const api_result = br_result(response).result;
+            const api_result = br_result(response)?.result;
             if (api_result) {
                 const error = api_result.error;
                 if (error) {
@@ -392,7 +393,7 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                     "method": "GET"
                 }
             }).done(function(response) {
-                const api_result = br_result(response).result;
+                const api_result = br_result(response)?.result;
                 if (api_result) {
                     const error = api_result.error;
                     if (error) {
@@ -465,7 +466,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                 "method": "GET"
             }
         }).done(function(response) {
-            const api_result = br_result(response).result;
+            const api_result = br_result(response)?.result;
             if (api_result) {
                 if (api_result.error) {
                     handle_scan_failure({
@@ -563,7 +564,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                             "method": "GET"
                         }
                     }).done(function(tx_response) {
-                        const tx_result = br_result(tx_response).result,
+                        const tx_result = br_result(tx_response)?.result,
                             blockchain_data = tx_result.data;
                         if (blockchain_data) {
                             $.each(blockchain_data, function(date, tx) {
@@ -617,7 +618,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                     "method": "GET"
                 }
             }).done(function(response) {
-                const api_result = br_result(response).result;
+                const api_result = br_result(response)?.result;
                 if (api_result) {
                     const blockchain_state = api_result.context;
                     if (blockchain_state) {
@@ -695,7 +696,7 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
     if (rdo.pending === "scanning") { // scan incoming transactions on address
         if (rd.payment === "ethereum") {
             api_proxy(eth_request).done(function(response) {
-                const api_result = br_result(response).result;
+                const api_result = br_result(response)?.result;
                 if (api_result) {
                     const transactions = api_result.result;
                     if (transactions) {
@@ -739,7 +740,7 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
         }
         if (contract) {
             api_proxy(token_request).done(function(response) {
-                const api_result = br_result(response).result;
+                const api_result = br_result(response)?.result;
                 if (api_result) {
                     const transactions = api_result.result;
                     if (transactions) {
@@ -789,7 +790,7 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
         if (tx_hash) {
             if (rd.payment === "ethereum") {
                 api_proxy(eth_request).done(function(response) {
-                    const api_result = br_result(response).result;
+                    const api_result = br_result(response)?.result;
                     if (api_result) {
                         const transactions = api_result.result;
                         if (transactions) {
@@ -833,7 +834,7 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
             }
             if (contract) {
                 api_proxy(token_request).done(function(response) {
-                    const api_result = br_result(response).result;
+                    const api_result = br_result(response)?.result;
                     if (api_result) {
                         const transactions = api_result.result;
                         if (transactions) {
@@ -1071,7 +1072,7 @@ function monero_lws_login(rd, api_data, rdo) {
             }
         }
     }).done(function(response) {
-        const api_result = br_result(response).result;
+        const api_result = br_result(response)?.result;
         if (api_result) {
             const new_address = api_result.new_address;
             if (new_address === true || new_address === false) { // confirm response
@@ -1141,7 +1142,7 @@ function monero_lws_get_address_txs(rd, api_data, rdo, vk_object, lws_host) {
             }
         }
     }).done(function(response) {
-        const api_result = br_result(response).result,
+        const api_result = br_result(response)?.result,
             transactions = api_result.transactions;
         if (transactions) {
             let matched_tx = false;
@@ -1253,7 +1254,7 @@ function scan_bitcoin_transactions(rd, api_data, rdo, block_height) {
                 "method": "GET"
             }
         }).done(function(address_response) {
-            const address_data = br_result(address_response).result;
+            const address_data = br_result(address_response)?.result;
             if (address_data) {
                 if (address_data.error) {
                     handle_scan_failure({
@@ -1272,7 +1273,7 @@ function scan_bitcoin_transactions(rd, api_data, rdo, block_height) {
                             "method": "GET"
                         }
                     }).done(function(tx_response) {
-                        const tx_data = br_result(tx_response).result;
+                        const tx_data = br_result(tx_response)?.result;
                         if (tx_data) {
                             if (has_tx(tx_data)) {
                                 const sorted_txs = sort_transactions_by_date(blockchaininfo_scan_data, tx_data);
@@ -1328,7 +1329,7 @@ function scan_bitcoin_transactions(rd, api_data, rdo, block_height) {
                     "method": "GET"
                 }
             }).done(function(tx_response) {
-                const tx_data = br_result(tx_response).result;
+                const tx_data = br_result(tx_response)?.result;
                 if (tx_data) {
                     if (tx_data.error) {
                         handle_scan_failure({
@@ -1378,7 +1379,7 @@ function process_blockcypher_transactions(rd, api_data, rdo) {
                 "method": "GET"
             }
         }).done(function(response) {
-            const api_result = br_result(response).result;
+            const api_result = br_result(response)?.result;
             if (api_result) {
                 if (api_result.error) {
                     handle_scan_failure({
@@ -1437,7 +1438,7 @@ function process_blockcypher_transactions(rd, api_data, rdo) {
                     "method": "GET"
                 }
             }).done(function(response) {
-                const api_result = br_result(response).result;
+                const api_result = br_result(response)?.result;
                 if (api_result) {
                     if (api_result.error) {
                         handle_scan_failure({
@@ -1473,7 +1474,7 @@ function process_blockcypher_transactions(rd, api_data, rdo) {
     }
 }
 
-// Processes Nimiq transactions through nimiq.watch and mopsus.com APIs with transaction filtering and confirmation tracking
+// Processes Nimiq transactions through nimiq.watch, nimiqscan.com and mopsus.com APIs with transaction filtering and confirmation tracking
 function process_nimiq_transactions(rd, api_data, rdo) {
     const api_name = api_data.name,
         tx_list = rdo.transactionlist,
@@ -1491,7 +1492,7 @@ function process_nimiq_transactions(rd, api_data, rdo) {
                     "method": "GET"
                 }
             }).done(function(response) {
-                const api_result = br_result(response).result;
+                const api_result = br_result(response)?.result;
                 if (api_result) {
                     if (has_tx(api_result)) {
                         const sorted_txs = sort_transactions_by_date(nimiq_scan_data, api_result);
@@ -1533,18 +1534,67 @@ function process_nimiq_transactions(rd, api_data, rdo) {
         return
     }
     if (rdo.pending === "polling") {
-        if (rd.txhash) {
+        const nimiq_hash = rd.txhash;
+        if (nimiq_hash) {
+            if (api_name === "nimiqscan.com") { // poll nimiqscan.com transaction id
+                api_proxy({
+                    "api": "nimiqscan.com",
+                    "cachetime": rdo.cachetime,
+                    "cachefolder": "1h",
+                    "params": {
+                        "method": "POST",
+                        "data": {
+                            "jsonrpc": "2.0",
+                            "id": 1,
+                            "method": "getTransactionByHashEnriched",
+                            "params": [nimiq_hash]
+                        }
+                    }
+                }).done(function(response) {
+                    const api_result = br_result(response)?.result?.result?.data;
+                    if (api_result) {
+                        const f_hash = api_result.hash;
+                        if (f_hash) {
+                            const parsed_tx = nimiqscan_scan_data(api_result, rdo.setconfirmations);
+                            if (parsed_tx) {
+                                if (parsed_tx.ccval) {
+                                    matched_tx = parsed_tx;
+                                    if (source === "requests") {
+                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                        if (tx_item) {
+                                            tx_list.append(tx_item.data(parsed_tx));
+                                        }
+                                    }
+                                }
+                            }
+                            process_scan_results(rd, api_data, rdo, matched_tx);
+                            return
+                        }
+                    }
+                    handle_scan_failure(null, rd, api_data, rdo);
+                }).fail(function(xhr, stat, err) {
+                    const is_proxy_error = is_proxy_fail(this.url),
+                        error_data = xhr || stat || err;
+                    handle_scan_failure({
+                        "error": error_data,
+                        "is_proxy": is_proxy_error
+                    }, rd, api_data, rdo);
+                }).always(function() {
+                    update_api_source(rdo, api_data);
+                });
+                return
+            }
             if (api_name === "nimiq.watch") { // poll nimiq.watch transaction id
                 api_proxy({
                     "api": api_name,
-                    "search": "transaction/" + nimiq_hash(rd.txhash),
+                    "search": "transaction/" + nimiq_hash,
                     "cachetime": rdo.cachetime,
                     "cachefolder": "1h",
                     "params": {
                         "method": "GET"
                     }
                 }).done(function(response) {
-                    const api_result = br_result(response).result;
+                    const api_result = br_result(response)?.result;
                     if (api_result) {
                         if (api_result.error) {
                             handle_scan_failure({
@@ -1583,14 +1633,14 @@ function process_nimiq_transactions(rd, api_data, rdo) {
             if (api_name === "mopsus.com") { // poll mopsus.com transaction id
                 api_proxy({
                     "api": api_name,
-                    "search": "tx/" + rd.txhash,
+                    "search": "tx/" + nimiq_hash,
                     "cachetime": rdo.cachetime,
                     "cachefolder": "1h",
                     "params": {
                         "method": "GET"
                     }
                 }).done(function(response) {
-                    const api_result = br_result(response).result;
+                    const api_result = br_result(response)?.result;
                     if (api_result) {
                         if (api_result.error) {
                             handle_scan_failure({
@@ -1609,7 +1659,7 @@ function process_nimiq_transactions(rd, api_data, rdo) {
                         }).done(function(stats_response) {
                             const stats_result = br_result(stats_response),
                                 block_height = q_obj(stats_result, "result.latest_block.height"),
-                                parsed_tx = nimiq_scan_data(api_result, rdo.setconfirmations, block_height, rd.txhash);
+                                parsed_tx = nimiq_scan_data(api_result, rdo.setconfirmations, block_height, nimiq_hash);
                             if (parsed_tx) {
                                 if (parsed_tx.ccval) {
                                     matched_tx = parsed_tx;
@@ -1704,7 +1754,7 @@ function scan_kaspa_transactions(rd, api_data, rdo, blue_score) {
                 "method": "GET"
             }
         }).done(function(response) {
-            const api_result = br_result(response).result;
+            const api_result = br_result(response)?.result;
             if (api_result) {
                 if (has_tx(api_result)) {
                     const sorted_txs = sort_transactions_by_date(kaspa_scan_data, api_result);
@@ -1750,7 +1800,7 @@ function scan_kaspa_transactions(rd, api_data, rdo, blue_score) {
                     "method": "GET"
                 }
             }).done(function(response) {
-                const api_result = br_result(response).result;
+                const api_result = br_result(response)?.result;
                 if (api_result) {
                     if (api_result.error) {
                         handle_scan_failure({
@@ -1803,7 +1853,7 @@ function process_dash_transactions(rd, api_data, rdo) {
                 "method": "GET"
             }
         }).done(function(response) {
-            const api_result = br_result(response).result;
+            const api_result = br_result(response)?.result;
             if (api_result) {
                 if (api_result.error) {
                     handle_scan_failure({
@@ -1856,7 +1906,7 @@ function process_dash_transactions(rd, api_data, rdo) {
                     "method": "GET"
                 }
             }).done(function(response) {
-                const api_result = br_result(response).result;
+                const api_result = br_result(response)?.result;
                 if (api_result) {
                     if (api_result.error) {
                         handle_scan_failure({
@@ -1930,7 +1980,6 @@ function electrum_rpc_blockheight(rd, api_data, rdo) {
         "proxy": true,
         "params": {
             "method": "POST",
-            "cache": true,
             "data": {
                 "id": "blockheight",
                 "method": "blockchain.headers.subscribe",
@@ -1938,7 +1987,7 @@ function electrum_rpc_blockheight(rd, api_data, rdo) {
             }
         }
     }).done(function(response) {
-        const api_result = br_result(response).result;
+        const api_result = br_result(response)?.result;
         let latest_block = null;
         if (api_result) {
             latest_block = api_result.height;
@@ -1980,7 +2029,6 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
             "proxy": true,
             "params": {
                 "method": "POST",
-                "cache": true,
                 "data": {
                     "id": "scanning",
                     "method": "blockchain.scripthash." + endpoint,
@@ -1989,7 +2037,7 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
                 }
             }
         }).done(function(response) {
-            const api_result = br_result(response).result;
+            const api_result = br_result(response)?.result;
             if (api_result) {
                 if (api_result.error) {
                     handle_scan_failure({
@@ -2016,7 +2064,6 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
                             "proxy": true,
                             "params": {
                                 "method": "POST",
-                                "cache": true,
                                 "data": {
                                     "id": "scanning",
                                     "method": "blockchain.transaction.get",
@@ -2098,7 +2145,6 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
             "proxy": true,
             "params": {
                 "method": "POST",
-                "cache": true,
                 "data": {
                     "id": "polling",
                     "tx_hash": tx_hash,
@@ -2108,7 +2154,7 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
                 }
             }
         }).done(function(response) {
-            const api_result = br_result(response).result;
+            const api_result = br_result(response)?.result;
             if (api_result) {
                 if (api_result.error) {
                     handle_scan_failure({
@@ -2171,7 +2217,7 @@ function mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc) {
             "method": "GET"
         }
     }).done(function(response) {
-        const api_result = br_result(response).result;
+        const api_result = br_result(response)?.result;
         if (api_result) {
             if (!api_result.error) {
                 block_height = api_result;
@@ -2217,7 +2263,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latest_block) {
                     "method": "GET"
                 }
             }).done(function(response) {
-                const api_result = br_result(response).result;
+                const api_result = br_result(response)?.result;
                 if (api_result) {
                     if (api_result.error) {
                         handle_scan_failure({
@@ -2265,7 +2311,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latest_block) {
                 "method": "GET"
             }
         }).done(function(response) {
-            const api_result = br_result(response).result;
+            const api_result = br_result(response)?.result;
             if (api_result) {
                 const parsed_tx = mempoolspace_scan_data(api_result, rdo.setconfirmations, rd.currencysymbol, rd.address, latest_block);
                 if (parsed_tx) {
@@ -2473,12 +2519,9 @@ function eth_params(node_url, cache_time, method, params) {
 
 // Extracts nested result data from Ethereum RPC JSON responses
 function inf_result(response) {
-    const json_result = br_result(response);
-    if (json_result) {
-        const rpc_result = json_result.result;
-        if (rpc_result) {
-            return rpc_result.result;
-        }
+    const rpc_result = br_result(response)?.result;
+    if (rpc_result) {
+        return rpc_result.result;
     }
     return false
 }
@@ -2506,14 +2549,13 @@ function nano_rpc(rd, api_data, rdo) {
             "proxy": true,
             "params": {
                 "method": "POST",
-                "cache": true,
                 "data": {
                     "account": rd.address,
                     "node": api_data.url
                 }
             }
         }).done(function(response) {
-            const api_result = br_result(response).result;
+            const api_result = br_result(response)?.result;
             if (api_result) {
                 if (api_result.error) {
                     handle_scan_failure({
@@ -2560,7 +2602,6 @@ function nano_rpc(rd, api_data, rdo) {
             "api_url": api_data.url,
             "params": {
                 "method": "POST",
-                "cache": true,
                 "data": {
                     "action": "block_info",
                     "json_block": true,
@@ -2568,7 +2609,7 @@ function nano_rpc(rd, api_data, rdo) {
                 }
             }
         }).done(function(response) {
-            const api_result = br_result(response).result;
+            const api_result = br_result(response)?.result;
             if (api_result) {
                 if (api_result.error) {
                     handle_scan_failure({
@@ -3174,6 +3215,22 @@ function nimiq_scan_data(data, setconfirmations, latest_block, tx_hash) {
         txhash,
         confirmations,
         "setconfirmations": final_confs,
+        "ccsymbol": "nim"
+    };
+}
+
+// Processes nimiqscan.com transaction data
+function nimiqscan_scan_data(data, setconfirmations) {
+    const transactiontime = normalize_timestamp(data.timestamp),
+        confirmations = data.confirmations,
+        txhash = data.hash,
+        ccval = data.value / 1e5;
+    return {
+        ccval,
+        transactiontime,
+        txhash,
+        confirmations,
+        setconfirmations,
         "ccsymbol": "nim"
     };
 }

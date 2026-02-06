@@ -1175,14 +1175,6 @@
             assertTrue(result.script_pub_key.startsWith("a914"), "P2SH prefix");
         });
         
-        // === Nimiq Hash Tests ===
-        
-        test("nimiq_hash: hex string encoding", () => {
-            const hex = "deadbeef";
-            const result = CryptoUtils.nimiq_hash(hex);
-            assertTrue(typeof result === "string", "Returns string");
-        });
-        
         // === Blake2b Tests ===
         
         test("blake2b: RFC 7693 test vector (abc, 64 bytes)", () => {

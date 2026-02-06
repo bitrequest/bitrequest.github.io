@@ -316,7 +316,7 @@ function route_crypto_api(rd, api_data, rdo) {
         blockchair_fetch(rd, api_data, rdo);
         return
     }
-    if (provider === "nimiq.watch" || provider === "mopsus.com") {
+    if (rd.payment === "nimiq") {
         process_nimiq_transactions(rd, api_data, rdo);
         return
     }
