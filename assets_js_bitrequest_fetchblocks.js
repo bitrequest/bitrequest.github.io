@@ -1474,7 +1474,7 @@ function process_blockcypher_transactions(rd, api_data, rdo) {
     }
 }
 
-// Processes Nimiq transactions through nimiq.watch, nimiqscan.com and mopsus.com APIs with transaction filtering and confirmation tracking
+// Processes Nimiq transactions through nimiq.watch and nimiqscan.com APIs with transaction filtering and confirmation tracking
 function process_nimiq_transactions(rd, api_data, rdo) {
     const api_name = api_data.name,
         tx_list = rdo.transactionlist,
@@ -1629,68 +1629,6 @@ function process_nimiq_transactions(rd, api_data, rdo) {
                     update_api_source(rdo, api_data);
                 });
                 return
-            }
-            if (api_name === "mopsus.com") { // poll mopsus.com transaction id
-                api_proxy({
-                    "api": api_name,
-                    "search": "tx/" + nimiq_hash,
-                    "cachetime": rdo.cachetime,
-                    "cachefolder": "1h",
-                    "params": {
-                        "method": "GET"
-                    }
-                }).done(function(response) {
-                    const api_result = br_result(response)?.result;
-                    if (api_result) {
-                        if (api_result.error) {
-                            handle_scan_failure({
-                                "error": api_result.error
-                            }, rd, api_data, rdo);
-                            return
-                        }
-                        api_proxy({
-                            "api": api_name,
-                            "search": "quick-stats/",
-                            "cachetime": rdo.cachetime,
-                            "cachefolder": "1h",
-                            "params": {
-                                "method": "GET"
-                            }
-                        }).done(function(stats_response) {
-                            const stats_result = br_result(stats_response),
-                                block_height = q_obj(stats_result, "result.latest_block.height"),
-                                parsed_tx = nimiq_scan_data(api_result, rdo.setconfirmations, block_height, nimiq_hash);
-                            if (parsed_tx) {
-                                if (parsed_tx.ccval) {
-                                    matched_tx = parsed_tx;
-                                    if (source === "requests") {
-                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                        if (tx_item) {
-                                            tx_list.append(tx_item.data(parsed_tx));
-                                        }
-                                    }
-                                }
-                            }
-                            process_scan_results(rd, api_data, rdo, matched_tx);
-                        }).fail(function(xhr, stat, err) {
-                            const error_data = xhr || stat || err;
-                            handle_scan_failure({
-                                "error": error_data
-                            }, rd, api_data, rdo);
-                        });
-                        return
-                    }
-                    handle_scan_failure(null, rd, api_data, rdo);
-                }).fail(function(xhr, stat, err) {
-                    const is_proxy_error = is_proxy_fail(this.url),
-                        error_data = xhr || stat || err;
-                    handle_scan_failure({
-                        "error": error_data,
-                        "is_proxy": is_proxy_error
-                    }, rd, api_data, rdo);
-                }).always(function() {
-                    update_api_source(rdo, api_data);
-                });
             }
         }
     }

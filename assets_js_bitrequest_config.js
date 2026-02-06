@@ -1619,7 +1619,7 @@ glob_config = {
                 "blockexplorers": {
                     "icon": "eye",
                     "selected": "nimiq.watch",
-                    "options": ["nimiq.watch", "mopsus.com", "nimiqscan.com"]
+                    "options": ["nimiq.watch", "nimiqscan.com"]
                 },
                 "apis": {
                     "icon": "sphere",
@@ -1635,11 +1635,6 @@ glob_config = {
                         },
                         {
                             "name": "nimiqscan.com",
-                            "api": true,
-                            "display": false
-                        },
-                        {
-                            "name": "mopsus.com",
                             "api": true,
                             "display": false
                         }
@@ -2214,13 +2209,6 @@ glob_config = {
             "sign_up": null
         },
         {
-            "name": "mopsus.com",
-            "base_url": "https://nimiq.mopsus.com/api/",
-            "key_param": null,
-            "api_key": "no_key",
-            "sign_up": null
-        },
-        {
             "name": "infura",
             "base_url": glob_const.main_eth_node,
             "key_param": null,
@@ -2373,13 +2361,6 @@ glob_config = {
             "prefix": null,
             "tx_prefix": "transaction/",
             "address_prefix": "account/"
-        },
-        {
-            "name": "mopsus.com",
-            "url": "https://nimiq.mopsus.com/",
-            "prefix": null,
-            "tx_prefix": "tx/",
-            "address_prefix": "addr/"
         },
         {
             "name": "dash.org",
