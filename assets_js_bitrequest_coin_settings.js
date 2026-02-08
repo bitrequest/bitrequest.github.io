@@ -641,8 +641,7 @@ function check_xpub(xpub_key, default_prefix, currency) {
 // Generates preview of derived addresses from Xpub key
 function generate_derived_addresses(currency, xpub_key) {
     try {
-        const coin_data = get_coin_config(currency),
-            bip32_config = get_bip32dat(currency),
+        const bip32_config = get_bip32dat(currency),
             derivation_path = "M/0/",
             start_index = 0,
             key_config = key_cc_xpub(xpub_key),

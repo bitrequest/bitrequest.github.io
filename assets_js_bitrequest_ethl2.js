@@ -715,7 +715,6 @@ function init_fetch_l2_contracts(callback) {
         l2_contacts = br_get_local("eth_l2_contracts", true);
     if (l2_contacts) {
         const currency_contracts = objectkey_from_array(l2_contacts, "currency", currency);
-        console.log(currency_contracts);
         if (currency_contracts) {
             const timestamp = currency_contracts.timestamp, // check if it is expired
                 cache_age = now_utc() - timestamp,
