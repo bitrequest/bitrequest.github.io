@@ -3,6 +3,8 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 header("Access-Control-Allow-Origin: *");
 
+include_once "../../../security.php";
+
 /**
  * Electrum protocol handler with Tor support
  * Allows communication with Electrum servers, including .onion addresses via Tor
@@ -12,7 +14,7 @@ header("Access-Control-Allow-Origin: *");
 $pd = file_get_contents("php://input");
 $pd_obj = json_decode($pd, true);
 if (isset($pd_obj["fetch"])) {
-	if (onion()) {
+	if (has_tor()) {
 		$response = socket_fetch_tor_stream($pd_obj);
 		echo json_encode($response);
 		return;
@@ -25,7 +27,7 @@ if (isset($pd_obj["fetch"])) {
 function socket_fetch($pl) {
 	$node = $pl["node"];
 	if (strpos($node, ".onion") !== false) {
-		if (onion()) { // check for TOR support
+		if (has_tor()) { // check for TOR support
 			return socket_fetch_tor_stream($pl);
 		}
 		$tor_proxy = $pl["tor_proxy"] ?? TOR_PROXY;
@@ -597,23 +599,4 @@ function err_obj($code, $message) {
 			"message" => $message
 		]
 	];
-}
-
-//Checks if Tor is available on the system by attempting to connect to the SOCKS proxy
-function onion() {
-	// Connect to Tor's SOCKS proxy with "127.0.0.1"
-	$socket = @fsockopen("127.0.0.1", 9050, $errno, $errstr, 1);
-	if ($socket) {
-		fclose($socket);
-		return true;
-	}       
-	
-	// Connect to Tor's SOCKS proxy with "localhost"
-	$socket = @fsockopen("localhost", 9050, $errno, $errstr, 1);
-	if ($socket) {
-		fclose($socket);
-		return true;
-	} 
-	
-	return false;
 }

@@ -1,4 +1,6 @@
 <?php
+	include_once "../../../security.php";
+	
     const MAX_HISTORY_COUNT = 15;
     const MAX_PENDING_COUNT = 85;
     

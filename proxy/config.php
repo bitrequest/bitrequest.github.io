@@ -34,10 +34,10 @@ $keys = array(
 
 // enter lightning node keys here
 $lightning_setup = array(
-    "lnd" => array(
-	    "host" => "",
-	    "key" => "",
-	    "routes" => []
+	"lnd" => array(
+		"host" => "",
+		"key" => "",
+		"routes" => []
 	),
 	"core-lightning" => array(
 		"host" => "",
@@ -45,9 +45,9 @@ $lightning_setup = array(
 		"routes" => []
 	),
 	"lnbits" => array(
-	    "host" => "",
-	    "key" => "",
-	    "routes" => []
+		"host" => "",
+		"key" => "",
+		"routes" => []
 	),
 	"apikey" => "",
 	"callback_url" => "",

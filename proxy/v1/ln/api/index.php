@@ -3,6 +3,7 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 header("Access-Control-Allow-Origin: *");
 
+include_once "../../security.php";
 include "../../../config.php";
 include "../../api.php";
 
@@ -51,11 +52,11 @@ switch ($type) {
 		$type_text = "checkout";
 		break;
 }
-$get_pid = $get_id ? substr($get_id, 1, 10) : false;
+$get_pid = $get_id ? safe_filename(substr($get_id, 1, 10)) : false;
 $get_nid = ($get_id && strlen($get_id) > 15) ? substr($get_id, 11) : false;
 
 // POST data
-$post_pid = $pdat["id"] ?? false;
+$post_pid = safe_filename($pdat["id"] ?? false);
 $post_nid = $pdat["nid"] ?? false;
 $p_expiry = $pdat["expiry"] ?? 60;
 
@@ -100,7 +101,7 @@ $fn = $pdat["fn"] ?? false;
 if ($fn === "put") {
 	$pl = $pdat["pl"] ?? false;
 	$rqtype = $pdat["rqtype"] ?? false;
-	$status = $pl["status"] ?? false;
+	$status = safe_filename($pl["status"] ?? false);
 	$cred_resp = false;
 	$stat_resp = false;
 	$stat_content = [
@@ -673,8 +674,9 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 			$result = json_decode($inv, true);
 			
 			// Check for valid response with r_hash
-			$is_valid = is_array($result) && isset($result["payment_hash"]);
-			return process_invoice_lookup($imp, $result, $is_valid, $pid, $type, $expiry, $status);
+			$invoice = isset($result["invoices"][0]) ? $result["invoices"][0] : null;
+			$is_valid = is_array($invoice) && isset($invoice["payment_hash"]);
+			return process_invoice_lookup($imp, $invoice, $is_valid, $pid, $type, $expiry, $status);
 		}
 	
 		if ($imp === "lnbits") {
@@ -722,7 +724,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 		}
 		
 		if ($imp === "core-lightning") {
-			return get_c_lightning_status($dat, $base_result);
+			return get_c_lightning_status($dat, $base_result, $expiry);
 		}
 	
 		if ($imp === "lnbits") {
@@ -762,8 +764,8 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 	}
 	
 	// Extract and normalize core-lightning invoice status information
-	function get_c_lightning_status($dat, $base_result) {
-		$status = $dat["state"];
+	function get_c_lightning_status($dat, $base_result, $expiry) {
+		$status = $dat["status"];
 		$br_state = "unknown";
 		if ($status === "paid") $br_state = "paid";
 		if ($status === "unpaid") $br_state = "pending";
@@ -816,15 +818,8 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 	}
 	
 	// Generate a description hash for LNURL payment metadata
-	function url_prefix($url, $imp) {
-		if (strpos($url, ".onion") !== false && !preg_match("~^(?:f|ht)tps?://~i", $url)) {
-		   $url = "https://" . $url;
-		} 
-	}
-	
-	// Generate a description hash for LNURL payment metadata
 	function d_hash($arr) {
-		return hash("sha256", utf8_encode(json_encode($arr)));
+		return hash("sha256", json_encode($arr));
 	}
 	
 	// Encode a hexadecimal value to base64 for LND compatibility

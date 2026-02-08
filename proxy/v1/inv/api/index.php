@@ -3,6 +3,7 @@
 	header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 	header("Access-Control-Allow-Origin: *");
 	
+	include_once "../../security.php";
 	include "../../api.php";
 	
 	const CACHE_TIME = "2m";
@@ -30,7 +31,7 @@
 	
 	// Handles the creation and caching of short URLs with error validation
 	function handle_post($data) {
-		$short_url = $data["shorturl"] ?? "";
+		$short_url = safe_filename($data["shorturl"] ?? "");
 		$long_url = $data["longurl"] ?? "";
 		if (empty($short_url) || empty($long_url)) {
 			send_response(["error" => "Missing shorturl or longurl"]);
@@ -70,7 +71,7 @@
 	
 	// Handles the retrieval and decoding of long URLs from short IDs with validation
 	function handle_fetch($data) {
-		$short_id = $data["shortid"] ?? "";
+		$short_id = safe_filename($data["shortid"] ?? "");
 		if (empty($short_id)) {
 			send_response(["error" => "Missing shortid"]);
 			return;

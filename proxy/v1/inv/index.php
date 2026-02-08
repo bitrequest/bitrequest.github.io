@@ -1,4 +1,6 @@
 <?php
+	include_once "../security.php";
+	
 	// Constants for application settings
 	const CACHE_TIME = "2m";
 	const CACHE_DIR = "api/cache/" . CACHE_TIME . "/";
@@ -17,7 +19,8 @@
 	
 	// Main execution
 	$inv = get_param("invoice");
-	$path = CACHE_DIR . $inv;
+	$inv = ($inv && preg_match("/^[a-zA-Z0-9_-]+$/", $inv)) ? $inv : false;
+	$path = $inv ? CACHE_DIR . $inv : false;
 	$message = null;
 	$longurl = null;
 	$thumb = null;

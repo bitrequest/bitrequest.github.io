@@ -3,14 +3,16 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 header("Access-Control-Allow-Origin: *");
 
+include_once "../security.php";
+include "../../config.php";
+include "../api.php";
+
 // Extract payment ID from GET parameters with validation
-$pid = isset($_GET["id"]) && is_string($_GET["id"]) ? substr($_GET["id"], 1, 10) : false;
-$path = "api/cache/tx/" . $pid;
+$pid = isset($_GET["id"]) && is_string($_GET["id"]) ? safe_filename(substr($_GET["id"], 1, 10)) : false;
+$path = $pid ? "api/cache/tx/" . $pid : false;
 
 // Check if the payment file exists and process the payment
 if ($pid && file_exists($path)) {
-    include "../../config.php";
-    include "../api.php";
     
     // Determine payment type based on ID prefix
     $type = isset($_GET["id"]) && is_string($_GET["id"]) ? substr($_GET["id"], 0, 1) : false;
@@ -84,7 +86,7 @@ if ($pid && file_exists($path)) {
     // Handle case where payment tracking file is not found
     echo json_encode([
         "status" => "ERROR",
-        "reason" => "Tracking file " . ($pid ?: "unknown") . " not found. Please chmod proxy/v1/ln/api to 777"
+        "reason" => "Tracking file " . ($pid ?: "unknown") . " not found. Please check directory permissions."
     ]);
     return;
 }

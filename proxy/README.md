@@ -26,7 +26,7 @@ Replace the 'v1' folder, making sure to leave the config.php file intact.
 
 ## Folder permissions
 
-(For Nginx) you might have to chmod the following api folders to 777 (Apply to enclosed) in order to cache files: "ln/api" and "inv/api".
+(For Nginx) you might have to chmod the following api folders to 755 (or 775 if the web server group needs write access) in order to cache files: "ln/api" and "inv/api".
 
 ## Lightning Setup:
 

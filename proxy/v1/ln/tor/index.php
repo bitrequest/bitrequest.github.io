@@ -4,11 +4,13 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 header("Access-Control-Allow-Origin: *");
 
+include_once "../../security.php";
+
 // Handle direct requests with Tor support
 $pd = file_get_contents("php://input");
 $pd_obj = json_decode($pd, true);
 if (isset($pd_obj)) {
-	if (onion()) {
+	if (has_tor()) {
 		// Extract method if available
 		if (isset($pd_obj["params"]) && isset($pd_obj["params"]["method"])) {
 			$pd_obj["method"] = $pd_obj["params"]["method"];
@@ -24,7 +26,7 @@ if (isset($pd_obj)) {
 function fetch_tor($url, $data, $headers) {
 	$method = (isset($data)) ? $data["method"] ?? "POST" : "GET";
 	$plo = ["url" => $url, "data" => $data, "headers" => $headers, "method" => $method];    
-	if (onion()) {
+	if (has_tor()) {
 		// Try with retries for better reliability
 		$max_retries = 3;
 		$retry_count = 0;
@@ -176,12 +178,6 @@ function curl_get_tor($pl) {
 			curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 		}
 		
-		// Enable verbose logging
-		$verbose_file = fopen("php://temp", "w+");
-		curl_setopt($ch, CURLOPT_STDERR, $verbose_file);
-		curl_setopt($ch, CURLOPT_VERBOSE, true);
-		curl_setopt($ch, CURLINFO_HEADER_OUT, true);
-		
 		// Execute request
 		$start_time = microtime(true);
 		$result = curl_exec($ch);
@@ -192,12 +188,7 @@ function curl_get_tor($pl) {
 		$curl_errno = curl_errno($ch);
 		$curl_error = curl_error($ch);
 		$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		$request_headers = curl_getinfo($ch, CURLINFO_HEADER_OUT);
 		
-		// Get verbose debug information
-		rewind($verbose_file);
-		$verbose_log = stream_get_contents($verbose_file);
-		fclose($verbose_file);
 		if ($curl_errno) {
 			curl_close($ch);
 			return err_obj("411", "cURL error (" . $curl_errno . "): " . $curl_error);
@@ -223,23 +214,4 @@ function err_obj($code, $message) {
 			"message" => $message,
 		],
 	]);
-}
-
-//Checks if Tor is available on the system by attempting to connect to the SOCKS proxy
-function onion() {
-	// Connect to Tor's SOCKS proxy with "127.0.0.1"
-	$socket = @fsockopen("127.0.0.1", 9050, $errno, $errstr, 1);
-	if ($socket) {
-		fclose($socket);
-		return true;
-	}       
-	
-	// Connect to Tor's SOCKS proxy with "localhost"
-	$socket = @fsockopen("localhost", 9050, $errno, $errstr, 1);
-	if ($socket) {
-		fclose($socket);
-		return true;
-	} 
-	
-	return false;
 }

@@ -1,4 +1,6 @@
 <?php
+	include_once "../security.php";
+	
     // Compressed helper functions
     function get_param($key, $default = null) { return $_GET[$key] ?? $default; }
     
@@ -134,15 +136,13 @@
         
         // If that fails, try Latin1 conversion
         if (!$data) {
-            // Try with utf8_decode to handle potential Latin1 encoding
-            $latin1_decoded = utf8_decode($decoded);
-            $data = json_decode($latin1_decoded, true);
-            
-            // If that fails, try with utf8_encode
-            if (!$data) {
-                $utf8_encoded = utf8_encode($decoded);
-                $data = json_decode($utf8_encoded, true);
-            }
+            $latin1_decoded = mb_convert_encoding($decoded, "ISO-8859-1", "UTF-8");
+			$data = json_decode($latin1_decoded, true);
+			
+			if (!$data) {
+			    $utf8_encoded = mb_convert_encoding($decoded, "UTF-8", "ISO-8859-1");
+			    $data = json_decode($utf8_encoded, true);
+			}
         }
         
         // Final check for valid data
