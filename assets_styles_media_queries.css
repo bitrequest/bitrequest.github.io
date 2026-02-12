@@ -1,0 +1,265 @@
+@media only screen and (min-width: 0px) {
+  body {
+    font-size: 0.9rem;
+  }
+}
+
+@media only screen and (min-width: 190px) {
+  body {
+    font-size: 1.1rem;
+  }
+
+  .qrwrap .qrcode {
+    width: 85%;
+  }
+
+  #optionslist {
+    font-size: 150%;
+  }
+
+  #rf_wrap {
+    font-size: 120%;
+  }
+
+  #pinkeypad .pinpad {
+    font-size: 200%;
+  }
+}
+
+@media only screen and (min-width: 250px) {
+  #sharerequest>span {
+    display: inline;
+  }
+
+  #pinkeypad .pinpad {
+    font-size: 250%;
+  }
+}
+
+@media only screen and (min-width: 280px) {
+  body {
+    font-size: 1.2rem;
+  }
+
+  .qrwrap .qrcode {
+    width: 75%;
+  }
+
+  .iconright2 .atext {
+    padding-right: 25%;
+  }
+
+  .iconright2 .iconbox {
+    font-size: 180%;
+    width: 25%;
+  }
+}
+
+@media only screen and (min-width: 319px) {
+  .applist {
+    font-size: 110%;
+  }
+
+  #pinkeypad .pinpad {
+    font-size: 280%;
+    margin: 0.3em;
+  }
+}
+
+/* Navigation and layout tweaks */
+@media only screen and (min-width: 370px) {
+  .qrwrap .qrcode {
+    width: 65%;
+  }
+
+  .iconright2 .atext {
+    padding-right: 15%;
+  }
+
+  #backupactions {
+    font-size: 140%;
+  }
+}
+
+@media only screen and (min-width: 400px) {
+
+  /* start flex font-size */
+  body {
+    font-size: 2.7vw;
+  }
+
+  #sharelist li {
+    font-size: 450%;
+  }
+
+  .iconbox {
+    font-size: 150%;
+  }
+
+  #show_backup {
+    display: inline-block;
+  }
+
+  #sharelist li:after {
+    font-size: 1.5rem;
+  }
+
+  #pinkeypad .pinpad {
+    font-size: 260%;
+  }
+
+  .nav li .self {
+    font-size: 120%;
+  }
+
+  #xratestats {
+    font-size: 10px;
+  }
+}
+
+@media only screen and (min-width: 450px) {
+  #rf_wrap {
+    font-size: 100%;
+  }
+}
+
+@media only screen and (min-width: 520px) {
+  .nav li .self {
+    font-size: 100%;
+    padding: 1.2em 1em;
+  }
+
+  .nav li#settingsbttn a {
+    padding: 1.25em 1em;
+  }
+
+  #pinkeypad .pinpad {
+    font-size: 200%;
+  }
+}
+
+/* Dialog and list max sizes */
+@media only screen and (min-width: 650px) {
+  #optionslist {
+    font-size: 4rem;
+  }
+
+  .iconright .iconbox {
+    font-size: 130%;
+  }
+
+  #request_front {
+    font-size: 105%;
+  }
+
+  .applist {
+    font-size: 100%;
+  }
+
+  .checkbox {
+    font-size: 110%;
+  }
+}
+
+@media only screen and (min-width: 850px) {
+
+  /* max font size dialog */
+  #startscreen {
+    font-size: 3.4rem;
+  }
+
+  .dialog {
+    font-size: 2rem;
+  }
+
+  .nav li .self {
+    padding: 1.2em 1em;
+  }
+
+  .nav li#settingsbttn a {
+    padding: 0.95em 1em;
+  }
+
+  .iconright .iconbox {
+    font-size: 100%;
+  }
+
+  #xratestats {
+    font-size: 12px;
+  }
+}
+
+@media only screen and (min-width: 1200px) {
+
+  /* max font-size */
+  body {
+    font-size: 3.2rem;
+  }
+}
+
+/* Scanner adjustments */
+@media only screen and (min-width: 846px) {
+  #scanregion {
+    width: 70vw;
+    height: 70vw;
+  }
+}
+
+@media only screen and (min-width: 1250px) {
+  #scanregion {
+    width: 50vw;
+    height: 50vw;
+  }
+}
+
+/* Seed dialog specific adjustments */
+@media only screen and (min-width: 320px) {
+  #sd_panel {
+    font-size: 130%;
+  }
+}
+
+@media only screen and (min-width: 400px) {
+  #sd_panel {
+    font-size: 160%;
+  }
+}
+
+@media only screen and (min-width: 560px) {
+  #sd_panel {
+    font-size: 130%;
+  }
+}
+
+@media only screen and (min-width: 700px) {
+  #sd_panel {
+    font-size: 100%;
+  }
+}
+
+/* Orientation and height specific tweaks */
+@media only screen and (orientation: landscape) and (max-height: 900px) {
+  .dialog {
+    max-width: 600px;
+  }
+
+  #sharelist li:after {
+    font-size: 2rem;
+  }
+}
+
+@media only screen and (orientation: landscape) and (max-height: 900px) and (min-width: 600px) {
+  .dialogstyle {
+    font-size: 1.5rem;
+  }
+
+  .qrcode {
+    max-width: 300px;
+  }
+}
+
+@media only screen and (min-height: 800px) {
+  #payment {
+    overflow-y: hidden;
+  }
+}
