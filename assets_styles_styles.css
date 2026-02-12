@@ -1,9 +1,5 @@
 /* Resets and base styles */
 
-:root {
-    color-scheme: light only;
-}
-
 * {
     box-sizing: border-box;
     -moz-osx-font-smoothing: grayscale;
