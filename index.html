@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html class="firstload">
+<head>
+	<meta name="robots" content="noindex" />
+	<meta charset="utf-8" />
+	<meta name="google" content="notranslate" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>Bitrequest</title>
+	<meta name="description" content="Accept crypto anywhere" />
+	<meta property="og:title" content="Bitrequest" />
+	<meta property="og:url" content="https://bitrequest.github.io" />
+	<meta property="og:description" content="Accept crypto anywhere" />
+	<meta property="og:image" content="img_icons_apple-touch-icon.png" />
+	<meta property="og:locale" content="en-US" />
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width" />
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta name="msapplication-TileColor" content="#da532c" />
+	<meta name="theme-color" content="#4D5359" />
+	<link rel="icon" type="image/x-icon" href="https://bitrequest.github.io/favicon.ico">
+	<link rel="apple-touch-icon" sizes="180x180" href="img_icons_apple-touch-icon.png">
+	<link rel="shortcut icon" type="image/png" sizes="32x32" href="img_icons_favicon-32x32.png">
+	<link rel="shortcut icon" type="image/png" sizes="16x16" href="img_icons_favicon-16x16.png">
+	<link rel="mask-icon" href="img_icons_safari-pinned-tab.svg" color="#5bbad5">
+	<link rel="manifest" href="manifest.json" type="application/json" />
+	<link rel="stylesheet" media="screen" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" />
+	<link rel="stylesheet" type="text/css" media="screen" href="assets_styles_styles.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="assets_styles_payments.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="assets_styles_settings.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="assets_styles_media_queries.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="assets_styles_icons.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="assets_styles_lightning.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="assets_styles_themes_default.css" id="theme" />
+</head>
+
+<body>
+	<div id="mainwrap">
+		<header>
+			<div id="header">
+				<h1>Bitrequest</h1>
+				<div id="homenav">
+					<div id="homebttn" class="icomoon"></div>
+					<div id="userbttn" class="icomoon"></div>
+				</div>
+			</div>
+			<div id="alert" class="flex"><span>0</span></div>
+			<nav id="relnav" class="navstyle">
+				<ul class="nav">
+					<li class="currenciesbttn">
+						<div data-rel="?p=currencies" class="self icon-coin-dollar"><span class="tl_page1">currencies</span></div>
+					</li>
+					<li class="requestsbttn">
+						<div data-rel="?p=requests" class="self icon-qrcode"><span class="tl_page2">requests</span></div>
+					</li>
+					<li class="settingsbttn">
+						<div data-rel="?p=settings" class="self icomoon"><span></span></div>
+					</li>
+				</ul>
+				<div class="highlightbar">
+					<div class="highlighter"></div>
+				</div>
+			</nav>
+		</header>
+		<main>
+			<div class="page flex" id="home">
+				<div class="content" id="homecontent">
+					<ul id="currencylist" class="currencylist">
+					</ul>
+				</div>
+			</div>
+			<div class="page" id="currencies">
+				<div class="content">
+					<h2 class="heading tl_page1">Currencies</h2>
+					<ul id="usedcurrencies" class="applist">
+					</ul>
+					<div id="add_erc20" class="button">
+						<span class="icon-plus">More</span>
+					</div>
+				</div>
+			</div>
+			<div class="page" id="settings">
+				<div class="content">
+					<h2 class="heading tl_page3">Settings</h2>
+					<ul id="appsettings" class="settinglist applist listyle2">
+					</ul>
+					<div id="app_info">
+						<p><span id="ua">PWA v0.292</span><br />
+							<a href="https://github.com/bitrequest/bitrequest.github.io/" target="_blank" class="exit">Source code</a><br />
+							<a href="https://github.com/bitrequest/bitrequest.github.io/wiki" target="_blank" class="exit">About</a><br />
+							<a href="https://www.bitrequest.io/privacy" target="_blank" class="exit">Privacy / Disclaimer</a><br />
+						</p>
+					</div>
+				</div>
+			</div>
+			<div class="page" id="requests">
+				<div class="content">
+					<h2 class="heading tl_page2">Requests</h2>
+					<ul id="requestlist" class="requestlist">
+					</ul>
+					<div data-rel="?p=archive" id="viewarchive" data-title="View archive" class="self button">
+						<span class="icon-folder-open">View archive</span>
+					</div>
+				</div>
+			</div>
+			<div class="page" id="archive">
+				<div class="content">
+					<h2 class="heading">Archive</h2>
+					<ul id="archivelist" class="requestlist">
+					</ul>
+				</div>
+			</div>
+		</main>
+	</div>
+	<div id="newrequest_alias" class="alias noselect linkcolor"> <span class="icon-qrcode"></span></div>
+	<div id="request_history" class="alias noselect linkcolor" title="check for recent payments"><span class="icon-history"></span></div>
+	<nav id="fixednav" class="navstyle">
+	</nav>
+	<div id="loader" class="popbg flex">
+		<div class="lds-ring">
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+		</div><br />
+		<p id="loadtext"><span>Loading</span> ...</p>
+	</div>
+	<div id="payment" class="popbg flex live">
+		<div id="paymentdialog" class="dialog">
+			<div id="paymentdialogbox">
+			</div>
+		</div>
+	</div>
+	<div id="sd_panel" class="noselect"></div>
+	<div id="optionspop" class="flex popbg">
+		<div id="optionsbox" class="poplistbox">
+		</div>
+	</div>
+	<div id="popup" class="popbg flex">
+		<div id="dialog" class="dialog dialogstyle">
+			<div id="dialogbody" class="clearfix">
+			</div>
+			<div id="actions">
+				<div id="execute">OK</div>
+				<div id="canceldialog">CANCEL</div>
+			</div>
+		</div>
+	</div>
+	<div id="sharepopup" class="popbg flex">
+		<div class="poplistbox">
+			<ul id="sharelist">
+				<li title="Whatsapp" class="wa_listitem">
+					<div class="icomoon" id="whatsappshare"></div>
+				</li>
+				<li title="E-mail">
+					<div class="icomoon" id="mailto"></div>
+				</li>
+				<li title="Copy url">
+					<div class="icomoon" id="copyurl"></div>
+				</li>
+				<li title="Gmail">
+					<div class="icomoon" id="gmailshare"></div>
+				</li>
+				<li title="Telegram">
+					<div class="icomoon" id="telegramshare"></div>
+				</li>
+				<li title="Outlook">
+					<div class="icomoon" id="outlookshare"></div>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<div id="closeoptions" class="icon-cross"></div>
+	<div id="notify">
+		<div id="notifysign"></div>
+	</div>
+	<div id="topnotify"></div>
+	<input id="copyinput" type="text" />
+	<div id="startscreen">
+		<div class="panelwrap flex">
+			<div class="startcenter">
+				<h1>Bitrequest</h1>
+				<h2 class="tl_page4">Accept crypto anywhere</h2>
+				<div id="startloader">
+					<div class="lds-ring">
+						<div></div>
+						<div></div>
+						<div></div>
+						<div></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="app_panel"></div>
+	<div id="scanner">
+		<video id="qr-video"></video>
+		<div id="sr_container" class="flex">
+			<div id="scanregion">
+				<div id="scan_bar"></div>
+			</div>
+		</div>
+		<div id="scanner_toolbar">
+			<p>Encode your address on bitrequest.io/qr</p>
+		</div>
+		<div id="closecam" class="icon-cross"></div>
+	</div>
+	<audio id="funk" type="audio/mpeg">
+		<source src="assets_styles_sounds_funk.mp3">
+	</audio>
+	<audio id="cashier" type="audio/mpeg">
+		<source src="assets_styles_sounds_cashier.mp3">
+	</audio>
+	<audio id="collect" type="audio/mpeg">
+		<source src="assets_styles_sounds_collect.mp3">
+	</audio>
+	<audio id="blip" type="audio/mpeg">
+		<source src="assets_styles_sounds_blip.mp3">
+	</audio>
+	<audio id="waterdrop" type="audio/mpeg">
+		<source src="assets_styles_sounds_waterdrop.mp3">
+	</audio>
+	<audio id="howl" type="audio/mpeg">
+		<source src="assets_styles_sounds_howl.mp3">
+	</audio>
+	<script src="assets_js_lib_jquery.js"></script>
+	<script src="assets_js_libraries.js"></script>
+	<script src="assets_js_bitrequest_lang_en.js"></script>
+	<script src="assets_js_bitrequest_lang_nl.js"></script>
+	<script src="assets_js_bitrequest_lang_fr.js"></script>
+	<script src="assets_js_bitrequest_lang_controller.js"></script>
+	<script src="assets_js_lib_global_queries.js"></script>
+	<script src="assets_js_bitrequest_config.js"></script>
+	<script src="assets_js_bitrequest_assets.js"></script>
+	<script src="assets_js_lib_sjcl.js"></script>
+	<script src="assets_js_lib_crypto_utils.js"></script>
+	<script src="assets_js_lib_xmr_utils.js"></script>
+	<script src="assets_js_lib_bip39_utils.js"></script>
+	<script src="assets_js_bitrequest_bip39.js"></script>
+	<script src="assets_js_bitrequest_core.js"></script>
+	<script src="assets_js_bitrequest_settings.js"></script>
+	<script src="assets_js_bitrequest_rpcs.js"></script>
+	<script src="assets_js_bitrequest_coin_settings.js"></script>
+	<script src="assets_js_bitrequest_lightning.js"></script>
+	<script src="assets_js_bitrequest_sockets.js"></script>
+	<script src="assets_js_bitrequest_polling.js"></script>
+	<script src="assets_js_bitrequest_ethl2.js"></script>
+	<script src="assets_js_bitrequest_payments.js"></script>
+	<script src="assets_js_bitrequest_fetchblocks.js"></script>
+	<script src="assets_js_bitrequest_monitors.js"></script>
+	<script src="assets_js_lib_gd_api.js"></script>
+</body>
+</html>
