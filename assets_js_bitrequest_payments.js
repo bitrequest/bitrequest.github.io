@@ -816,7 +816,7 @@ function continue_request(contracts) {
         lightning_switch = payment_currency === "bitcoin" ? (is_request && !is_lightning ? "" : "<div id='lightning_switch' title='lightning' class='lnswitch'><span class='icon-power'></span></div>") : "",
         ndef_switch = payment_currency === "bitcoin" && glob_const.ndef ? "<div id='ndef_switch' title='Tap to pay' class='lnswitch'><span class='icon-connection'></span></div>" : "";
     update_page_title(page_name);
-    glob_const.paymentdialogbox.append("<div id='request_back' class='share_request dialogstyle'></div><div id='request_front' class='dialogstyle'><div id='xratestats'><span id='rq_errlog'></span></div>" + ndef_switch + lightning_switch + "<div class='networks'></div></div>").attr(payment_attributes);
+    glob_const.paymentdialogbox.append("<div id='request_back' class='share_request dialogstyle' style='background: #fff !important; filter: none !important;'></div><div id='request_front' class='dialogstyle' style='background: #fff !important; filter: none !important;'><div id='xratestats'><span id='rq_errlog'></span></div>" + ndef_switch + lightning_switch + "<div class='networks'></div></div>").attr(payment_attributes);
     // Extend global request object
     $.extend(request, extended_request_data);
     // Extend global helper object
