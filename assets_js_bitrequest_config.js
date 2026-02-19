@@ -280,6 +280,14 @@ glob_config = {
                         "seed": false
                     },
                     {
+                        "name": "sparksat",
+                        "website": "https://sparksat.app",
+                        "appstore": null,
+                        "playstore": null,
+                        "desktop": "https://sparksat.app",
+                        "seed": true
+                    },
+                    {
                         "name": "breeze",
                         "website": "https://breez.technology",
                         "appstore": "https://testflight.apple.com/join/wPju2Du7",
@@ -301,7 +309,7 @@ glob_config = {
                         "appstore": "https://apps.apple.com/app/id1438599608",
                         "playstore": "https://play.google.com/store/apps/details?id=com.livingroomofsatoshi.wallet",
                         "desktop": null,
-                        "seed": false
+                        "seed": true
                     },
                     {
                         "name": "zap",

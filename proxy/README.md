@@ -22,7 +22,8 @@ Replace the 'v1' folder, making sure to leave the config.php file intact.
 * Host this folder on your webserver as your personal Lightning RPC proxy.
 * Enter your Lightning host and keys in the config.php file.
 * In the Bitrequest app, go to Currencies -> Bitcoin -> Settings -> Lightning Network and connect to your webserver.
-* Select your Lightning node.
+* Select your Lightning implementation.
+* Spark requires only an identity key — no node or host needed.
 
 ## Folder permissions
 
@@ -35,6 +36,7 @@ Replace the 'v1' folder, making sure to leave the config.php file intact.
 * **LND:** host: {REST host}, key: {Invoice Macaroon (hex)}
 * **core-lightning:** host: {API host}, key: 'Invoice Rune'
 * **LNbits:** host: {API host}, key: 'Invoice/read key'
+* **Spark:** key: {Identity key (hex)} — no host required
 
 ### Settings:
 
@@ -56,7 +58,7 @@ Available endpoints:
 
 **Endpoint:** {API proxy}/proxy/v1/ln/api/
 
-imp {$implementation} : "lnd" / "core-lightning" / "lnbits"
+imp {$implementation} : "lnd" / "core-lightning" / "lnbits" / "spark"
 
 ### ln-create-invoice:
 
@@ -83,7 +85,8 @@ Response:
   "bolt11": "lnbcrt100n1p3r3zvnpp59xxgzarekeh0dg0qa5hu4ap4xlpjl3jd7v4yhx6cqq5668vv8c8qdp8w3jhxapqd9h8vmmfvdjjqctsdyszsnzw24fyc2gcqzpgxqz95sp5cq3lu0kgawn2djhfa7rq34v539t5lnslnyrsdt7zpxqa4z2zx0kq9qyyssqs6akvn2wsx6wjratycg0wmwqhtmgl0cqw4m0xqhj7cgy4uxk6alsln578y8x66utkch7vkav0kz2zc6yx4pygre27h2vtzrat803pqcqj8wzxp",
   "hash": "298c817479b66ef6a1e0ed2fcaf43537c32fc64df32a4b9b580029ad1d8c3e0e",
   "invoice": "$decoded bolt11",
-  "proxy": "app.bitrequest.io"
+  "proxy": "app.bitrequest.io",
+  "request_id": "019c7179-2125-..." // Spark only
 }
 ```
 
@@ -141,7 +144,9 @@ Response:
     "txtime": "1647712620000",
     "conf": "1",
     "proxy": "app.bitrequest.io",
-    "version": "0.001"
+    "version": "0.001",
+    "request_id": "019c7179-2125-...", // Spark only
+    "transfer_id": "019c7179-7892-..." // Spark only (sparkscan.io tx link)
 }
 ```
 

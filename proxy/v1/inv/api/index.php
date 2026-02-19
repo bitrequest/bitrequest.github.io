@@ -4,7 +4,7 @@
 	header("Access-Control-Allow-Origin: *");
 	
 	include_once "../../filter.php";
-	include "../../api.php";
+	include_once "../../api.php";
 	
 	const CACHE_TIME = "2m";
 	const CACHE_DIR = "cache/" . CACHE_TIME . "/";

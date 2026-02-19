@@ -1,6 +1,6 @@
 <?php	
 // PROXY
-const VERSION = "0.032";
+const VERSION = "0.033";
 const CACHE_DURATIONS = [
 	"2m" => 6220800,  // 2 months in seconds
 	"1w" => 604800,   // 1 week in seconds

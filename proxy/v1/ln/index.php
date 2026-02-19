@@ -4,8 +4,8 @@ header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 header("Access-Control-Allow-Origin: *");
 
 include_once "../filter.php";
-include "../../config.php";
-include "../api.php";
+include_once "../../config.php";
+include_once "../api.php";
 
 // Extract payment ID from GET parameters with validation
 $pid = isset($_GET["id"]) && is_string($_GET["id"]) ? safe_filename(substr($_GET["id"], 1, 10)) : false;

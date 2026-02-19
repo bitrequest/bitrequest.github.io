@@ -789,9 +789,10 @@ function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode)
 }
 
 // Monitors Lightning Network invoice payment status with callback handling
-function lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_data, payment_id, node_id) {
+function lnd_poll_invoice(proxy_host, proxy_key, imp, invoice_data, payment_id, node_id) {
     if (is_openrequest()) { // only when request is visible
-        const default_error = "unable to connect";
+        const default_error = "unable to connect",
+            hash = invoice_data.request_id || invoice_data.hash;
         $.ajax({
             "method": "POST",
             "cache": false,
@@ -799,8 +800,8 @@ function lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_data, pay
             "url": proxy_host + "/proxy/v1/ln/api/",
             "data": {
                 "fn": "ln-invoice-status",
-                "imp": invoice_mode,
-                "hash": invoice_data.hash,
+                imp,
+                hash,
                 "id": payment_id,
                 "nid": node_id,
                 "callback": "yes",

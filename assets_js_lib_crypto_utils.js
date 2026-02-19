@@ -427,6 +427,27 @@ function bech32_encode(hrp, data) {
     return ret;
 }
 
+// Creates a checksum for Bech32m encoding (Taproot / Spark addresses)
+function create_checksum_m(hrp, data) {
+    const values = hrp_expand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]),
+        mod = polymod(values) ^ BECH32M_CONST,
+        ret = [];
+    for (let p = 0; p < 6; ++p) {
+        ret.push((mod >> 5 * (5 - p)) & 31);
+    }
+    return ret;
+}
+
+// Encodes data into a Bech32m address
+function bech32m_encode(hrp, data) {
+    let combined = data.concat(create_checksum_m(hrp, data)),
+        ret = hrp + "1";
+    for (let p = 0; p < combined.length; ++p) {
+        ret += b32ab.charAt(combined[p]);
+    }
+    return ret;
+}
+
 // Decodes a Bech32 encoded string
 function bech32_decode(bechString) {
     let p, has_lower = false,
@@ -2166,6 +2187,8 @@ const CryptoUtils = {
     verify_checksum_with_type,
     create_checksum,
     bech32_encode,
+    bech32m_encode,
+    create_checksum_m,
     bech32_decode,
     bech32_dec_array,
     lnurl_decodeb32,

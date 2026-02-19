@@ -208,6 +208,13 @@ pre .key {
   display: none;
 }
 
+#lnsettingsbox #lnd_credentials .lndcd.cs_spark {
+  height: 0px;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 #lnsettingsbox .popform.nocam #lnd_credentials .qrscanner {
   display: none;
 }

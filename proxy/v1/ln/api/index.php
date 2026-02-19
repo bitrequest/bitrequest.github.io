@@ -2,10 +2,11 @@
 header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 header("Access-Control-Allow-Origin: *");
+ignore_user_abort(true); // keep running if client disconnects mid-request
 
 include_once "../../filter.php";
-include "../../../config.php";
-include "../../api.php";
+include_once "../../../config.php";
+include_once "../../api.php";
 
 $pdat = $_POST;
 if (isset($pdat["ping"])) {
@@ -176,9 +177,14 @@ if ($fn === "ln-request-status" && $post_pid) {
 }
 
 // Check if the implementation is supported
-if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
+if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 	$allowed_functions = ["ln-create-invoice", "ln-list-invoices", "ln-invoice-status", "ln-invoice-decode", "ln-delete-invoice"];
 	if ($lnget || in_array($fn, $allowed_functions)) {
+		
+		// Include Spark SDK if needed
+		if ($imp === "spark") {
+			include_once "spark.php";
+		}
 		
 		// Initialize variables for host, key, and other settings
 		$host = $key = false;
@@ -232,6 +238,11 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 			$isproxy = false;
 		}
 
+		// Spark uses built-in endpoints; ensure host is set for validation
+		if ($imp === "spark" && !$host) {
+			$host = "https://api.lightspark.com";
+		}
+
 		// Check if host and key are available, return error if not
 		if (!$host || !$key) {
 			$cname = !$key ? "keys" : "hostname";
@@ -274,10 +285,19 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 							"txtime" => null,
 							"conf" => 0
 						];
+						if (isset($invoice["request_id"])) {
+							$s_content["request_id"] = $invoice["request_id"];
+						}
 						file_put_contents($path, json_encode($s_content));
 					}
 				}
 				echo json_encode($invoice);
+
+				// Spark: run preimage ceremony after response
+				if ($imp === "spark" && isset($invoice["preimage"])) {
+					spark_flush_response();
+					spark_store_preimage_shares($key, $invoice["preimage"], $invoice["bolt11"], $invoice["hash"]);
+				}
 			}
 			return;
 		}
@@ -363,13 +383,22 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 					$hash = $result["hash"];
 					
 					if ($pr && $hash) {
-						// Prepare response with payment request
+						if ($imp === "spark" && isset($result["preimage"])) {
+							set_time_limit(120);
+							$ceremony_result = spark_store_preimage_shares($key, $result["preimage"], $pr, $hash);
+							if ($ceremony_result !== true) {
+								echo json_encode(["status" => "ERROR", "reason" => "Preimage ceremony failed: " . $ceremony_result]);
+								return;
+							}
+						}
+
+						// Return invoice to wallet — preimage shares already with operators
 						$inv_arr = ["pr" => $pr, "routes" => $routes];
 						if ($successmessage && strlen($successmessage) > 2) {
 							$inv_arr["successAction"] = ["tag" => "message", "message" => $successmessage];
 						}
 						echo json_encode($inv_arr);
-						
+
 						// Store invoice details for tracking
 						$s_content = [
 							"pid" => $get_pid,
@@ -384,14 +413,20 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 							"txtime" => null,
 							"conf" => 0
 						];
-						
+						if (isset($result["request_id"])) {
+							$s_content["request_id"] = $result["request_id"];
+						}
+
 						$tx_content = json_encode($s_content);
 						file_put_contents($path, $tx_content);
-						
-						// Submit transaction to the bitrequest service
+
+						if ($imp === "spark") {
+							spark_flush_response();
+						}
+
 						$postheaders = ["post: " . $tx_content, "tls_wildcard" => true];
 						curl_get(TOR_PROXY . ":8030/", $tx_content, $postheaders);
-						
+
 						// Trigger callback if configured
 						if ($callback_url && strlen($callback_url) > 10) {
 							handle_callback($callback_url, $s_content, $type_text, $remote_tracking, $local_tracking);
@@ -508,6 +543,15 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 				return invoice_uniform($imp, $inv, $type);
 			}
 		}
+
+		if ($imp === "spark") {
+			$result = spark_create_invoice($key, (int)$amount, $memo, $desc_hash, (int)$expiry);
+			if (isset($result["error"])) {
+				return r_err("spark: " . $result["error"], null);
+			}
+			$inv = json_encode($result);
+			return invoice_uniform($imp, $inv, $type);
+		}
 	
 		return r_err("unable to create invoice", null);
 	}
@@ -555,6 +599,15 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 			return array_merge($result, [
 				"bolt11" => $bolt11,
 				"hash" => $dat["payment_hash"]
+			]);
+		}
+
+		if ($imp === "spark") {
+			return array_merge($result, [
+				"bolt11" => $dat["bolt11"],
+				"hash" => $dat["hash"],
+				"preimage" => $dat["preimage"] ?? null,
+				"request_id" => $dat["request_id"] ?? null
 			]);
 		}
 	
@@ -618,6 +671,14 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 			$invoices = curl_get($rpcurl, null, $headers);
 			$result = json_decode($invoices, true);
 			$connected = ($result["balance"] > -1);
+			return process_invoice_result($result, $connected, $type, $pingtest);
+		}
+
+		if ($imp === "spark") {
+			// Spark - test connection by authenticating
+			$auth = spark_authenticate($key);
+			$connected = !isset($auth["error"]);
+			$result = $connected ? ["spark" => "connected"] : ["error" => $auth["error"]];
 			return process_invoice_result($result, $connected, $type, $pingtest);
 		}
 	
@@ -690,6 +751,13 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 			$result = json_decode($inv, true);
 			return process_invoice_lookup($imp, $result, isset($result["details"]), $pid, $type, $expiry, $status);
 		}
+
+		if ($imp === "spark") {
+			// Spark uses request_id for lookups (passed via hash parameter)
+			$result = spark_invoice_lookup($key, $hash);
+			$is_valid = !isset($result["error"]);
+			return process_invoice_lookup($imp, $result, $is_valid, $pid, $type, $expiry, $status);
+		}
 		return r_err("unable to fetch invoice", null);
 	}
 	
@@ -729,6 +797,10 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 	
 		if ($imp === "lnbits") {
 			return get_lnbits_status($dat, $base_result, $expiry);
+		}
+
+		if ($imp === "spark") {
+			return get_spark_status($dat, $base_result);
 		}
 	
 		return false;
@@ -814,6 +886,35 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 			"timestamp" => $inv_txtime * 1000,
 			"txtime" => $inv_txtime * 1000,
 			"conf" => $conf
+		]);
+	}
+	
+	// Extract and normalize Spark invoice status information (LND-like format)
+	function get_spark_status($dat, $base_result) {
+		$status = $dat["state"];
+		$br_state = "unknown";
+		if ($status === "SETTLED") $br_state = "paid";
+		if ($status === "OPEN") $br_state = "pending";
+		if ($status === "CANCELED") $br_state = "canceled";
+		
+		$conf = ($br_state === "paid") ? 1 : 0;
+		$inv_txcreated = isset($dat["creation_date"]) ? (int)$dat["creation_date"] * 1000 : 0;
+		$inv_txtime = ($br_state === "paid" && isset($dat["settle_date"])) ? (int)$dat["settle_date"] * 1000 : null;
+		$inv_amount = isset($dat["value_msat"]) ? (int)$dat["value_msat"] : 0;
+		$inv_amount_paid = isset($dat["amt_paid_msat"]) ? (int)$dat["amt_paid_msat"] : 0;
+		$inv_hash = isset($dat["r_hash"]) ? lnd_b64_dec($dat["r_hash"]) : null;
+
+		return array_merge($base_result, [
+			"status" => $br_state,
+			"bolt11" => $dat["payment_request"],
+			"hash" => $inv_hash,
+			"amount" => $inv_amount,
+			"amount_paid" => ($br_state === "paid") ? $inv_amount_paid : null,
+			"timestamp" => $inv_txcreated,
+			"txtime" => $inv_txtime,
+			"conf" => $conf,
+			"request_id" => $dat["spark_request_id"] ?? null,
+			"transfer_id" => $dat["spark_transfer_id"] ?? null
 		]);
 	}
 	

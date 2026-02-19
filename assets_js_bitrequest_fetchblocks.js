@@ -133,6 +133,7 @@ function process_lightning_payment(rd, api_data, rdo) {
             status_display.text(" " + invoice_status);
             if (response.pid === lightning.pid) {
                 if (response.bolt11) {
+                    const hash = response.request_id || response.hash; // request_id for spark invoices
                     $.ajax({
                         "method": "POST",
                         "cache": false,
@@ -141,7 +142,7 @@ function process_lightning_payment(rd, api_data, rdo) {
                         "data": {
                             "fn": "ln-invoice-status",
                             "imp": implementation,
-                            "hash": response.hash,
+                            hash,
                             "id": payment_id,
                             "nid": node_id,
                             "callback": "no",
@@ -255,6 +256,7 @@ function process_lightning_payment(rd, api_data, rdo) {
         const invoice = lightning.invoice;
         if (invoice) {
             if (tx_hash) {
+                const hash = invoice.request_id || tx_hash.slice(9); // request_id for spark invoices
                 $.ajax({
                     "method": "POST",
                     "cache": false,
@@ -263,7 +265,7 @@ function process_lightning_payment(rd, api_data, rdo) {
                     "data": {
                         "fn": "ln-invoice-status",
                         "imp": implementation,
-                        "hash": tx_hash.slice(9),
+                        hash,
                         "id": payment_id,
                         "nid": node_id,
                         "callback": "no",
@@ -271,6 +273,13 @@ function process_lightning_payment(rd, api_data, rdo) {
                         "x-api": proxy_key
                     }
                 }).done(function(invoice_response) {
+                    if (invoice_response?.error) {
+                        handle_scan_failure({
+                            "error": invoice_response.error
+                        }, rd, "ln", rdo);
+                        finalize_request_state(rdo);
+                        return
+                    }
                     const status = invoice_response.status;
                     if (status) {
                         lightning.invoice = invoice_response;
@@ -300,6 +309,7 @@ function process_lightning_payment(rd, api_data, rdo) {
                     handle_scan_failure({
                         "error": error_obj
                     }, rd, "ln", rdo);
+                    finalize_request_state(rdo);
                 }).always(function() {
                     update_api_source(rdo, {
                         "name": "proxy"
@@ -311,6 +321,7 @@ function process_lightning_payment(rd, api_data, rdo) {
         handle_scan_failure({
             "error": tl("noinvoicesfound")
         }, rd, "ln", rdo);
+        finalize_request_state(rdo);
         return
     }
     route_api_request(rd, api_data, rdo);
@@ -3255,7 +3266,9 @@ function lnd_tx_data(data) {
         "confirmations": data.conf,
         "setconfirmations": 1,
         "ccsymbol": "btc",
-        "status": data.status
+        "status": data.status,
+        "request_id": data.request_id,
+        "transfer_id": data.transfer_id
     };
 }
 

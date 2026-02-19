@@ -49,6 +49,10 @@ $lightning_setup = array(
 		"key" => "",
 		"routes" => []
 	),
+	"spark" => array(
+		"key" => "", // 64 hex chars - identity privkey
+		"routes" => []
+	),
 	"apikey" => "",
 	"callback_url" => "",
 	"local_tracking" => "no",

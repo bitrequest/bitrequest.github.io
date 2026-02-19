@@ -2676,11 +2676,15 @@ function showtransaction_trigger() {
             tx_data = parent_item.data(),
             request_data = request_item.data(),
             tx_hash = tx_data.txhash || request_data.txhash;
+        if (tx_data && tx_data.transfer_id) { // use sparkscan.io
+            open_blockexplorer_url("https://sparkscan.io/tx/" + tx_data.transfer_id + "?network=mainnet");
+            return
+        }
         if (tx_hash) {
             const is_lightning = tx_hash.startsWith("lightning");
             if (is_lightning) {
                 const lightning_data = request_data.lightning,
-                    impl = lightning_data.imp,
+                    imp = lightning_data.imp,
                     invoice_data = lightning_data.invoice;
                 if (invoice_data) {
                     const invoice_hash = invoice_data.hash;
@@ -2692,8 +2696,9 @@ function showtransaction_trigger() {
                             const proxy_host = lightning_data.proxy_host,
                                 node_id = lightning_data.nid,
                                 peer_id = lightning_data.pid,
-                                password = lightning_data.pw;
-                            lnd_lookup_invoice(proxy_host, impl, invoice_hash, node_id, peer_id, password);
+                                password = lightning_data.pw,
+                                spark_request_id = tx_data?.request_id || invoice_data?.request_id;
+                            lnd_lookup_invoice(proxy_host, imp, invoice_hash, node_id, peer_id, password, spark_request_id);
                             return
                         }
                     }
@@ -3088,6 +3093,7 @@ function addcurrency(coin_data) {
     const can_derive = derive_first_check(currency);
     if (can_derive === true) {
         loadpage("?p=" + currency);
+        save_currencies(true);
         return
     }
     if (is_viewonly() === true) {
@@ -4175,11 +4181,12 @@ function hide_transaction_meta() {
 }
 
 // Fetches and decodes Lightning Network invoice details from proxy
-function lnd_lookup_invoice(proxy, impl, hash, node_id, peer_id, password) {
+function lnd_lookup_invoice(proxy, imp, hash, node_id, peer_id, password, spark_request_id) {
     const proxy_data = lnurl_deform(proxy),
         proxy_host = proxy_data.url,
         proxy_key = password || proxy_data.k,
         api_url = proxy_host + "/proxy/v1/ln/api/",
+        hash_id = spark_request_id || hash,
         request_data = {
             "method": "POST",
             "cache": false,
@@ -4187,8 +4194,8 @@ function lnd_lookup_invoice(proxy, impl, hash, node_id, peer_id, password) {
             "url": api_url,
             "data": {
                 "fn": "ln-invoice-decode",
-                "imp": impl,
-                "hash": hash,
+                imp,
+                "hash": hash_id,
                 "nid": node_id,
                 "callback": "no",
                 "id": peer_id,
@@ -4217,7 +4224,7 @@ function lnd_lookup_invoice(proxy, impl, hash, node_id, peer_id, password) {
                     "content": [{
                             "div": {
                                 "class": "invoice_body",
-                                "content": "<pre>" + highlight_json_syntax(response) + "</pre><div class='inv_pb'><img src='" + c_icons(impl) + "' class='lnd_icon' title='" + impl + "'/> Powered by " + impl + "</div>"
+                                "content": "<pre>" + highlight_json_syntax(response) + "</pre><div class='inv_pb'><img src='" + c_icons(imp) + "' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
                             }
                         },
                         {

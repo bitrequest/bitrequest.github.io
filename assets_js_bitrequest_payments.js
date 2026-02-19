@@ -909,11 +909,10 @@ function lightning_setup() {
                     if (lnd_payment_id) {
                         const encoded_proxy_host = lnurl_encode_save(direct_proxy),
                             proxy_host = encoded_proxy_host ? lnurl_deform(encoded_proxy_host).url : null,
-                            node_id_source = node_host ? (implementation === "lnbits" ? node_key : node_host) : null,
+                            node_id_source = node_key || null,
                             derived_node_id = node_id_source ? sha_sub(node_id_source, 10) : false,
                             node_id = decoded_data.nid ? decoded_data.nid : (derived_node_id ? derived_node_id : null),
                             node_password = decoded_data.pw ? sha_sub(decoded_data.pw, 10) : (proxy_key ? proxy_key : null),
-                            use_lnurl = !(node_host && node_key),
                             is_lnurl_only = !node_id,
                             is_shared = !!lightning_id,
                             lnd_config = {
@@ -940,7 +939,7 @@ function lightning_setup() {
                                     "key": node_key
                                 })) : false
                             }
-                        lnd_put(proxy_host, node_password, lnd_payload, use_lnurl);
+                        lnd_put(proxy_host, node_password, lnd_payload);
                         return
                     }
                     console.error("error", "missing payment id");
@@ -976,11 +975,8 @@ function lightning_setup() {
             is_local_node_host = is_local_node(node_host),
             node_key = selected_service.key,
             is_lnurl = !!selected_service.lnurl,
-            is_lnurl_only = is_lnurl && !node_host,
-            is_proxy_enabled = (proxy_enabled == true) ? true : false,
             saved_payment_id = br_get_session("lndpid"),
             payment_id = saved_payment_id ? saved_payment_id : sha_sub(now_utc(), 10),
-            use_lnurl = is_lnurl_only || is_proxy_enabled,
             lnd_config = {
                 "request": false,
                 "shared": false,
@@ -993,7 +989,7 @@ function lightning_setup() {
                 "key": node_key,
                 "lnurl": is_lnurl,
                 "name": selected_service.name,
-                "proxy": is_proxy_enabled,
+                "proxy": true,
                 "local_node": is_local_node_host,
                 "local_proxy": is_local_proxy,
                 "selected": lightning_data.selected
@@ -1009,14 +1005,14 @@ function lightning_setup() {
                     "key": node_key
                 })) : false
             }
-        lnd_put(proxy_host, proxy_key, lnd_payload, use_lnurl);
+        lnd_put(proxy_host, proxy_key, lnd_payload);
         return
     }
     proceed_pf();
 }
 
 // Initializes communication with Lightning Network proxy server and handles authentication
-function lnd_put(proxy_url, proxy_key, payload, is_lnurl) {
+function lnd_put(proxy_url, proxy_key, payload) {
     const request_type = request.requesttype === "local" ? undefined : request.requesttype;
     glob_let.proxy_attempts[proxy_url] = true;
     $.ajax({
@@ -1033,7 +1029,7 @@ function lnd_put(proxy_url, proxy_key, payload, is_lnurl) {
     }).done(function(response) {
         const is_successful = response.stat;
         if (is_successful === true) {
-            test_lnd(is_lnurl);
+            test_lnd();
             return
         }
         if (is_successful === "no write acces") {
@@ -1071,7 +1067,7 @@ function lnd_put(proxy_url, proxy_key, payload, is_lnurl) {
 }
 
 // Validates Lightning Network connection and implementation-specific status checks with caching
-function test_lnd(is_lnurl) {
+function test_lnd() {
     const lnd_config = helper.lnd;
     if (!lnd_config.proxy_host) {
         proceed_pf();
@@ -1089,22 +1085,7 @@ function test_lnd(is_lnurl) {
     // functions in assets_js_bitrequest_lightning.js
     const node_host = lnd_config.host,
         is_onion_host = node_host && node_host.indexOf(".onion") > 0;
-    if (is_lnurl || is_onion_host) {
-        validate_lnurl_connection(lnd_config);
-        return
-    }
-    if (lnd_config.imp === "lnd") {
-        check_lnd_status(lnd_config);
-        return
-    }
-    if (lnd_config.imp === "core-lightning") {
-        check_c_lightning_status(lnd_config);
-        return
-    }
-    if (lnd_config.imp === "lnbits") {
-        check_lnbits_status(lnd_config);
-        return
-    }
+    validate_lnurl_connection(lnd_config);
 }
 
 // Finalizes payment setup after Lightning Network validation and handles offline scenarios

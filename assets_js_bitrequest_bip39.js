@@ -551,7 +551,8 @@ function bip39(dat) {
     glob_let.phraseverified = false;
     const dialog_data = get_default_object(dat, true),
         saved_phrase = ls_phrase_obj(),
-        can_edit = dialog_data && dialog_data.edit,
+        can_edit = dialog_data?.edit,
+        spark_init = dialog_data?.spark,
         dialog_type = dialog_data.type || null,
         is_restore = dialog_type === "restore" && can_edit === true,
         ui_state = glob_let.hasbip === true ? (glob_let.bipv === true ? "bipsavedbu" : "bipsaved") : "nobip",
@@ -563,7 +564,7 @@ function bip39(dat) {
         verify_header = dialog_type === "restore" ? tl("verifycurrent") : tl("verifybackup"),
         save_prompt = is_restore ? tl("entersecretphrase") : tl("writedownsecretphrase"),
         verify_button = is_restore ? "<div id='restore_seed' class='button' data-seedid='" + dialog_data.seedid + "'>" + tl("restorebttn") + "</div>" : "<div id='cfbu2' class='button'>" + tl("ivebackeditup") + "</div>",
-        markup = $("<div id='seed_steps' class='panel" + current_step + "' data-goal='" + dialog_type + "'>\
+        markup = $("<div id='seed_steps' class='panel" + current_step + "' data-goal='" + dialog_type + "' data-spark='" + spark_init + "'>\
         <div id='seed_step1' class='seed_step'>\
             <div class='ss_header'>\
                 <div class='icon-cross ssnav'></div>\
@@ -897,21 +898,61 @@ function seed_callback() {
             glob_let.bipid = phrase_id;
         notify("🎉 " + tl("congratulations") + " 🎉");
         const seed_id = phrase_id,
-            seed_phrase = glob_let.phrasearray.join(" ");
-        if (set_up()) {
-            const existing_derivations = filter_all_addressli("seedid", seed_id);
-            if (existing_derivations.length > 0) {
-                update_address_lists();
+            seed_phrase = glob_let.phrasearray.join(" "),
+            seed_steps = $("#seed_steps"),
+            spark_init = seed_steps.attr("data-spark") === "true";
+        if (spark_init) { // save spark settings and launch lightning request
+            const seed_hex = mnemonic_to_seed(seed_phrase),
+                key = fetch_spark_id(seed_hex);
+            if (key) {
+                const lightning_item = get_lightning_settings(),
+                    lightning_data = lightning_item.data(),
+                    services = lightning_data.services,
+                    node_id = sha_sub(key, 10),
+                    host = glob_const.spark_host,
+                    selected = true,
+                    selected_service = {
+                        "imp": "spark",
+                        node_id,
+                        host,
+                        key,
+                        "name": host,
+                        "proxy": true,
+                        "lnurl": false,
+                        "tor": false
+                    };
+                services.push(selected_service);
+                lightning_item.data({
+                    selected_service,
+                    services,
+                    selected
+                });
+                save_cc_settings("bitcoin", true);
+                derive_all_init(seed_phrase, seed_id);
+                openpage("?p=home", "home", "loadpage");
+                const home_item = get_homeli("bitcoin");
+                home_item.find(".rq_icon").trigger("click");
+            } else {
+                topnotify(tl("unable to generate spark invoice"));
+                derive_all_init(seed_phrase, seed_id);
+                hide_seed_panel();
             }
-            deactivate_xpubs();
-            derive_all(seed_phrase, seed_id);
-            save_currencies(true);
         } else {
-            derive_all_init(seed_phrase, seed_id);
-            openpage("?p=home", "home", "loadpage");
-            const selected_coin = $("#seed_steps").attr("data-goal"),
-                home_item = get_homeli(selected_coin);
-            home_item.find(".rq_icon").trigger("click");
+            if (set_up()) {
+                const existing_derivations = filter_all_addressli("seedid", seed_id);
+                if (existing_derivations.length > 0) {
+                    update_address_lists();
+                }
+                deactivate_xpubs();
+                derive_all(seed_phrase, seed_id);
+                save_currencies(true);
+            } else {
+                derive_all_init(seed_phrase, seed_id);
+                openpage("?p=home", "home", "loadpage");
+                const selected_coin = seed_steps.attr("data-goal"),
+                    home_item = get_homeli(selected_coin);
+                home_item.find(".rq_icon").trigger("click");
+            }
         }
         encrypt_seed_data(phrase_obj);
     }

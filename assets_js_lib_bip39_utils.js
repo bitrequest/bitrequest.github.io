@@ -679,21 +679,128 @@ function derive_nano_account(seed_hex, index) {
 }
 
 // ============================================
+// SPARK KEY DERIVATION
+// ============================================
+
+function fetch_spark_id(s) {
+    if (s) {
+        return fetch_spark_keys(s)
+    }
+    if (glob_let.hasbip) {
+        const bip32_keys = key_cc();
+        if (bip32_keys) {
+            const seed = bip32_keys.seed;
+            if (seed) {
+                return fetch_spark_keys(seed);
+            }
+        }
+    }
+    return false;
+}
+
+function fetch_spark_keys(seed) {
+    const spark_keys = derive_spark_keys(seed);
+    if (spark_keys) {
+        const spark_id = spark_keys?.identity?.privkey;
+        if (spark_id) {
+            return spark_id;
+        }
+    }
+    return false;
+}
+
+// Spark derivation path constants
+const SPARK_PURPOSE = 8797555;
+
+// Derives all 5 Spark key pairs from a BIP39 mnemonic
+// account_number: 1 for mainnet (default), 0 for regtest
+// Returns: { identity, signing, deposit, static_deposit, htlc }
+//          each with { privkey, pubkey } (hex strings)
+function derive_spark_keys(seed, account_number) {
+    if (account_number === undefined) account_number = 1;
+    const root_key = get_rootkey(seed),
+        master_key = root_key.slice(0, 64),
+        master_chain = root_key.slice(64),
+        key_types = ["identity", "signing", "deposit", "static_deposit", "htlc"],
+        result = {};
+
+    for (let i = 0; i < 5; i++) {
+        const path = "m/" + SPARK_PURPOSE + "'/" + account_number + "'/" + i + "'",
+            derive_params = {
+                "dpath": path,
+                "key": master_key,
+                "cc": master_chain
+            },
+            derived = derive_x(derive_params),
+            privkey = derived.key,
+            pubkey = get_publickey(privkey);
+
+        result[key_types[i]] = {
+            privkey,
+            pubkey
+        };
+    }
+    return result;
+}
+
+// Encodes a compressed public key as a Spark address
+// identity_pubkey_hex: 33-byte compressed pubkey as hex string
+// network: "mainnet" (default), "regtest", "testnet", "signet"
+function encode_spark_address(identity_pubkey_hex, network) {
+    // Protobuf wrapper: field 1 tag (0x0A), length 33 (0x21), then pubkey bytes
+    const pubkey_bytes = hex_to_bytes(identity_pubkey_hex),
+        payload = uint_8array(35);
+    payload[0] = 0x0A;
+    payload[1] = 0x21;
+    payload.set(pubkey_bytes, 2);
+
+    const words = to_words(Array.from(payload)),
+        prefixes = {
+            "mainnet": "spark",
+            "testnet": "sparkt",
+            "regtest": "sparkrt",
+            "signet": "sparks"
+        };
+    return bech32m_encode(prefixes[network] || "spark", words);
+}
+
+// Convenience: seed → Spark address (mainnet)
+function seed_to_spark_address(seed, account_number) {
+    const keys = derive_spark_keys(seed, account_number);
+    return encode_spark_address(keys.identity.pubkey, "mainnet");
+}
+
+// All derived from bip39_utils_test_vectors.test_phrase
+function test_spark_derivation() {
+    try {
+        const seed = bip39_utils_test_vectors.expected_seed,
+            keys = derive_spark_keys(seed, 1),
+            expected_pubkey = "02a8d8b3ffb8096c83c33ab79dc9efc6c351691f9b793f5af8b5fd5c13a9c3495a",
+            expected_address = "spark1pgss92xck0lmsztvs0pn4duae8huds63dy0ek7flttuttl2uzw5uxj26ep0pvs",
+            address = encode_spark_address(keys.identity.pubkey, "mainnet");
+        return keys.identity.pubkey === expected_pubkey && address === expected_address;
+    } catch (e) {
+        console.error("test_spark_derivation:", e.message);
+        return false;
+    }
+}
+
+// ============================================
 // MODULE EXPORT
 // ============================================
 
 const Bip39Utils = {
     // Version
-    version: bip39_utils_test_vectors.version,
+    "version": bip39_utils_test_vectors.version,
 
     // Constants object (for consistency with CryptoUtils/XmrUtils)
     bip39_utils_test_vectors,
 
     // Test constants (also exposed directly for convenience)
-    test_phrase: bip39_utils_test_vectors.test_phrase,
-    expected_seed: bip39_utils_test_vectors.expected_seed,
-    expected_address: bip39_utils_test_vectors.expected_address,
-    test_xpub: bip39_utils_test_vectors.test_xpub,
+    "test_phrase": bip39_utils_test_vectors.test_phrase,
+    "expected_seed": bip39_utils_test_vectors.expected_seed,
+    "expected_address": bip39_utils_test_vectors.expected_address,
+    "test_xpub": bip39_utils_test_vectors.test_xpub,
 
     // Mnemonic functions
     mnemonic_to_seed,
@@ -713,6 +820,12 @@ const Bip39Utils = {
     ext_keys,
     xpub_obj,
     b58c_x_payload,
+
+    // Spark
+    derive_spark_keys,
+    encode_spark_address,
+    seed_to_spark_address,
+    test_spark_derivation,
 
     // Address formatting
     format_keys,
