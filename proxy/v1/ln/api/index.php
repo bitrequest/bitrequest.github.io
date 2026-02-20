@@ -384,6 +384,17 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 					
 					if ($pr && $hash) {
 						if ($imp === "spark" && isset($result["preimage"])) {
+							// Notify payment server about spark invoice generation, this might take up to 5 seconds.
+							$status = json_encode([
+								"pid" => $get_pid,
+								"status" => "generate",
+								"rqtype" => $type_text
+							]);
+							$postheaders = [
+								"post: " . $status,
+								"tls_wildcard" => true
+							];
+							curl_get(TOR_PROXY . ":8030/", $status, $postheaders);
 							set_time_limit(120);
 							$ceremony_result = spark_store_preimage_shares($key, $result["preimage"], $pr, $hash);
 							if ($ceremony_result !== true) {

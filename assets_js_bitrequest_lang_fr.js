@@ -69,6 +69,7 @@ function lang_fr(id, data) {
         "requestsaved": "Paiement sauvegardées",
         "requiredfields": "Remplissez les champs demandés, s'il vous plaît",
         "requiredfield": "est un champ obligatoire",
+        "requestinginvoice": "Récupérer invoice...",
         "nofetchincoice": "Impossible de récupérer invoice.",
         "copy": "Copie",
         "copied": "copié dans le clipboard",

@@ -69,6 +69,7 @@ function lang_nl(id, data) {
         "requestsaved": "Betaalverzoek opgeslagen",
         "requiredfields": "Voeg de verpichte velden in",
         "requiredfield": "is een verplicht veld",
+        "requestinginvoice": "Invoice genereren...",
         "nofetchincoice": "Niet in staat om invoices op te halen.",
         "copy": "Kopieer",
         "copied": "gekopieerd naar klembord",

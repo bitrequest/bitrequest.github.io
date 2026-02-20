@@ -69,6 +69,7 @@ function lang_en(id, data) {
         "requestsaved": "Request saved",
         "requiredfields": "Please fill in required fields",
         "requiredfield": "is a required field",
+        "requestinginvoice": "Requesting invoice...",
         "nofetchincoice": "Unable to fetch invoice.",
         "copy": "Copy",
         "copied": "copied to clipboard",

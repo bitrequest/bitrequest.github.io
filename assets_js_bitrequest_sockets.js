@@ -474,6 +474,9 @@ function lightning_socket(lnd, foreground) {
                 vibrate();
                 play_audio("blip");
             }
+            if (socket_data.status === "generate") {
+                notify(tl("requestinginvoice"), 500000, " loading");
+            }
             set_dialog_timeout();
             return
         }

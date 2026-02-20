@@ -69,6 +69,7 @@ function lang_es(id, data) {
         "requestsaved": "Solicitud guardada",
         "requiredfields": "Completa los campos obligatorios",
         "requiredfield": "es un campo obligatorio",
+        "requestinginvoice": "Solicitar factura...",
         "nofetchincoice": "No se pudo obtener la factura.",
         "copy": "Copiar",
         "copied": "copiado al portapapeles",
