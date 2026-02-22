@@ -1260,7 +1260,7 @@
    width: 0%; 
    background-color:#bc973d;
    z-index: -1;
-   animation: loadBar 5s linear forwards;
+   animation: loadBar 6s linear forwards;
 }
 
 @keyframes loadBar {

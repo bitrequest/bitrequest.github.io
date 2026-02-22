@@ -120,7 +120,7 @@ function render_lightning_interface(replace) {
             spark_support = test_spark_derivation(),
             spark_id = spark_support ? fetch_spark_id() : false,
             spark_attr = spark_id || "no_id",
-            spark_span = spark_support ? "<span data-value='spark' class='imp_select' data-spark='" + spark_attr + "'><img src='" + c_icons("spark") + "' class='lnd_icon'> Spark</span>" : "",
+            spark_span = spark_support ? "<span data-value='spark' class='imp_select'><img src='" + c_icons("spark") + "' class='lnd_icon'> Spark</span>" : "",
             proxy_select = has_proxy ? "<div class='selectbox' id='lnd_proxy_select_input'>" +
             "<input type='text' value='" + current_proxy_url + "' data-pid='" + current_proxy_id + "' placeholder='https://...' readonly='readonly'/>" +
             "<div class='selectarrows icon-menu2' data-pe='none'></div>" +
@@ -177,7 +177,7 @@ function render_lightning_interface(replace) {
             "<strong>2.</strong> " + tl("lnnodestep2") + "<br/>" +
             "<strong>3.</strong> " + tl("lnnodestep3") + "<br/><br/>" +
             "</p>" +
-            "<input type='text' value='' placeholder='https://...' id='lnd_proxy_url_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>" +
+            "<input type='text' value='' placeholder='https://...' id='lnd_proxy_url_input' autocomplete='off' autocapitalize='off' spellcheck='false' data-spark='" + spark_attr + "'/>" +
             "<input type='password' value='' placeholder='API key' id='proxy_pw_input'/>" +
             "</div>" +
             "</div>" +
@@ -871,27 +871,9 @@ function add_custom_proxy(proxy_object) {
 function handle_implementation_selection() {
     $(document).on("mousedown", "#implements .imp_select", function(e) {
         const selected_implementation = $(this),
-            lightning_data = get_lightning_settings().data(),
-            proxy_list = lightning_data.proxies,
-            has_proxies = !empty_obj(proxy_list),
-            implementation = selected_implementation.attr("data-value");
-        if (implementation === "spark") {
-            const spark_id = selected_implementation.attr("data-spark");
-            if (spark_id === "no_id") { // generate seedphrase
-                canceldialog();
-                setTimeout(function() {
-                    manage_bip32({
-                        "type": "bitcoin",
-                        "spark": true
-                    });
-                }, 1000);
-                return
-            }
-        }
-        const credential_sections = $("#lnd_credentials .lndcd"),
-            selected_credential_section = $("#lnd_credentials .cs_" + implementation),
-            proxy_switch = $("#lnsettingsbox #lnurl_s .switchpanel.custom"),
-            has_proxy = proxy_switch.hasClass("true");
+            implementation = selected_implementation.attr("data-value"),
+            credential_sections = $("#lnd_credentials .lndcd"),
+            selected_credential_section = $("#lnd_credentials .cs_" + implementation);
         $("#add_proxy_drawer").slideUp(200);
         $("#lnd_proxy_url_input").blur();
         credential_sections.not(selected_credential_section).hide();
@@ -1030,6 +1012,19 @@ function trigger_ln() {
                 if (key_length > 300) { // invoice macaroons should be less than 300 characters
                     popnotify("error", tl("entermacaroon"));
                     return
+                }
+                if (implementation === "spark") {
+                    const spark_id = proxy_url_input.attr("data-spark");
+                    if (spark_id === "no_id") { // generate seedphrase
+                        canceldialog();
+                        setTimeout(function() {
+                            manage_bip32({
+                                "type": "bitcoin",
+                                "spark": true
+                            });
+                        }, 1000);
+                        return
+                    }
                 }
                 test_create_invoice(implementation, current_proxy, node_host, node_key);
             } else {
