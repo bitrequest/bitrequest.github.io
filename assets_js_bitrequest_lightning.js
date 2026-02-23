@@ -55,6 +55,8 @@ $(document).ready(function() {
     //lnurl_encode
     //lnurl_decode
     //lnurl_decode_c
+    //crawl
+    //invoice_received
 
     // ** Node Status Functions: **
     //validate_lnurl_connection
@@ -1403,6 +1405,27 @@ function lnurl_decode(lnurl) {
 // Decodes and sanitizes LNURL string
 function lnurl_decode_c(lnurl) {
     return sanitize_string(lnurl_decode(lnurl));
+}
+
+// Loading bar lightning progress
+function crawl() {
+    glob_let.progress += (70 - glob_let.progress) * 0.015;
+    $("#notifysign").css("--load-progress", glob_let.progress + "%");
+    glob_let.anim_frame = requestAnimationFrame(crawl);
+}
+
+function invoice_received() {
+    if (!glob_let.anim_frame) return
+    cancelAnimationFrame(glob_let.anim_frame);
+    glob_let.progress = 0;
+    glob_let.anim_frame = null;
+    const notifysign = $("#notifysign");
+    notifysign.css("--load-progress", "100%");
+    setTimeout(() => {
+        notifysign.addClass("no-transition");
+        notifysign.css("--load-progress", "0%");
+        setTimeout(() => notifysign.removeClass("no-transition"), 50);
+    }, 400);
 }
 
 // ** Node Status Functions: **

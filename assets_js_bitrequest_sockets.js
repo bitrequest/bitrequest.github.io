@@ -475,7 +475,8 @@ function lightning_socket(lnd, foreground) {
                 play_audio("blip");
             }
             if (socket_data.status === "generate") {
-                notify(tl("requestinginvoice"), 500000, " loading");
+                notify(tl("requestinginvoice"), 500000);
+                crawl();
             }
             set_dialog_timeout();
             return
@@ -816,6 +817,7 @@ function lnd_poll_invoice(proxy_host, proxy_key, imp, invoice_data, payment_id, 
             const payment_status = response.status;
             if (payment_status) {
                 request.address = "lnurl"; // make it a lightning request
+                invoice_received(); // terminate loading animation
                 notify(tl("waitingforpayment"), 500000);
                 helper.lnd.invoice = response;
                 const tx_data = lnd_tx_data(response);

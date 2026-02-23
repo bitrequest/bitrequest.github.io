@@ -1242,28 +1242,3 @@
 #paymentdialogbox.request.iszero #pickcurrency {
     pointer-events: all;
 }
-
-/* Loading the notify popup */
-#notifysign.button.loading {
-   position: relative;
-   overflow: hidden;
-   z-index: 1; 
-}
-
-/* The loading bar itself */
-#notifysign.button.loading::before {
-   content: "";
-   position: absolute;
-   top: 0;
-   left: 0;
-   height: 100%;
-   width: 0%; 
-   background-color:#bc973d;
-   z-index: -1;
-   animation: loadBar 6s linear forwards;
-}
-
-@keyframes loadBar {
-  0% { width: 0%; }
-  100% { width: 100%; }
-}

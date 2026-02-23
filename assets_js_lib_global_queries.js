@@ -169,6 +169,7 @@ const br_bipobj = br_get_local("bpdat", true),
     glob_let = {
         "post_scan": false,
         "angle": 0,
+        "anim_frame": null,
         "ap_id": null,
         "api_attempt": {},
         "apikey_fails": false,
@@ -211,6 +212,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "ndef_timer": 0,
         "new_address": false, // prevent double address entries
         "overflow_detected": false,
+        "progress": 0,
         "percent": 0,
         "phrasearray": null,
         "phraseverified": false, // core:
