@@ -222,6 +222,8 @@ function test_bip39() {
 
     const timing = (typeof performance !== "undefined" ? performance.now() : Date.now()) - start_time;
     console.log("BIP39 compatibility tests completed in " + timing.toFixed(2) + "ms");
+    const spark_support = test_spark_derivation();
+    glob_const.spark_support = spark_support; // set spark support
 }
 
 // Marks interface as BIP39 incompatible and disables derivation testing
@@ -1448,7 +1450,15 @@ function phrase_info_pu(selected_coin) {
         backup_toggle = has_encrypted_data() === true ?
         "<li class='clearfix'><strong>" + tl("backupsecretphrase") + ":</strong><div id='toggle_sbu_span' class='ait'>" +
         switch_panel(backup_setting, " global") + "</div></li>" : "",
-        delete_option = selected_coin ? "" : (glob_let.hasbip === true ? backup_toggle +
+        spark_support = glob_const.spark_support;
+    let spark_span = "";
+    if (spark_support) {
+        const spark_keys = seed_to_spark_keys_and_address(seed_hex),
+            id_privkey = spark_keys?.identity?.privkey,
+            spark_address = spark_keys.spark_address;
+        spark_span = "<li class='clearfix noline' style='margin:0;padding:0'><ul id='spark_box'><li class='clearfix pd_hide pd_bitcoin' data-currency='bitcoin' style='display:list-item'><strong>Spark: </strong><span id='show_vk' class='ref' data-vk='derive'>" + tl("show") + "</span><div id='pk_span' class='shwpk' style='display: none;'><br><strong style='color:#8d8d8d'>⚡️ Identity private key</strong> <span class='adbox adboxl select' data-type='Identity private key'>" + id_privkey + "</span><br><br><strong style='color:#8d8d8d'>⚡️ Spark address</strong> <span class='adbox adboxl select' data-type='Spark address'>" + spark_address + "</span></div></li></li>";
+    }
+    const delete_option = selected_coin ? "" : (glob_let.hasbip === true ? backup_toggle +
             "<li class='clearfix'><div id='deletephrase' class='icon-bin'></div></li>" : ""),
         dialog_content = $("<div id='ad_info_wrap' class='" + view_class + "' data-class='" + coin_class + "'>" + header + "<ul>" +
             seed_info +
@@ -1459,14 +1469,14 @@ function phrase_info_pu(selected_coin) {
         <li class='clearfix noline' style='margin:0;padding:0'>\
             <ul id='segw_box'>\
             </ul>\
+        </li>\
         <li>\
             <div id='d_paths'>\
             </div>\
-        </li>\
-        <li id='xpub_box' class='clearfix noline'>\
-        </li>\
-        <li>\
-            <div id='bip_mi'><strong>" + tl("compatiblewallets") + ": </strong><span class='xpref ref'>" + tl("hide") + "</span></div>\
+        </li>" +
+            spark_span +
+            "<li>\
+            <div id='bip_mi'><strong>" + tl("compatiblewallets") + ": </strong><span class='xpref ref'>" + tl("show") + "</span></div>\
             <div id='bip_mibox' class='clearfix drawer'>\
                 <div id='supported_wallets'>\
                 </div>\
@@ -1474,9 +1484,7 @@ function phrase_info_pu(selected_coin) {
         </li>" + delete_option +
             "</ul>\
     </div>").data(root_data);
-
     popdialog(dialog_content, "canceldialog");
-
     $.each(glob_config.bitrequest_coin_data, function(i, coin_config) {
         const coin = coin_config.currency,
             coin_symbol = coin_config.data.ccsymbol,
@@ -1578,7 +1586,7 @@ function list_compatible_wallets(coin) {
                 </div>\
             </li>\
             <li>\
-                <div id='bip_mibox' class='clearfix drawer'>\
+                <div id='bip_mibox' class='clearfix drawer' style='display:block'>\
                     <div id='supported_wallets'>\
                     </div>\
                 </div>\

@@ -118,7 +118,7 @@ function render_lightning_interface(replace) {
             camera_class = glob_let.hascam ? "" : " nocam",
             node_name = current_node ? current_node.name : "",
             current_node_id = current_node ? current_node.node_id : "",
-            spark_support = test_spark_derivation(),
+            spark_support = glob_const.spark_support,
             spark_id = spark_support ? fetch_spark_id() : false,
             spark_attr = spark_id || "no_id",
             spark_span = spark_support ? "<span data-value='spark' class='imp_select'><img src='" + c_icons("spark") + "' class='lnd_icon'> Spark</span>" : "",

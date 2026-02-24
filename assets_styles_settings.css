@@ -1105,7 +1105,7 @@ body.seed_dialog #sd_panel {
 }
 
 #bip_mibox {
-    //display:none;
+    display:none;
 }
 
 .si_li {

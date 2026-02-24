@@ -753,7 +753,6 @@ function encode_spark_address(identity_pubkey_hex, network) {
     payload[0] = 0x0A;
     payload[1] = 0x21;
     payload.set(pubkey_bytes, 2);
-
     const words = to_words(Array.from(payload)),
         prefixes = {
             "mainnet": "spark",
@@ -768,6 +767,14 @@ function encode_spark_address(identity_pubkey_hex, network) {
 function seed_to_spark_address(seed, account_number) {
     const keys = derive_spark_keys(seed, account_number);
     return encode_spark_address(keys.identity.pubkey, "mainnet");
+}
+
+// Convenience: seed → Spark keys and Spark address (mainnet)
+function seed_to_spark_keys_and_address(seed, account_number) {
+    const keys = derive_spark_keys(seed, account_number),
+        spark_address = encode_spark_address(keys.identity.pubkey, "mainnet");
+    keys.spark_address = spark_address;
+    return keys;
 }
 
 // All derived from bip39_utils_test_vectors.test_phrase
