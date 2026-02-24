@@ -15,10 +15,10 @@ define("SECP256K1_GX_HEX", "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2
 define("SECP256K1_GY_HEX", "483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8");
 
 // Lazy-init decimal versions
-function _sp() { static $v; return $v ?? ($v = _hex2dec(SECP256K1_P_HEX)); }
-function _sn() { static $v; return $v ?? ($v = _hex2dec(SECP256K1_N_HEX)); }
-function _sgx() { static $v; return $v ?? ($v = _hex2dec(SECP256K1_GX_HEX)); }
-function _sgy() { static $v; return $v ?? ($v = _hex2dec(SECP256K1_GY_HEX)); }
+function _sp() {static $v; return $v ?? ($v = _hex2dec(SECP256K1_P_HEX));}
+function _sn() {static $v; return $v ?? ($v = _hex2dec(SECP256K1_N_HEX));}
+function _sgx() {static $v; return $v ?? ($v = _hex2dec(SECP256K1_GX_HEX));}
+function _sgy() {static $v; return $v ?? ($v = _hex2dec(SECP256K1_GY_HEX));}
 
 // === Spark operator configuration (mainnet) ===
 define("SPARK_OPERATORS", [
@@ -186,14 +186,13 @@ function spark_ec_pubkey_compressed($privkey_hex) {
 // ECIES ENCRYPTION (ecies/rs compatible)
 // ==========================================================
 
-function spark_ecies_encrypt($plaintext_bytes, $recipient_pubkey_hex) {
+function spark_ecies_encrypt_bcmath($plaintext_bytes, $recipient_pubkey_hex) {
 	// Generate ephemeral key in valid range [1, n-1]
 	$n = _sn();
 	$eph_dec = _bcmod_pos(_hex2dec(bin2hex(random_bytes(32))), bcsub($n, "1"));
 	$eph_dec = bcadd($eph_dec, "1");
 	$eph_priv_hex = _dec2hex($eph_dec);
 	$eph_pub_hex = spark_ec_pubkey($eph_priv_hex);
-
 	// ECDH: shared secret = ephemeral * recipient
 	$cached = spark_operator_points();
 	if (isset($cached[$recipient_pubkey_hex])) {
@@ -202,17 +201,14 @@ function spark_ecies_encrypt($plaintext_bytes, $recipient_pubkey_hex) {
 		list($rpx, $rpy) = spark_ec_decompress($recipient_pubkey_hex);
 	}
 	list($sx, $sy) = spark_ec_mul($eph_priv_hex, $rpx, $rpy);
-
 	// Derive AES key via HKDF
 	$ikm = hex2bin($eph_pub_hex) . hex2bin("04" . $sx . $sy);
 	$aes_key = hash_hkdf("sha256", $ikm, 32, "", "");
-
 	// AES-256-GCM encrypt
 	$nonce = random_bytes(16);
 	$tag = "";
 	$ct = openssl_encrypt($plaintext_bytes, "aes-256-gcm", $aes_key, OPENSSL_RAW_DATA, $nonce, $tag, "", 16);
 	if ($ct === false) return false;
-
 	return hex2bin($eph_pub_hex) . $nonce . $tag . $ct;
 }
 
@@ -375,7 +371,6 @@ function spark_grpc_call($address, $path, $proto_bytes, $auth_token = null) {
 	if ($auth_token) {
 		$headers[] = "Authorization: Bearer " . $auth_token;
 	}
-
 	$ch = curl_init(rtrim($address, "/") . $path);
 	curl_setopt_array($ch, [
 		CURLOPT_POST => true,
@@ -385,26 +380,21 @@ function spark_grpc_call($address, $path, $proto_bytes, $auth_token = null) {
 		CURLOPT_TIMEOUT => 15,
 		CURLOPT_HEADER => true
 	]);
-
 	$full_response = curl_exec($ch);
 	$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 	$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 	$error = curl_error($ch);
 	curl_close($ch);
 	if ($error) return "cURL error: " . $error;
-
 	$resp_headers = substr($full_response, 0, $header_size);
 	$response = substr($full_response, $header_size);
-
 	// Check for gRPC error in HTTP headers
 	if (preg_match('/grpc-status:\s*(\d+)/i', $resp_headers, $m) && $m[1] !== "0") {
 		$msg = "";
 		if (preg_match('/grpc-message:\s*(.+)/i', $resp_headers, $m2)) $msg = urldecode(trim($m2[1]));
 		return "gRPC error " . $m[1] . ": " . $msg;
 	}
-
 	if ($http_code !== 200) return "HTTP " . $http_code;
-
 	// Parse gRPC-web response: data frames (0x00) + trailer frame (0x80)
 	$body = "";
 	$pos = 0;
@@ -430,11 +420,9 @@ function spark_grpc_call($address, $path, $proto_bytes, $auth_token = null) {
 			$body .= $frame_data;
 		}
 	}
-
 	if ($grpc_status !== null && $grpc_status !== "0") {
 		return "gRPC error " . $grpc_status . ": " . ($grpc_message ?? "unknown");
 	}
-
 	return ["body" => $body];
 }
 
@@ -449,7 +437,6 @@ function spark_grpc_call($address, $path, $proto_bytes, $auth_token = null) {
 function spark_grpc_authenticate($address, $identity_key_hex) {
 	$nid = substr(hash("sha256", $identity_key_hex), 0, 10);
 	$cache_file = SPARK_GRPC_TOKEN_CACHE_DIR . "/" . $nid . "_spark_grpc_token";
-
 	// Check cache
 	if (file_exists($cache_file)) {
 		$cached = json_decode(file_get_contents($cache_file), true);
@@ -465,48 +452,38 @@ function spark_grpc_authenticate($address, $identity_key_hex) {
 	if (!$pkey) return "error:invalid identity key";
 	$pubkey_hex = spark_get_pubkey($pkey);
 	$pubkey_bytes = hex2bin($pubkey_hex);
-
 	// Step 1: GetChallenge
 	$req = spark_proto_field_bytes(1, $pubkey_bytes);
 	$result = spark_grpc_call($address, "/spark_authn.SparkAuthnService/get_challenge", $req);
 	if (!is_array($result)) return "error:get_challenge failed: " . $result;
 	if (empty($result["body"])) return "error:empty challenge response";
-
 	// Parse GetChallengeResponse → ProtectedChallenge → Challenge
 	$resp_fields = spark_proto_decode($result["body"]);
 	if (!isset($resp_fields[1])) return "error:no protectedChallenge in response";
 	$protected_challenge_bytes = $resp_fields[1][1];
-
 	$pc_fields = spark_proto_decode($protected_challenge_bytes);
 	if (!isset($pc_fields[2])) return "error:no challenge in protectedChallenge";
 	$challenge_proto_bytes = $pc_fields[2][1];
-
 	// Step 2: Sign challenge
 	openssl_sign($challenge_proto_bytes, $signature, $pkey, OPENSSL_ALGO_SHA256);
 	$signature = spark_normalize_sig($signature);
-
 	// Step 3: VerifyChallenge
 	$verify_req = spark_proto_field_bytes(1, $protected_challenge_bytes)
 		. spark_proto_field_bytes(2, $signature)
 		. spark_proto_field_bytes(3, $pubkey_bytes);
-
 	$verify_result = spark_grpc_call($address, "/spark_authn.SparkAuthnService/verify_challenge", $verify_req);
 	if (!is_array($verify_result)) return "error:verify_challenge failed: " . $verify_result;
-
 	// Parse VerifyChallengeResponse
 	$vr_fields = spark_proto_decode($verify_result["body"]);
 	if (!isset($vr_fields[1])) return "error:no sessionToken in verify response";
-
 	$session_token = $vr_fields[1][1];
 	$expires = isset($vr_fields[2]) ? $vr_fields[2][1] : time() + 600;
-
 	// Cache token
 	$cache_dir = SPARK_GRPC_TOKEN_CACHE_DIR;
 	if (!is_dir($cache_dir)) mkdir($cache_dir, 0755, true);
 	$existing = file_exists($cache_file) ? (json_decode(file_get_contents($cache_file), true) ?: []) : [];
 	$existing[$address] = ["token" => $session_token, "expires" => $expires];
 	file_put_contents($cache_file, json_encode($existing));
-
 	return $session_token;
 }
 
@@ -517,7 +494,6 @@ function spark_grpc_authenticate($address, $identity_key_hex) {
 function spark_store_preimage_shares($identity_key_hex, $preimage_hex, $invoice, $payment_hash_hex) {
 	$operators = SPARK_OPERATORS;
 	$threshold = SPARK_THRESHOLD;
-
 	// Split preimage into shares and encrypt for each operator
 	$shares = spark_shamir_split($preimage_hex, $threshold, count($operators));
 	$encrypted_shares = [];
@@ -528,25 +504,20 @@ function spark_store_preimage_shares($identity_key_hex, $preimage_hex, $invoice,
 		if ($encrypted === false) return "ECIES encryption failed for operator " . $op["id"];
 		$encrypted_shares[$op["identifier"]] = $encrypted;
 	}
-
 	// Sign the payload
 	$payment_hash = hex2bin($payment_hash_hex);
 	$signing_data = spark_signing_payload($payment_hash, $encrypted_shares, $threshold, $invoice);
-
 	$pkey = spark_build_key($identity_key_hex);
 	if (!$pkey) return "Failed to build identity key";
 	openssl_sign($signing_data, $signature, $pkey, OPENSSL_ALGO_SHA256);
 	$signature = spark_normalize_sig($signature);
 	$user_pubkey = hex2bin(spark_get_pubkey($pkey));
-
 	// Build protobuf and send to coordinator
 	$proto = spark_proto_store_preimage_v2(
 		$payment_hash, $encrypted_shares, $threshold, $invoice, $user_pubkey, $signature
 	);
-
 	$token = spark_grpc_authenticate(SPARK_COORDINATOR, $identity_key_hex);
 	if (str_starts_with($token, "error:")) return "gRPC auth failed: " . substr($token, 6);
-
 	$result = spark_grpc_call(SPARK_COORDINATOR, SPARK_GRPC_PATH, $proto, $token);
 	return is_array($result) ? true : $result;
 }

@@ -1605,6 +1605,14 @@ function set_scan_result(result) {
 
 // Processes Lightning Network connection QR codes
 function handle_ln_connect(result, payment) {
+    if (payment === "nwc") {
+        const nwc_account = extract_alby_username(result) || "",
+            set_success = set_ln_fields(payment, nwc_account, result);
+        if (set_success) {
+            trigger_ln();
+        }
+        return
+    }
     const params_url = renderlnconnect(result);
     if (params_url) {
         const rest_url = params_url.resturl,
@@ -2430,6 +2438,7 @@ function reset_paymentdialog() {
     allow_screen_sleep();
     stop_nfc_scan();
     clear_polling_timeout();
+    invoice_received(); // reset loading bar
     glob_let.lnd_ph = false,
         request = null,
         helper = null,
@@ -4459,19 +4468,29 @@ function dragend() {
 
 // Processes and validates custom URL scheme handlers
 function check_intents(encoded_scheme) {
-    if (encoded_scheme == "false") {
+    if (encoded_scheme == false) {
         return
     }
     const decoded_url = atob(encoded_scheme),
         protocol = decoded_url.split(":")[0];
-    if (protocol == "eclair" || protocol == "acinq" || protocol == "lnbits") {
+    if (protocol === "eclair" || protocol === "acinq" || protocol === "lnbits") {
         const warning_content = "<h2 class='icon-warning'>" + tl("proto", {
             "proto": protocol
         }) + "</h2>";
         popdialog(warning_content, "canceldialog");
         return
     }
-
+    if (protocol === "nostr+walletconnect") {
+        setTimeout(function() {
+            render_lightning_interface();
+            ln_connect({
+                "lnconnect": "",
+                "macaroon": decoded_url,
+                "imp": "nwc"
+            });
+        }, 1500);
+        return
+    }
     if (protocol == "lndconnect" || proto == "clnrest") {
         const implementation = (protocol === "lndconnect") ? "lnd" :
             (protocol === "clnrest") ? "core-lightning" : protocol,
@@ -4793,9 +4812,10 @@ function ln_connect(params) {
         macaroon_token = url_params.macaroon,
         imp_value = url_params.imp;
     if (macaroon_token && imp_value) {
-        const decoded_mac = b64urldecode(macaroon_token);
+        const nwc = imp_value === "nwc",
+            decoded_mac = nwc ? macaroon_token : b64urldecode(macaroon_token);
         if (decoded_mac) {
-            const rest_url = atob(ln_connect_url),
+            const rest_url = nwc ? extract_alby_username(decoded_mac) || "" : atob(ln_connect_url),
                 set_success = set_ln_fields(imp_value, rest_url, decoded_mac);
             if (set_success === true) {
                 $("#adln_drawer").show();

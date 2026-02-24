@@ -24,6 +24,7 @@ Replace the 'v1' folder, making sure to leave the config.php file intact.
 * In the Bitrequest app, go to Currencies -> Bitcoin -> Settings -> Lightning Network and connect to your webserver.
 * Select your Lightning implementation.
 * Spark requires only an identity key — no node or host needed.
+* NWC requires only a connection URI — no node or host needed.
 
 ## Folder permissions
 
@@ -37,6 +38,7 @@ Replace the 'v1' folder, making sure to leave the config.php file intact.
 * **core-lightning:** host: {API host}, key: 'Invoice Rune'
 * **LNbits:** host: {API host}, key: 'Invoice/read key'
 * **Spark:** key: {Identity key (hex)} — no host required
+* **NWC:** key: {NWC connection URI} — no host required
 
 ### Settings:
 
@@ -58,7 +60,7 @@ Available endpoints:
 
 **Endpoint:** {API proxy}/proxy/v1/ln/api/
 
-imp {$implementation} : "lnd" / "core-lightning" / "lnbits" / "spark"
+imp {$implementation} : "lnd" / "core-lightning" / "lnbits" / "spark" / "nwc"
 
 ### ln-create-invoice:
 

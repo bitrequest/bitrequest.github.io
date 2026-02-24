@@ -49,6 +49,10 @@ $lightning_setup = array(
 		"key" => "",
 		"routes" => []
 	),
+	"nwc" => array(
+		"key" => "", // NWC Connection Secret
+		"routes" => []
+	),
 	"spark" => array(
 		"key" => "", // 64 hex chars - identity privkey
 		"routes" => []

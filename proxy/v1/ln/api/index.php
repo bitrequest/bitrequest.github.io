@@ -177,13 +177,18 @@ if ($fn === "ln-request-status" && $post_pid) {
 }
 
 // Check if the implementation is supported
-if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
+if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 	$allowed_functions = ["ln-create-invoice", "ln-list-invoices", "ln-invoice-status", "ln-invoice-decode", "ln-delete-invoice"];
 	if ($lnget || in_array($fn, $allowed_functions)) {
 		
 		// Include Spark SDK if needed
 		if ($imp === "spark") {
-			include_once "spark.php";
+			include_once "spark/spark.php";
+		}
+		
+		// Include NWC SDK if needed
+		if ($imp === "nwc") {
+			include_once "nwc/nwc.php";
 		}
 		
 		// Initialize variables for host, key, and other settings
@@ -237,10 +242,15 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 			$key = $postkey;
 			$isproxy = false;
 		}
-
-		// Spark uses built-in endpoints; ensure host is set for validation
-		if ($imp === "spark" && !$host) {
-			$host = "https://api.lightspark.com";
+		
+		// Spark and NWC use built-in endpoints; ensure host is set for validation
+		if (!$host) {
+			if ($imp === "spark") {
+				$host = "https://api.lightspark.com";
+			}
+			if ($imp === "nwc") {
+				$host = "Nostr Wallet Connect";
+			}
 		}
 
 		// Check if host and key are available, return error if not
@@ -370,8 +380,22 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 				$meta = bin2hex(json_encode($meta_arr));
 				
 				// Create a new invoice
+				if ($lnget) {
+					// Notify payment server about spark/nwc invoice generation, this might take up to 5 seconds.
+					if ($imp === "nwc" || $imp === "spark") {
+				        $status = json_encode([
+				            "pid" => $get_pid,
+				            "status" => "generate",
+				            "rqtype" => $type_text
+				        ]);
+			            $postheaders = [
+			                "post: " . $status,
+			                "tls_wildcard" => true
+			            ];
+			            curl_get(TOR_PROXY . ":8030/", $status, $postheaders);
+					}
+				}
 				$result = create_invoice($imp, $get_pid, $host, $key, $specified_amount, $memo, $type, null, "lnurl", $desc_hash, $meta, $p_expiry);
-				
 				if ($result) {
 					$inv_error = $result["error"] ?? false;
 					if ($inv_error) {
@@ -384,17 +408,6 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 					
 					if ($pr && $hash) {
 						if ($imp === "spark" && isset($result["preimage"])) {
-							// Notify payment server about spark invoice generation, this might take up to 5 seconds.
-							$status = json_encode([
-								"pid" => $get_pid,
-								"status" => "generate",
-								"rqtype" => $type_text
-							]);
-							$postheaders = [
-								"post: " . $status,
-								"tls_wildcard" => true
-							];
-							curl_get(TOR_PROXY . ":8030/", $status, $postheaders);
 							set_time_limit(120);
 							$ceremony_result = spark_store_preimage_shares($key, $result["preimage"], $pr, $hash);
 							if ($ceremony_result !== true) {
@@ -554,6 +567,22 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 				return invoice_uniform($imp, $inv, $type);
 			}
 		}
+		
+		if ($imp === "nwc") {
+			if ($pingtest) {
+				$getinfo = nwc_get_info($key);
+				if ($getinfo) {
+					$info = json_encode($getinfo);
+					return invoice_uniform($imp, $info, $type);
+				}
+			}
+			$result = nwc_create_invoice($key, (int)$amount, $memo, (int)$expiry);
+			if (isset($result["error"])) {
+				return r_err("NWC: " . $result["error"], null);
+			}
+			$inv = json_encode($result);
+			return invoice_uniform($imp, $inv, $type);
+		}
 
 		if ($imp === "spark") {
 			$result = spark_create_invoice($key, (int)$amount, $memo, $desc_hash, (int)$expiry);
@@ -612,6 +641,13 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 				"hash" => $dat["payment_hash"]
 			]);
 		}
+		
+		if ($imp === "nwc") {
+			return array_merge($result, [
+				"bolt11" => $dat["invoice"],
+				"hash" => $dat["payment_hash"]
+			]);
+		}
 
 		if ($imp === "spark") {
 			return array_merge($result, [
@@ -641,7 +677,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 			
 			// Check if we got an array of invoices or a single invoice
 			if (isset($result["invoices"]) && is_array($result["invoices"])) {
-				$connected = !empty($result["invoices"]) && isset($result["invoices"][0]["r_hash"]);
+				$connected = true;
 			} else if (isset($result["r_hash"])) {
 				// We received a single invoice - wrap it in the expected structure
 				$result = ["invoices" => [$result]];
@@ -664,7 +700,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 			
 			// Check if we got an array of invoices or a single invoice
 			if (isset($result["invoices"]) && is_array($result["invoices"])) {
-				$connected = !empty($result["invoices"]) && isset($result["invoices"][0]["payment_hash"]);
+				$connected = true;
 			} else if (isset($result["payment_hash"])) {
 				// We received a single invoice - wrap it in the expected structure
 				$result = ["invoices" => [$result]];
@@ -684,6 +720,28 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 			$connected = ($result["balance"] > -1);
 			return process_invoice_result($result, $connected, $type, $pingtest);
 		}
+		
+		if ($imp === "nwc") {
+		    try {
+		        $result = nwc_list_transactions($key, 50);
+		        if (isset($result["invoices"]) && is_array($result["invoices"])) {
+		            $connected = true;
+		        } else {
+		            $connected = false;
+		        }
+		    } catch (Exception $e) {
+		        // list_transactions not supported — fall back to get_info
+		        try {
+		            $info = nwc_get_info($key);
+		            $connected = isset($info["alias"]) || isset($info["methods"]);
+		            $result = $connected ? ["nwc" => "connected"] : ["error" => "get_info failed"];
+		        } catch (Exception $e2) {
+		            $connected = false;
+		            $result = ["error" => $e2->getMessage()];
+		        }
+		    }
+		    return process_invoice_result($result, $connected, $type, $pingtest);
+		}
 
 		if ($imp === "spark") {
 			// Spark - test connection by authenticating
@@ -692,7 +750,6 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 			$result = $connected ? ["spark" => "connected"] : ["error" => $auth["error"]];
 			return process_invoice_result($result, $connected, $type, $pingtest);
 		}
-	
 		return false;
 	}
 	
@@ -762,6 +819,13 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 			$result = json_decode($inv, true);
 			return process_invoice_lookup($imp, $result, isset($result["details"]), $pid, $type, $expiry, $status);
 		}
+		
+		if ($imp === "nwc") {
+			// Spark uses request_id for lookups (passed via hash parameter)
+			$result = nwc_lookup_invoice($key, $hash);
+			$is_valid = !isset($result["error"]);
+			return process_invoice_lookup($imp, $result, $is_valid, $pid, $type, $expiry, $status);
+		}
 
 		if ($imp === "spark") {
 			// Spark uses request_id for lookups (passed via hash parameter)
@@ -808,6 +872,10 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 	
 		if ($imp === "lnbits") {
 			return get_lnbits_status($dat, $base_result, $expiry);
+		}
+		
+		if ($imp === "nwc") {
+			return get_nwc_status($dat, $base_result, $expiry);
 		}
 
 		if ($imp === "spark") {
@@ -896,6 +964,33 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "spark"])) {
 			"amount_paid" => ($br_state === "paid") ? $inv_amount : null,
 			"timestamp" => $inv_txtime * 1000,
 			"txtime" => $inv_txtime * 1000,
+			"conf" => $conf
+		]);
+	}
+	
+	// Extract and normalize nwc invoice status information
+	function get_nwc_status($dat, $base_result, $expiry) {
+		$status = $dat["state"];
+		$br_state = "unknown";
+		if ($status === "settled") $br_state = "paid";
+		if ($status === "pending") $br_state = "pending";
+		if ($status === "expired") $br_state = "canceled";
+		
+		// Extract relevant fields with defaults for missing values
+		$conf = ($br_state === "paid") ? 1 : 0;
+		$inv_txcreated = isset($dat["expires_at"]) ? ((int)$dat["expires_at"] - $expiry) * 1000 : 0;
+		$inv_txtime = isset($dat["settled_at"]) ? (int)$dat["settled_at"] * 1000 : 0;
+		$inv_amount = isset($dat["amount"]) ? (int)$dat["amount"] : 0;
+		$inv_hash = isset($dat["payment_hash"]) ? $dat["payment_hash"] : null;
+	
+		return array_merge($base_result, [
+			"status" => $br_state,
+			"bolt11" => $dat["bolt11"],
+			"hash" => $inv_hash,
+			"amount" => $inv_amount,
+			"amount_paid" => ($br_state === "paid") ? $inv_amount : null,
+			"timestamp" => $inv_txcreated,
+			"txtime" => $inv_txtime,
 			"conf" => $conf
 		]);
 	}
