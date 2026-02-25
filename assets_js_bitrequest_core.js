@@ -4471,7 +4471,7 @@ function check_intents(encoded_scheme) {
     if (encoded_scheme == false) {
         return
     }
-    const decoded_url = atob(encoded_scheme),
+    const decoded_url = decodeb64_flex(encoded_scheme),
         protocol = decoded_url.split(":")[0];
     if (protocol === "eclair" || protocol === "acinq" || protocol === "lnbits") {
         const warning_content = "<h2 class='icon-warning'>" + tl("proto", {
@@ -4491,7 +4491,7 @@ function check_intents(encoded_scheme) {
         }, 1500);
         return
     }
-    if (protocol == "lndconnect" || proto == "clnrest") {
+    if (protocol == "lndconnect" || protocol == "clnrest") {
         const implementation = (protocol === "lndconnect") ? "lnd" :
             (protocol === "clnrest") ? "core-lightning" : protocol,
             connection_data = renderlnconnect(decoded_url);

@@ -661,6 +661,26 @@ function b64urldecode(str) {
     }
 }
 
+// Decode as URL-Safe Base64 with standard b64 fallback
+function decodeb64_flex(input) {
+    let decoded_string = null;
+    try {
+        let b64_urlsafe = input.replace(/-/g, "+").replace(/_/g, "/");
+        while (b64_urlsafe.length % 4) {
+            b64_urlsafe += "=";
+        }
+        decoded_string = atob(b64_urlsafe);
+        return decoded_string;
+    } catch (e) {
+        try {
+            decoded_string = atob(input);
+            return decoded_string;
+        } catch (e) {
+            console.error("Could not decode Base64 string:", e);
+        }
+    }
+}
+
 // Shorten long titles
 function truncate_middle(str, start = 13, end = 15, limit = 35) {
     // Check if value is a string
