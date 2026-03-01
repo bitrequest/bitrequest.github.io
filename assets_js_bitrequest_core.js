@@ -4468,62 +4468,59 @@ function dragend() {
 
 // Processes and validates custom URL scheme handlers
 function check_intents(encoded_scheme) {
-    if (encoded_scheme == false) {
+    if (encoded_scheme == "false") {
         return
     }
     const decoded_url = decodeb64_flex(encoded_scheme),
         protocol = decoded_url.split(":")[0];
-    if (protocol === "eclair" || protocol === "acinq" || protocol === "lnbits") {
-        const warning_content = "<h2 class='icon-warning'>" + tl("proto", {
-            "proto": protocol
-        }) + "</h2>";
-        popdialog(warning_content, "canceldialog");
-        return
-    }
-    if (protocol === "nostr+walletconnect") {
-        setTimeout(function() {
-            render_lightning_interface();
-            ln_connect({
-                "lnconnect": "",
-                "macaroon": decoded_url,
-                "imp": "nwc"
-            });
-        }, 1500);
-        return
-    }
-    if (protocol == "lndconnect" || protocol == "clnrest") {
-        const implementation = (protocol === "lndconnect") ? "lnd" :
-            (protocol === "clnrest") ? "core-lightning" : protocol,
-            connection_data = renderlnconnect(decoded_url);
-        if (connection_data) {
-            const rest_url = connection_data.resturl,
-                macaroon_data = connection_data.macaroon || scheme_obj.rune;
-            // wait for settings to be rendered
-            if (rest_url && macaroon_data) {
-                setTimeout(function() {
-                    render_lightning_interface();
-                    ln_connect({
-                        "lnconnect": btoa(rest_url),
-                        "macaroon": macaroon_data,
-                        "imp": implementation
-                    });
-                }, 1500);
-                return
-            }
-            popnotify("error", tl("decodeqr"));
+    if (protocol) {
+        if (protocol === "eclair" || protocol === "acinq" || protocol === "lnbits") {
+            const warning_content = "<h2 class='icon-warning'>" + tl("proto", {
+                "proto": protocol
+            }) + "</h2>";
+            popdialog(warning_content, "canceldialog");
+            return
         }
-        return
-    }
-    if (protocol.length < 1) {
-        const error_content = "<h2 class='icon-warning'>" + tl("invalidurlscheme") + "</h2>";
-        popdialog(error_content, "canceldialog");
-        return
-    }
-    if (protocol && protocol.length > 0) {
+        if (protocol === "nostr+walletconnect") {
+            setTimeout(function() {
+                render_lightning_interface();
+                ln_connect({
+                    "lnconnect": "",
+                    "macaroon": decoded_url,
+                    "imp": "nwc"
+                });
+            }, 1500);
+            return
+        }
+        if (protocol == "lndconnect" || protocol == "clnrest") {
+            const implementation = (protocol === "lndconnect") ? "lnd" :
+                (protocol === "clnrest") ? "core-lightning" : protocol,
+                connection_data = renderlnconnect(decoded_url);
+            if (connection_data) {
+                const rest_url = connection_data.resturl,
+                    macaroon_data = connection_data.macaroon || scheme_obj.rune;
+                // wait for settings to be rendered
+                if (rest_url && macaroon_data) {
+                    setTimeout(function() {
+                        render_lightning_interface();
+                        ln_connect({
+                            "lnconnect": btoa(rest_url),
+                            "macaroon": macaroon_data,
+                            "imp": implementation
+                        });
+                    }, 1500);
+                    return
+                }
+                popnotify("error", tl("decodeqr"));
+            }
+            return
+        }
         const unsupported_content = "<h2 class='icon-warning'>" + tl("usnotsupported") + "</h2>";
         popdialog(unsupported_content, "canceldialog");
         return
     }
+    const error_content = "<h2 class='icon-warning'>" + tl("invalidurlscheme") + "</h2>";
+    popdialog(error_content, "canceldialog");
 }
 
 // Expands shortened URLs with caching and platform handling

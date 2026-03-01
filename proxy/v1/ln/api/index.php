@@ -585,7 +585,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 		}
 
 		if ($imp === "spark") {
-			$result = spark_create_invoice($key, (int)$amount, $memo, $desc_hash, (int)$expiry);
+			$result = spark_create_invoice($key, (int)$amount, $memo, $desc_hash, true);
 			if (isset($result["error"])) {
 				return r_err("spark: " . $result["error"], null);
 			}

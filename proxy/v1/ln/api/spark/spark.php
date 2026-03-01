@@ -341,6 +341,7 @@ function spark_invoice_lookup($identity_key_hex, $request_id) {
 		case "REFUND_SIGNING_COMMITMENTS_QUERYING_FAILED":
 		case "PAYMENT_PREIMAGE_RECOVERING_FAILED":
 		case "PAYMENT_PREIMAGE_QUERYING_FAILED":
+		case "HTLC_FAILED":
 			$state = "CANCELED";
 			break;
 	}
