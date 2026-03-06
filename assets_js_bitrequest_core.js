@@ -4492,21 +4492,21 @@ function check_intents(encoded_scheme) {
             }, 1500);
             return
         }
-        if (protocol == "lndconnect" || protocol == "clnrest") {
-            const implementation = (protocol === "lndconnect") ? "lnd" :
+        if (protocol === "lndconnect" || protocol === "clnrest") {
+            const imp = (protocol === "lndconnect") ? "lnd" :
                 (protocol === "clnrest") ? "core-lightning" : protocol,
                 connection_data = renderlnconnect(decoded_url);
             if (connection_data) {
                 const rest_url = connection_data.resturl,
-                    macaroon_data = connection_data.macaroon || scheme_obj.rune;
+                    macaroon = connection_data.macaroon || scheme_obj.rune;
                 // wait for settings to be rendered
-                if (rest_url && macaroon_data) {
+                if (rest_url && macaroon) {
                     setTimeout(function() {
                         render_lightning_interface();
                         ln_connect({
                             "lnconnect": btoa(rest_url),
-                            "macaroon": macaroon_data,
-                            "imp": implementation
+                            macaroon,
+                            imp
                         });
                     }, 1500);
                     return
