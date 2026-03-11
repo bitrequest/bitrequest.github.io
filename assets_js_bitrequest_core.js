@@ -580,11 +580,14 @@ function finish_functions() {
 
     // ** Utility Functions: **
     //amountshort
-    check_params();
     const ap = all_proxies(),
         all_tor_proxies = filter_object_array(ap, "tor", true);
     glob_let.tor_proxies = filter_object_array(all_tor_proxies, "tor", true);
     visibility_change();
+    console.log(glob_const.is_ios_app);
+    if (glob_const.is_ios_app === false) {
+        check_params();
+    }
 }
 
 // Updates HTML document language and meta tag attributes based on current language code

@@ -1229,7 +1229,7 @@ function check_params(params) {
 function detect_device_type() {
     const useragent = br_useragent;
     return (glob_const.is_android_app === true) ? "android-app" :
-        (glob_let.is_ios_app === true) ? "apple-app" :
+        (glob_const.is_ios_app === true) ? "apple-app" :
         (/iPad/.test(useragent)) ? "iPad" :
         (/iPhone/.test(useragent)) ? "iPhone" :
         (/Android/.test(useragent)) ? "Android" :
@@ -1243,7 +1243,7 @@ function get_platform(device) {
     if (glob_const.supportsTouch) {
         if (glob_const.is_android_app === true || device === "Android" || device === "Windows") {
             return "playstore";
-        } else if (device === "iPhone" || device === "iPad" || device === "Macintosh" || glob_let.is_ios_app === true) {
+        } else if (device === "iPhone" || device === "iPad" || device === "Macintosh" || glob_const.is_ios_app === true) {
             return "appstore";
         }
     } else {
