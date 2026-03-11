@@ -584,7 +584,11 @@ function finish_functions() {
         all_tor_proxies = filter_object_array(ap, "tor", true);
     glob_let.tor_proxies = filter_object_array(all_tor_proxies, "tor", true);
     visibility_change();
-    check_params();
+    setTimeout(function() {
+        if (glob_const.is_ios_app === false) {
+            check_params();
+        }
+    }, 1500);
 }
 
 // Updates HTML document language and meta tag attributes based on current language code
