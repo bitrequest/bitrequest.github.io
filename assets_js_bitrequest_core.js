@@ -588,7 +588,7 @@ function finish_functions() {
         if (glob_const.is_ios_app === false) {
             check_params();
         }
-    }, 1500);
+    }, 500);
 }
 
 // Updates HTML document language and meta tag attributes based on current language code
