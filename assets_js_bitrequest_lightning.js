@@ -191,7 +191,9 @@ function render_lightning_interface(replace) {
             "<ul>" +
             "</div>" +
             "</div>",
-            content = template_dialog_temp({
+            content_check = $("#add_lndnode_trigger");
+        if (content_check.length && !replace) return // prevent double content
+        const content = template_dialog_temp({
                 "id": "lnsettingsbox",
                 "icon": "icon-power",
                 "title": node_title,

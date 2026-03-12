@@ -580,15 +580,11 @@ function finish_functions() {
 
     // ** Utility Functions: **
     //amountshort
+    check_params();
     const ap = all_proxies(),
         all_tor_proxies = filter_object_array(ap, "tor", true);
     glob_let.tor_proxies = filter_object_array(all_tor_proxies, "tor", true);
     visibility_change();
-    setTimeout(function() {
-        if (glob_const.is_ios_app === false) {
-            check_params();
-        }
-    }, 500);
 }
 
 // Updates HTML document language and meta tag attributes based on current language code
@@ -4811,7 +4807,7 @@ function ln_connect(params) {
     const url_params = params || get_urlparameters(),
         ln_connect_url = url_params.lnconnect,
         macaroon_token = url_params.macaroon,
-        imp_value = url_params.imp;
+        imp_value = url_params.imp || "lnd";
     if (macaroon_token && imp_value) {
         const nwc = imp_value === "nwc",
             decoded_mac = nwc ? macaroon_token : b64urldecode(macaroon_token);
