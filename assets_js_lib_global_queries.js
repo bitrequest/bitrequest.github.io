@@ -1183,7 +1183,7 @@ function init_keys(key_obj, set) { // set required keys
 
 // ** Check params ** //
 // Processes URL parameters for routing and action dispatch
-function check_params(params) {
+function check_params(params, app) {
     const url_params = params || get_urlparameters();
     if (url_params.xss) {
         return
@@ -1214,6 +1214,8 @@ function check_params(params) {
         return
     }
     if (url_params.scheme) {
+        const first_load = glob_const.html.hasClass("firstload");
+        if (first_load && app) return
         check_intents(url_params.scheme);
         return
     }

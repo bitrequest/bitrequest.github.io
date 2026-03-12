@@ -1056,9 +1056,10 @@ function cancel_url_dialogs() {
 }
 
 // Manages URL routing and page transitions for iOS app integration
-function ios_redirections(url) {
+function ios_redirections(url, pwa) {
     if (!url) return
-    const query_string = get_search(url),
+    const app = !pwa, // function is called from app
+        query_string = get_search(url),
         url_params = parse_url_params(query_string);
     if (url_params.xss) return
     const current_url = glob_const.w_loc.href.toUpperCase(),
@@ -1089,11 +1090,11 @@ function ios_redirections(url) {
     if (is_opendialog()) {
         canceldialog();
         setTimeout(function() {
-            check_params(url_params);
+            check_params(url_params, app);
         }, 1000);
         return
     }
-    check_params(url_params);
+    check_params(url_params, app);
 }
 
 // (Can only be envoked from the IOS app), Configures app for iOS-specific behaviors and adds iOS identifier
@@ -4531,7 +4532,7 @@ function expand_shorturl(input_param) {
     }
     const cached_url = br_get_session("longurl_" + input_param);
     if (cached_url) { // check for cached values
-        ios_redirections(cached_url);
+        ios_redirections(cached_url, true);
         return
     }
     if (input_param) {
@@ -4565,7 +4566,7 @@ function expand_shorturl(input_param) {
                             const long_url = parsed_data.sharedurl;
                             if (long_url) {
                                 const local_url = make_local(long_url);
-                                ios_redirections(local_url);
+                                ios_redirections(local_url, true);
                                 br_set_session("longurl_" + input_param, local_url);
                                 return
                             }
@@ -4590,7 +4591,7 @@ function expand_bitly_url(input_param) {
     const bitly_id = input_param.slice(3),
         cached_url = br_get_session("longurl_" + bitly_id);
     if (cached_url) { // check for cached values
-        ios_redirections(cached_url);
+        ios_redirections(cached_url, true);
         return
     }
     api_proxy({
@@ -4615,7 +4616,7 @@ function expand_bitly_url(input_param) {
         if (parsed_data) {
             const long_url = parsed_data.long_url;
             if (long_url) {
-                ios_redirections(long_url);
+                ios_redirections(long_url, true);
                 br_set_session("longurl_" + bitly_id, long_url);
                 return
             }
