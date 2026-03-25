@@ -3473,7 +3473,7 @@ function verify_viewkey(address, viewkey) {
     try {
         const decoded = cn_base_58.decode(address),
             public_viewkey_from_address = decoded.slice(66, 130),
-            computed_public_viewkey = xmr_get_publickey(viewkey);
+            computed_public_viewkey = ed25519_point_multiply(viewkey).toHex();
         if (computed_public_viewkey === public_viewkey_from_address) {
             return true
         }
