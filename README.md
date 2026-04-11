@@ -51,7 +51,7 @@ Integrate crypto checkout into your online store.
 - Real-time payment notifications
 - Request history, receipts, and CSV export
 
-### Addresses
+### Addresses bc1q9w9vctw8h2u5fzrgmgat83k9yfk6hy3qpsq5v7
 - Manage multiple wallet addresses per currency
 - Generate addresses from seed phrase
 - Random address selection for privacy
