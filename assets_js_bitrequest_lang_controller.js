@@ -97,7 +97,7 @@ function tl(id, dat) {
                 "obj": lang_de(id, data)
             },
             "zh-cn": {
-                "lang": "Chinese (Simplified)",
+                "lang": "Chinese",
                 "flag": "🇨🇳",
                 "obj": lang_zh_cn(id, data)
             }
