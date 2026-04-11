@@ -82,6 +82,12 @@ Integrate crypto checkout into your online store.
 
 ---
 
+## Translations
+
+Bitrequest is available in English, Dutch, French, Spanish, and German. Want to add your language? See [`TRANSLATE_PROMPT.md`](TRANSLATE_PROMPT.md) — a complete guide for generating and submitting a new translation file.
+
+---
+
 ## Related
 
 - [Wiki & Documentation](https://github.com/bitrequest/bitrequest.github.io/wiki)
