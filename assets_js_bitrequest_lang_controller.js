@@ -95,6 +95,11 @@ function tl(id, dat) {
                 "lang": "German",
                 "flag": "🇩🇪",
                 "obj": lang_de(id, data)
+            },
+            "zh-cn": {
+                "lang": "Chinese (Simplified)",
+                "flag": "🇨🇳",
+                "obj": lang_zh_cn(id, data)
             }
         }
     if (id == "obj") {
