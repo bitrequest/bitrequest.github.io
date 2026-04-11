@@ -90,6 +90,11 @@ function tl(id, dat) {
                 "lang": "Spanish",
                 "flag": "🇪🇸",
                 "obj": lang_es(id, data)
+            },
+            "de": {
+                "lang": "German",
+                "flag": "🇩🇪",
+                "obj": lang_de(id, data)
             }
         }
     if (id == "obj") {
