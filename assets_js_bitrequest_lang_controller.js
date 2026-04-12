@@ -100,6 +100,11 @@ function tl(id, dat) {
                 "lang": "Chinese",
                 "flag": "🇨🇳",
                 "obj": lang_zh_cn(id, data)
+            },
+            "hi": {
+                "lang": "Hindi",
+                "flag": "🇮🇳",
+                "obj": lang_hi(id, data)
             }
         }
     if (id == "obj") {
