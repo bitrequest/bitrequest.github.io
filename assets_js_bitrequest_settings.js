@@ -197,7 +197,14 @@ function save_account_name() {
     $(document).on("click", "#accountformbox input.submit", function(e) {
         e.preventDefault();
         const input = $(this).prev("input"),
-            value = input.val();
+            value = input.val(),
+            cleaned = value.replace(/[^\u0000-\u024F\u1E00-\u1EFF\s\d.,;:!?@#$%&*()'\-_+=/\\€£¥₹₽₿'"]/g, "");
+        if (cleaned !== value) {
+            input.val("");
+            popnotify("error", tl("latincharacters"));
+            input.focus();
+            return false
+        }
         if (value.length < 1) {
             popnotify("error", tl("nameisrequired"));
             input.focus();
