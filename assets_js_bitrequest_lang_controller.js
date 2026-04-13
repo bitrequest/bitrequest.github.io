@@ -105,6 +105,11 @@ function tl(id, dat) {
                 "lang": "Hindi",
                 "flag": "🇮🇳",
                 "obj": lang_hi(id, data)
+            },
+            "ja": {
+                "lang": "Japanese",
+                "flag": "🇯🇵",
+                "obj": lang_ja(id, data)
             }
         }
     if (id == "obj") {
@@ -134,7 +139,7 @@ function transclear(id, dat) {
 }
 
 // Languages that don't render in PDF Helvetica / WinAnsiEncoding
-const pdf_unsafe_langs = ["zh-cn", "hi"];
+const pdf_unsafe_langs = ["zh-cn", "hi", "ja"];
 
 // Translate for PDF/CSV — falls back to English for non-Latin scripts
 function pdf_tl(id, dat) {

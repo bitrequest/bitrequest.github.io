@@ -173,7 +173,7 @@
     width: 100%;
     padding: 0;
     background-color: rgba(243, 242, 242, 1);
-    max-height: 500px;
+    max-height: 600px;
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
     z-index: 2;
