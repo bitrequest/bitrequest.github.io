@@ -171,6 +171,7 @@ function lang_ja(id, data) {
         "minimal3": "名前は3文字以上必要です",
         "checkyourform": "入力内容を確認してください",
         "entertitle": "説明を入力してください",
+        "latincharacters": "英字（A-Z）、数字、記号のみ入力できます",
         "successshare": "共有しました！",
         // confirm
         "opencoinsettings": data.currency + "設定を開きますか？",
