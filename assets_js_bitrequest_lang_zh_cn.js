@@ -203,6 +203,7 @@ function lang_zh_cn(id, data) {
         "minimal3": "姓名至少需要3个字符",
         "checkyourform": "请检查您的表单",
         "entertitle": "请输入描述",
+        "latincharacters": "仅允许输入字母 (A-Z)、数字和符号",
         "successshare": "分享成功！",
         // confirm
         "opencoinsettings": "打开" + data.currency + "设置？",

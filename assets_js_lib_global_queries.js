@@ -479,8 +479,8 @@ function now_utc() {
 }
 
 // Formats timestamp into localized short date with time
-function short_date(tx_time) {
-    return new Date(tx_time).toLocaleString(langcode, {
+function short_date(tx_time, lang) {
+    return new Date(tx_time).toLocaleString(lang || langcode, {
         "day": "2-digit",
         "month": "2-digit",
         "year": "2-digit",
@@ -540,8 +540,9 @@ function fulldateformat(date, lang, markup) {
         current_year = new Date().getFullYear(),
         year_suffix = year == current_year ? "" : ", " + year,
         time = format_time_24h(date),
-        time_markup = markup ? " | <div class='fdtime'>" + time + "</div>" : " | " + time;
-    return weekdays()[date.getDay()] + ", " + date.toLocaleString(lang, {
+        time_markup = markup ? " | <div class='fdtime'>" + time + "</div>" : " | " + time,
+        weekday = (lang !== langcode) ? date.toLocaleString(lang, { weekday: "long" }) : weekdays()[date.getDay()];
+    return weekday + ", " + date.toLocaleString(lang, {
         "month": "long"
     }) + " " + date.getDate() + year_suffix + time_markup;
 }

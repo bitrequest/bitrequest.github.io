@@ -203,6 +203,7 @@ function lang_hi(id, data) {
         "minimal3": "नाम कम से कम 3 अक्षरों का होना चाहिए",
         "checkyourform": "कृपया अपना फ़ॉर्म जाँचें",
         "entertitle": "कृपया विवरण दर्ज करें",
+        "latincharacters": "केवल अक्षर (A-Z), संख्याएँ और चिह्न अनुमत हैं",
         "successshare": "सफलतापूर्वक साझा किया गया!",
         // confirm
         "opencoinsettings": data.currency + " सेटिंग्स खोलें?",

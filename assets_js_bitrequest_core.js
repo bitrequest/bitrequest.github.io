@@ -3996,7 +3996,7 @@ function get_pdf_url(request_data) {
     status_text = status === "new" ? "Waiting for payment" : status,
         is_lightning = txhash && txhash.slice(0, 9) === "lightning",
         is_hybrid = lightning && lightning.hybrid === true,
-        payment_date = fulldateformat(new Date(paymenttimestamp || timestamp), langcode),
+        payment_date = fulldateformat(new Date(paymenttimestamp || timestamp), pdf_langcode()),
         received_amount = trimdecimals(receivedamount, 6),
         fiat_amount = trimdecimals(fiatvalue, 2),
         is_incoming = requesttype === "incoming",
@@ -4011,33 +4011,33 @@ function get_pdf_url(request_data) {
         first_viewed_time = timestamp || requestdate,
         created_date_obj = new Date(created_time),
         fw_date_obj = new Date(first_viewed_time),
-        request_date = fulldateformat(created_date_obj, langcode),
-        fw_date = fulldateformat(fw_date_obj, langcode),
+        request_date = fulldateformat(created_date_obj, pdf_langcode()),
+        fw_date = fulldateformat(fw_date_obj, pdf_langcode()),
         ln_network = is_lightning ? "lightning" : "",
         invoice_data = {
             "Request ID": requestid,
-            [transclear("currency")]: remove_diacritics(payment),
-            [transclear("amount")]: formatted_amount + " " + currency_symbol,
-            [transclear("status")]: transclear(status_text),
-            [transclear("type")]: transclear(request_type),
-            [transclear("receivingaddress")]: address
+            [pdf_tl("currency")]: payment,
+            [pdf_tl("amount")]: formatted_amount + " " + currency_symbol,
+            [pdf_tl("status")]: pdf_tl(status_text),
+            [pdf_tl("type")]: pdf_tl(request_type),
+            [pdf_tl("receivingaddress")]: address
         };
     if (exists(requestname)) {
-        invoice_data[transclear("from")] = remove_diacritics(requestname);
+        invoice_data[pdf_tl("from")] = requestname;
     }
     if (exists(requesttitle)) {
-        invoice_data[transclear("title")] = "'" + remove_diacritics(requesttitle) + "'";
+        invoice_data[pdf_tl("title")] = "'" + requesttitle + "'";
     }
     if (is_incoming) {
-        invoice_data[transclear("created")] = request_date;
-        invoice_data[transclear("firstviewed")] = fw_date;
+        invoice_data[pdf_tl("created")] = request_date;
+        invoice_data[pdf_tl("firstviewed")] = fw_date;
     }
     if (status === "paid") {
-        const amount_label = is_incoming ? transclear("amountpaid") : transclear("amountreceived");
-        invoice_data[transclear("paidon")] = payment_date;
+        const amount_label = is_incoming ? pdf_tl("amountpaid") : pdf_tl("amountreceived");
+        invoice_data[pdf_tl("paidon")] = payment_date;
         invoice_data[amount_label] = received_amount + " " + payment;
         if (!iscrypto) {
-            invoice_data[transclear("fiatvalueon") + " " + payment_date] = fiat_amount + " " + currencyname;
+            invoice_data[pdf_tl("fiatvalueon") + " " + payment_date] = fiat_amount + " " + currencyname;
         }
     }
     if (exists(txhash)) {
@@ -4045,10 +4045,10 @@ function get_pdf_url(request_data) {
     }
     const network = eth_layer2 || ln_network;
     if (network) {
-        invoice_data[transclear("network")] = network;
+        invoice_data[pdf_tl("network")] = network;
     }
     const proxy_url = d_proxy();
-    return proxy_url + "/proxy/v1/receipt/?data=" + btoa(JSON.stringify(invoice_data));
+    return proxy_url + "/proxy/v1/receipt/?data=" + btoa(unescape(encodeURIComponent(JSON.stringify(invoice_data))));
 }
 
 // ** Archive Management: **

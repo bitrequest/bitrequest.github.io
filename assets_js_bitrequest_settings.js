@@ -1123,7 +1123,7 @@ function generate_backup_data() {
             json.push('"' + key + '":' + value);
         }
     }
-    return btoa("{" + json.join(",") + "}");
+    return btoa(unescape(encodeURIComponent("{" + json.join(",") + "}")));
 }
 
 // Generates timestamped JSON backup filename with current locale
@@ -1989,37 +1989,37 @@ function complile_csv() {
             fiatcur = val.fiatcurrency,
             pts = val.paymenttimestamp || timestamp,
             pdfurl = get_pdf_url(val),
-            paid_time = pts ? short_date(pts) : "",
+            paid_time = pts ? short_date(pts, pdf_langcode()) : "",
             layer = val.eth_layer2,
             network = layer || lnstr,
             netstr = network || "";
         if (should_include_request(status, type, include.paid, include.ins, include.new, include.pending, include.pos, include.outgoing, include.incoming)) {
             if (include.from) {
-                csv[transclear("from")] = rqname;
+                csv[pdf_tl("from")] = rqname;
             }
             if (include.desc) {
-                csv[transclear("title")] = desc;
+                csv[pdf_tl("title")] = desc;
             }
-            csv[transclear("currency")] = payment;
-            csv[transclear("status")] = transclear(status);
-            csv[transclear("network")] = netstr;
+            csv[pdf_tl("currency")] = payment;
+            csv[pdf_tl("status")] = pdf_tl(status);
+            csv[pdf_tl("network")] = netstr;
             const rqtype = type === "local" ? "point of sale" : type;
-            csv[transclear("type")] = transclear(rqtype);
-            csv[transclear("created")] = short_date(created_time);
-            csv[transclear("amount")] = amount + " " + uoa;
+            csv[pdf_tl("type")] = pdf_tl(rqtype);
+            csv[pdf_tl("created")] = short_date(created_time, pdf_langcode());
+            csv[pdf_tl("amount")] = amount + " " + uoa;
             const rval = received ? received + " " + ccsymbol : "",
-                paidrecv = type === "incoming" ? transclear("paid") : transclear("received"),
-                pttitle = transclear("amount") + " " + transclear("received") + " / " + transclear("paid"),
+                paidrecv = type === "incoming" ? pdf_tl("paid") : pdf_tl("received"),
+                pttitle = pdf_tl("amount") + " " + pdf_tl("received") + " / " + pdf_tl("paid"),
                 fiatstr = fiatval ? fiatval.toFixed(2) + " " + fiatcur : "";
             csv[pttitle] = rval + " (" + paidrecv + ")";
-            csv[transclear("fiatvalue")] = fiatstr;
-            csv[transclear("paidon")] = paid_time;
+            csv[pdf_tl("fiatvalue")] = fiatstr;
+            csv[pdf_tl("paidon")] = paid_time;
             if (include.address) {
-                csv[transclear("receivingaddress")] = address;
+                csv[pdf_tl("receivingaddress")] = address;
             }
             csv.txhash = txhash;
             if (include.receipt) {
-                csv["PDF download (" + transclear("receipt") + ")"] = pdfurl;
+                csv["PDF download (" + pdf_tl("receipt") + ")"] = pdfurl;
             }
             csv_arr.push(csv);
         }

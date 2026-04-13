@@ -203,6 +203,7 @@ function lang_en(id, data) {
         "minimal3": "Name should have minimal 3 characters",
         "checkyourform": "Please check your form",
         "entertitle": "Please enter a description",
+        "latincharacters": "Only letters (A-Z), numbers, and symbols allowed",
         "successshare": "Successful share!",
         // confirm
         "opencoinsettings": "Open " + data.currency + " settings?",

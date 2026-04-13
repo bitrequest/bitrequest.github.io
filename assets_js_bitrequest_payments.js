@@ -2130,6 +2130,12 @@ function validate_request_data(lnurl) {
 // Triggers request data validation on form input changes
 function input_requestdata() {
     $(document).on("input", "#shareform input", function() {
+        const input = $(this),
+            cleaned = input.val().replace(/[^\u0000-\u024F\u1E00-\u1EFF\s\d.,;:!?@#$%&*()'\-_+=/\\€£¥₹₽₿'"]/g, "");
+        if (cleaned !== input.val()) {
+            input.val(cleaned);
+            notify(tl("latincharacters"), 5000, "yes");
+        }
         validate_request_data();
         set_dialog_timeout();
     });

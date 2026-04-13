@@ -132,3 +132,19 @@ function transclear(id, dat) {
     }
     return translate;
 }
+
+// Languages that don't render in PDF Helvetica / WinAnsiEncoding
+const pdf_unsafe_langs = ["zh-cn", "hi"];
+
+// Translate for PDF/CSV — falls back to English for non-Latin scripts
+function pdf_tl(id, dat) {
+    if (pdf_unsafe_langs.indexOf(langcode) === -1) {
+        return transclear(id, dat);
+    }
+    return lang_en(id, dat || {}) || id;
+}
+
+// Langcode for PDF/CSV date formatting
+function pdf_langcode() {
+    return pdf_unsafe_langs.indexOf(langcode) === -1 ? langcode : "en";
+}
