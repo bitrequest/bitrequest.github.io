@@ -1473,6 +1473,8 @@ function phrase_info_pu(selected_coin) {
         <li>\
             <div id='d_paths'>\
             </div>\
+        </li>\
+        <li id='xpub_box' class='clearfix noline'>\
         </li>" +
             spark_span +
             "<li>\
@@ -1548,7 +1550,9 @@ function phrase_info_pu(selected_coin) {
                 wallet_element = $("<ul id='formbox_ul' class='clearfix" + display_class + "'>" + wallet_list + "</ul>");
             let xpub_element = "",
                 segwit_element = "";
+            console.log(xpub_key);
             if (xpub_key) {
+                console.log("xpub_key");
                 xpub_element = $("<div class='xpub_ib clearfix" + display_class + "' data-xpub='" + xpub_key + "'>\
                     <div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>" + tl("show") + "</span></div>\
                         <div class='xp_span drawer'>\
