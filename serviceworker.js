@@ -1,4 +1,4 @@
-    const CACHE = "bitrequest-page-v0.311",
+    const CACHE = "bitrequest-page-v0.312",
 	offlineFallbackPage = "index.html";
 
 // Install: cache core assets with new version
