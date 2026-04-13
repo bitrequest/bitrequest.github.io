@@ -115,6 +115,11 @@ function tl(id, dat) {
                 "lang": "AI",
                 "flag": "🤖",
                 "obj": lang_ai(id, data)
+            },
+            "ia": {
+                "lang": "Deep AI",
+                "flag": "👾",
+                "obj": lang_ai2(id, data)
             }
         }
     if (id == "obj") {
