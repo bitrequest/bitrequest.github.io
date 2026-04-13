@@ -110,6 +110,11 @@ function tl(id, dat) {
                 "lang": "Japanese",
                 "flag": "🇯🇵",
                 "obj": lang_ja(id, data)
+            },
+            "ai": {
+                "lang": "AI",
+                "flag": "🤖",
+                "obj": lang_ai(id, data)
             }
         }
     if (id == "obj") {
