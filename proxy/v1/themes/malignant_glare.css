@@ -3,15 +3,84 @@
  *  An aggressive, cyberpunk-inspired interface.
  */
 
+/* CRT bezel vignette — darkens viewport corners */
+html {
+    position: relative;
+}
+html::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(ellipse at center,
+            transparent 55%,
+            rgba(13, 1, 26, 0.4) 85%,
+            rgba(13, 1, 26, 0.85) 100%);
+    pointer-events: none;
+    z-index: 2147483645;
+    mix-blend-mode: multiply;
+}
+
 
 /* Keyframe Animations */
 @keyframes scanline {
     0% {
-        transform: translateY(0);
+        background-position: 0 0;
     }
-
     100% {
-        transform: translateY(100%);
+        background-position: 0 4px;
+    }
+}
+
+/* Yellow line keyframes: same translation range/timing as scanline, but with
+   opacity that holds full through the visible top half then fades to 0.
+   The 10s pause is built in via 33%-100% keyframes that hold the line offscreen. */
+@keyframes glare-sweep {
+    0% {
+        transform: translateY(-100%);
+        opacity: 1;
+    }
+    16.67% {
+        transform: translateY(-50%);
+        opacity: 1;
+    }
+    33.33% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+}
+
+/* Chromatic aberration pulse — random RGB-split flicker on the heading,
+   on top of the existing cyber-flicker. Independent timing so they don't sync. */
+@keyframes chroma-pulse {
+    0%, 92%, 100% {
+        text-shadow:
+            0 0 5px #ff00c1,
+            0 0 10px #ff00c1;
+    }
+    93% {
+        text-shadow:
+            -2px 0 0 #00ffff,
+            2px 0 0 #ff00c1,
+            0 0 8px #ff00c1;
+    }
+    94% {
+        text-shadow:
+            3px 0 0 #00ffff,
+            -3px 0 0 #ff00c1,
+            0 0 12px #ff00c1;
+    }
+    95% {
+        text-shadow:
+            -1px 0 0 #00ffff,
+            1px 0 0 #ff00c1,
+            0 0 8px #ff00c1;
     }
 }
 
@@ -74,7 +143,9 @@ body {
     overflow-x: hidden;
 }
 
-/* Scanline Overlay */
+/* CRT scanline overlay — fills viewport with horizontal lines that scroll
+   continuously via background-position. No transform reset because the pattern
+   itself is infinite — moving by 4px (one stripe period) visually equals 0. */
 body::after {
     content: ' ';
     display: block;
@@ -82,13 +153,42 @@ body::after {
     top: 0;
     left: 0;
     width: 100%;
-    height: 200%;
+    height: 100vh;
     background: repeating-linear-gradient(to bottom,
-            rgba(255, 255, 255, 0.05),
-            rgba(255, 255, 255, 0.05) 1px,
+            rgba(255, 255, 255, 0.35),
+            rgba(255, 255, 255, 0.35) 1px,
             transparent 1px,
             transparent 4px);
-    animation: scanline 8s infinite linear;
+    /* 0.5s per 4px = ~8px/sec scroll. Slow drift, perfectly seamless because
+       the keyframe end position equals one full stripe period. */
+    animation: scanline 0.5s infinite linear;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 2147483646;
+}
+
+/* Yellow chromatic glare line — its own element so it can fade independently
+   from the scanline texture. Same 5s linear timing as scanline = frame-locked,
+   but glare-sweep adds an opacity curve that fades from 100%→0% over the
+   bottom half of the viewport (animation 50%→100%). */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background:
+        linear-gradient(to right,
+            transparent 0%,
+            rgba(0, 255, 255, 0.4) 8%,
+            rgba(255, 220, 100, 0.7) 25%,
+            rgba(255, 245, 180, 1) 50%,
+            rgba(255, 220, 100, 0.7) 75%,
+            rgba(255, 0, 193, 0.4) 92%,
+            transparent 100%) bottom / 100% 2px no-repeat;
+    animation: glare-sweep 15s infinite linear;
+    opacity: 0.6;
     pointer-events: none;
     z-index: 2147483647;
 }
@@ -115,7 +215,7 @@ header,
     font-family: 'Courier New', Courier, monospace;
     padding-bottom: 1.3em;
     color: #ffffff;
-    animation: cyber-flicker 4s infinite linear;
+    animation: cyber-flicker 4s infinite linear, chroma-pulse 5.7s infinite linear;
 }
 
 /* Request list item backgrounds */
