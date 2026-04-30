@@ -1,5 +1,23 @@
 const root_html = document.documentElement,
-    b_url = "https://bitrequest.github.io";
+    b_url = (function () {
+        // Auto-derive the trusted origin from this script's own location so the
+        // PWA works wherever it's hosted (github.io, web.app, IPFS, Arweave,
+        // self-host) without any configuration. Falls back to the canonical
+        // host if the origin can't be resolved (script inlined, blob:/data: URL).
+        const here = document.currentScript && document.currentScript.src;
+        if (here) {
+            try { return new URL(here).origin; } catch (e) {}
+        }
+        // Fallback: locate this helper by filename in the script tag list.
+        const scripts = document.getElementsByTagName("script");
+        for (let i = 0; i < scripts.length; i++) {
+            const src = scripts[i].src || "";
+            if (src.indexOf("assets_js_lib_bitrequest_checkout.js") !== -1) {
+                try { return new URL(src).origin; } catch (e) {}
+            }
+        }
+        return "https://bitrequest.github.io";
+    })();
 
 document.addEventListener("DOMContentLoaded", function() {
     document.addEventListener("click", function(e) {
