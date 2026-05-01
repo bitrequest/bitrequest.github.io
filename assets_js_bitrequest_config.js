@@ -1123,10 +1123,14 @@ glob_config = {
                 "layer2": {
                     "icon": "new-tab",
                     "selected": false,
-                    "options": {
-                        "arbitrum one": ethl2s["arbitrum one"],
-                        "base": ethl2s.base
-                    }
+                    // L2 options for native ETH disabled — Etherscan's free API
+                    // tier no longer covers native ETH transfers on Arbitrum/Base.
+                    // ERC-20 tokens on those L2s still work via Alchemy (see the
+                    // global layer2 block further down). Restore the entries
+                    // below if/when paid Etherscan API access becomes available:
+                    //   "arbitrum one": ethl2s["arbitrum one"],
+                    //   "base": ethl2s.base
+                    "options": {}
                 },
                 "Xpub": {
                     "active": true,
