@@ -70,58 +70,15 @@ function systemlang() { // get system language
 
 function tl(id, dat) {
     const data = (dat) ? dat : {},
-        languages = {
-            "en": {
-                "lang": "English",
-                "flag": "🇺🇲",
-                "obj": lang_en(id, data)
-            },
-            "nl": {
-                "lang": "Dutch",
-                "flag": "🇾🇪",
-                "obj": lang_nl(id, data)
-            },
-            "fr": {
-                "lang": "French",
-                "flag": "🇨🇵",
-                "obj": lang_fr(id, data)
-            },
-            "es": {
-                "lang": "Spanish",
-                "flag": "🇪🇸",
-                "obj": lang_es(id, data)
-            },
-            "de": {
-                "lang": "German",
-                "flag": "🇩🇪",
-                "obj": lang_de(id, data)
-            },
-            "zh-cn": {
-                "lang": "Chinese",
-                "flag": "🇨🇳",
-                "obj": lang_zh_cn(id, data)
-            },
-            "hi": {
-                "lang": "Hindi",
-                "flag": "🇮🇳",
-                "obj": lang_hi(id, data)
-            },
-            "ja": {
-                "lang": "Japanese",
-                "flag": "🇯🇵",
-                "obj": lang_ja(id, data)
-            },
-            "ai": {
-                "lang": "AI",
-                "flag": "🤖",
-                "obj": lang_ai(id, data)
-            },
-            "ia": {
-                "lang": "Deep AI",
-                "flag": "👾",
-                "obj": lang_ai2(id, data)
-            }
-        }
+        languages = {};
+    $.each(LANG_META, function(code, meta) {
+        const fn = window[meta.fn];
+        languages[code] = {
+            "lang": meta.lang,
+            "flag": meta.flag,
+            "obj": typeof fn === "function" ? fn(id, data) : null
+        };
+    });
     if (id == "obj") {
         return languages;
     }
@@ -130,11 +87,9 @@ function tl(id, dat) {
         if (lang_string) {
             return lang_string;
         }
-        // use english if string is not found.
         return languages.en.obj || id;
     } catch (err) {
         console.error(err.name, err.message);
-        // use english if language is not found.
         return languages.en.obj || id;
     }
 }

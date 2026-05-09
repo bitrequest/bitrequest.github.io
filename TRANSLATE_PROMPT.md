@@ -5,7 +5,7 @@ Use this prompt with an AI assistant (Claude, ChatGPT, etc.) to generate a trans
 ## Instructions
 
 1. Copy the prompt below.
-2. Replace `[YOUR LANGUAGE]` and `[COUNTRYCODE]` with your language and ISO 639-1 code (e.g. `German` / `de`, `Japanese` / `ja`, `Portuguese` / `pt`).
+2. Replace `[YOUR LANGUAGE]`, `[COUNTRYCODE]`, and `[FLAG]` with your language, ISO 639-1 code, and country flag emoji (e.g. `German` / `de` / `🇩🇪`, `Japanese` / `ja` / `🇯🇵`, `Portuguese` / `pt` / `🇵🇹`).
 3. Paste the prompt into an AI assistant along with the English source file (`assets_js_bitrequest_lang_en.js`). Optionally include existing translations (e.g. `_nl.js`, `_fr.js`, `_es.js`) for additional context.
 4. Review the output carefully — AI translations need human verification, especially for crypto terminology.
 5. Test the file in Bitrequest before submitting a pull request.
@@ -94,13 +94,10 @@ Return the complete translated JavaScript file, ready to use. Keep all comments 
 ## After generating the translation
 
 1. Save the output as `assets_js_bitrequest_lang_[COUNTRYCODE].js`
-2. Add the script tag to `index.html`
-3. Add your language to `assets_js_bitrequest_lang_controller.js`:
+2. Register your language in `assets_js_bitrequest_lang_meta.js` by adding an entry to the `LANG_META` object:
 ```js
-"[COUNTRYCODE]": {
-    "lang": "[YOUR LANGUAGE]",
-    "obj": lang_[COUNTRYCODE](id, data)
-}
+"[COUNTRYCODE]": {"lang": "[YOUR LANGUAGE]", "flag": "[FLAG]", "fn": "lang_[COUNTRYCODE]"}
 ```
-4. **Test everything** — verify variables render correctly, strings fit in the UI, and crypto terminology is natural
-5. Submit a pull request to the [Bitrequest repository](https://github.com/bitrequest/bitrequest.github.io)
+   Bitrequest loads only the active language at runtime — there's no longer a `<script>` tag to add to `index.html`. The dynamic loader looks up the `fn` field to resolve which function the file defines.
+3. **Test everything** — verify variables render correctly, strings fit in the UI, and crypto terminology is natural. Pick your language in settings; the loader will fetch your file on demand.
+4. Submit a pull request to the [Bitrequest repository](https://github.com/bitrequest/bitrequest.github.io)

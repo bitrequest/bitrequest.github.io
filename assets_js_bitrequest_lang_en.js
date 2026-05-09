@@ -1,30 +1,15 @@
 // 1. Copy the file assets_js_bitrequest_lang_en.js and replace the filename with your countrycode suffix.
 // Example assets_js_bitrequest_lang_en.js --> assets_js_bitrequest_lang_nl.js
-
-// 2. Add the scripttag with your new file to index.html
-
-// 3. Replace the functionname 'lang_en' below with your countrycode.
+// 2. Replace the functionname 'lang_en' below with your countrycode.
 // Example lang_en(id, data) -> lang_nl(id, data)
-
-// 4. Add your language object with the right countrycode / countryname and functionname to the translate() function in assets_js_bitrequest_lang_controller.js
+// 3. Register your language in assets_js_bitrequest_lang_meta.js by adding an entry to the LANG_META object with your countrycode, language name, flag emoji, and function name.
 // Example:
-
 /* 
-"en": {
-    "lang": "English",
-    "obj": lang_en(id, data)
-}
+"en": {"lang": "English", "flag": "🇺🇲", "fn": "lang_en"}
 -->
-"en": {
-    "lang": "English",
-    "obj": lang_en(id, data)
-},
-"nl": {
-    "lang": "Dutch",
-    "obj": lang_nl(id, data)
-}
+"en": {"lang": "English", "flag": "🇺🇲", "fn": "lang_en"},
+"nl": {"lang": "Dutch", "flag": "🇳🇱", "fn": "lang_nl"}
 */
-
 // 4. Translate the function object below.
 // Leave the object keys unchanged, translate the object value, don't translate variables!! (You can rearrange variables for your language format).
 // Try to keep stringlength the same.
