@@ -34,7 +34,7 @@ html::after {
     }
 }
 
-/* Yellow line keyframes: same translation range/timing as scanline, but with
+/* Yellow line keyframes with
    opacity that holds full through the visible top half then fades to 0.
    The 10s pause is built in via 33%-100% keyframes that hold the line offscreen. */
 @keyframes glare-sweep {
@@ -161,15 +161,13 @@ body::after {
             transparent 4px);
     /* 0.5s per 4px = ~8px/sec scroll. Slow drift, perfectly seamless because
        the keyframe end position equals one full stripe period. */
-    animation: scanline 0.5s infinite linear;
     opacity: 0.6;
     pointer-events: none;
     z-index: 2147483646;
 }
 
-/* Yellow chromatic glare line — its own element so it can fade independently
-   from the scanline texture. Same 5s linear timing as scanline = frame-locked,
-   but glare-sweep adds an opacity curve that fades from 100%→0% over the
+/* Yellow chromatic glare line.
+   Glare-sweep adds an opacity curve that fades from 100%→0% over the
    bottom half of the viewport (animation 50%→100%). */
 body::before {
     content: '';
@@ -188,7 +186,7 @@ body::before {
             rgba(255, 0, 193, 0.4) 92%,
             transparent 100%) bottom / 100% 2px no-repeat;
     animation: glare-sweep 15s infinite linear;
-    opacity: 0.6;
+    opacity: 0.4;
     pointer-events: none;
     z-index: 2147483647;
 }
