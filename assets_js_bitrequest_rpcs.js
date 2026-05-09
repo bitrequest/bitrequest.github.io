@@ -12,6 +12,8 @@ $(document).ready(function() {
     submit_rpcnode();
     //nodes_match
     //match_url
+    //mark_live
+    //mark_offline
     //validate_rpc_connection
     //pre_save_rpc_settings
     //save_rpc_settings
@@ -428,58 +430,16 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
         custom = node_config.custom;
     if (glob_let.ap_id === "apis") {
         if (currency_name === "ethereum" || glob_let.is_erc20t === true) {
-            const test_hash = glob_const.test_tx.ethereum, // random tx
-                rpc_payload = {
-                    "jsonrpc": "2.0",
-                    "id": 2,
-                    "method": "eth_getTransactionByHash",
-                    "params": [test_hash]
-                };
-            api_proxy({
-                "api_url": rpc_url + get_infura_apikey(rpc_url),
-                "params": {
-                    "method": "POST",
-                    "data": rpc_payload,
-                    "headers": {
-                        "Content-Type": "application/json"
-                    }
-                }
-            }).done(function(response) {
-                const parsed_data = br_result(response),
-                    response_hash = q_obj(parsed_data, "result.result.hash"),
-                    is_live = (response_hash === test_hash);
-                create_rpc_node_element(api_list, is_live, node_id, node_config, is_selected);
-            }).fail(function(error) {
-                create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
+            test_eth_rpc(rpc_url + get_infura_apikey(rpc_url)).done(function(result) {
+                create_rpc_node_element(api_list, result.is_live, node_id, node_config, is_selected);
             });
             return
         }
         if (is_btchain(currency_name)) {
             const test_tx = glob_const.test_tx[currency_name];
             if (rpc_name === "electrum") {
-                api_proxy({
-                    "api": currency_name,
-                    "cachetime": 25,
-                    "cachefolder": "1h",
-                    "custom": "electrum",
-                    "api_url": rpc_url,
-                    "proxy": true,
-                    "params": {
-                        "method": "POST",
-                        "cache": true,
-                        "data": {
-                            "id": sha_sub(rpc_url, 6),
-                            "method": "blockchain.transaction.get",
-                            "ref": test_tx,
-                            "node": rpc_url
-                        }
-                    }
-                }).done(function(e) {
-                    const api_result = br_result(e),
-                        is_live = q_obj(api_result, "result.tx_hash");
-                    create_rpc_node_element(api_list, is_live, node_id, node_config, is_selected);
-                }).fail(function(xhr, stat, err) {
-                    create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
+                test_electrum(rpc_url, currency_name).done(function(result) {
+                    create_rpc_node_element(api_list, result.is_live, node_id, node_config, is_selected);
                 });
                 return
             }
@@ -493,8 +453,8 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
                     }
                 }).done(function(e) {
                     const ar = br_result(e).result,
-                        result = ar.progressPercent || ar.difficultyChange || ar.estimatedRetargetDate;
-                    is_live = (result) ? true : false;
+                        result = ar.progressPercent || ar.difficultyChange || ar.estimatedRetargetDate,
+                        is_live = (result) ? true : false;
                     create_rpc_node_element(api_list, is_live, node_id, node_config, is_selected);
                 }).fail(function(xhr, stat, err) {
                     create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
@@ -504,31 +464,11 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
             return
         }
         if (currency_name === "nano") {
-            api_proxy({
-                "api": "nano",
-                "search": "test",
-                "cachetime": 25,
-                "cachefolder": "1h",
-                "api_url": rpc_url,
-                "params": {
-                    "method": "POST",
-                    "data": glob_let.test_rpc_call,
-                    "headers": {
-                        "Content-Type": "text/plain"
-                    }
+            test_nano_rpc(rpc_url).done(function(result) {
+                if (result.is_live && result.node_vendor) {
+                    node_config.vendor = result.node_vendor;
                 }
-            }).done(function(e) {
-                const parsed_data = br_result(e),
-                    node_vendor = q_obj(parsed_data, "result.node_vendor"),
-                    is_live = (node_vendor) ? true : false;
-                if (is_live) {
-                    node_config.vendor = node_vendor;
-                    create_rpc_node_element(api_list, true, node_id, node_config, is_selected);
-                    return
-                }
-                create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
-            }).fail(function(xhr, stat, err) {
-                create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
+                create_rpc_node_element(api_list, result.is_live, node_id, node_config, is_selected);
             });
             return
         }
@@ -542,62 +482,16 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
                         create_rpc_node_element(api_list, true, node_id, node_config, is_selected);
                     } else {
                         if (rpc_name === "xmr_node") {
-                            api_proxy({
-                                "api_url": rpc_url + "/get_transaction_pool_hashes",
-                                "proxy": rpc_url.includes(".onion"),
-                                "params": {
-                                    "method": "POST",
-                                    "headers": {
-                                        "Content-Type": "application/json"
-                                    }
+                            test_xmr_node(rpc_url).done(function(result) {
+                                if (result.is_live) {
+                                    set_monero_lws_node_access(rpc_url, view_key); // save xmr node connection status
                                 }
-                            }).done(function(e) {
-                                const parsed_data = br_result(e).result;
-                                if (parsed_data) {
-                                    const txs_hashes = parsed_data.tx_hashes;
-                                    if (txs_hashes && txs_hashes.length > 0) { // confirm response
-                                        set_monero_lws_node_access(rpc_url, view_key); // save xmr node connection status
-                                        create_rpc_node_element(api_list, true, node_id, node_config, is_selected);
-                                    } else {
-                                        create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
-                                    }
-                                } else {
-                                    create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
-                                }
-                            }).fail(function(xhr, stat, err) {
-                                create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
+                                create_rpc_node_element(api_list, result.is_live, node_id, node_config, is_selected);
                             });
                         } else if (rpc_name === "lws") {
-                            api_proxy({
-                                "api_url": rpc_url + "/login",
-                                "proxy": false,
-                                "params": {
-                                    "method": "POST",
-                                    "data": {
-                                        "address": test_address, // use dummy XMR address, wait with creating an account until sharing a request. This way Point of Sale only request don't require LWS
-                                        "view_key": glob_const.test_address.xmrvk,
-                                        "create_account": true,
-                                        "generated_locally": false
-                                    },
-                                    "headers": {
-                                        "Content-Type": "application/json"
-                                    }
-                                }
-                            }).done(function(e) {
-                                const parsed_data = br_result(e).result;
-                                if (parsed_data) {
-                                    const new_address = parsed_data.new_address;
-                                    if (new_address === true || new_address === false) { // confirm response
-                                        set_monero_lws_node_access(rpc_url, view_key); // save lws node connection status
-                                        create_rpc_node_element(api_list, true, node_id, node_config, is_selected);
-                                    } else {
-                                        create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
-                                    }
-                                } else {
-                                    create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
-                                }
-                            }).fail(function(xhr, stat, err) {
-                                create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
+                            // use dummy XMR address, wait with creating an account until sharing a request. This way Point of Sale only request don't require LWS
+                            test_lws_login(rpc_url, test_address, glob_const.test_address.xmrvk).done(function(result) {
+                                create_rpc_node_element(api_list, result.is_live, node_id, node_config, is_selected);
                             });
                         }
                     }
@@ -850,7 +744,220 @@ function match_url(url) {
     return (www_index > -1) ? url.substring(www_index + 7) : (slash_index > -1) ? url.substring(slash_index + 3) : url;
 }
 
-// Tests RPC/WebSocket connectivity for multiple cryptocurrency protocols with error handling
+// Marks the RPC input section as live, optionally records the detected provider name, and saves the node settings.
+function mark_live(input_section, currency_name, node_config, detected_name) {
+    input_section.addClass("live").removeClass("offline");
+    if (detected_name) {
+        node_config.name = detected_name;
+    }
+    pre_save_rpc_settings(currency_name, node_config, true);
+}
+
+// Marks the RPC input section as offline and notifies the user with the standard "unable to connect" message.
+function mark_offline(input_section) {
+    input_section.addClass("offline").removeClass("live");
+    popnotify("error", tl("unabletoconnect"));
+}
+
+// Tests an Ethereum / ERC20 RPC URL by querying a known transaction hash. Caller is responsible for supplying
+// the full URL (with API key appended where required). Returns a Deferred resolving to {"is_live": bool}.
+function test_eth_rpc(api_url) {
+    const test_hash = glob_const.test_tx.ethereum,
+        deferred = $.Deferred();
+    api_proxy({
+        "api_url": api_url,
+        "params": {
+            "method": "POST",
+            "data": {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "eth_getTransactionByHash",
+                "params": [test_hash]
+            },
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
+    }).done(function(response) {
+        const response_hash = q_obj(br_result(response), "result.result.hash");
+        deferred.resolve({
+            "is_live": response_hash === test_hash
+        });
+    }).fail(function() {
+        deferred.resolve({
+            "is_live": false
+        });
+    });
+    return deferred.promise();
+}
+
+// Tests a Monero daemon RPC by querying the transaction pool. Returns a Deferred resolving to {"is_live": bool}.
+function test_xmr_node(rpc_url) {
+    const deferred = $.Deferred();
+    api_proxy({
+        "api_url": rpc_url + "/get_transaction_pool_hashes",
+        "proxy": rpc_url.includes(".onion"),
+        "params": {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
+    }).done(function(response) {
+        const txs_hashes = br_result(response)?.result?.tx_hashes,
+            is_live = !!(txs_hashes && txs_hashes.length > 0);
+        deferred.resolve({
+            "is_live": is_live
+        });
+    }).fail(function() {
+        deferred.resolve({
+            "is_live": false
+        });
+    });
+    return deferred.promise();
+}
+
+// Tests a Monero LWS server by attempting login with the given account credentials. Caller decides what (if anything)
+// to cache via set_monero_lws_node_access on success. Returns a Deferred resolving to {"is_live": bool}.
+function test_lws_login(rpc_url, address, view_key) {
+    const deferred = $.Deferred();
+    api_proxy({
+        "api_url": rpc_url + "/login",
+        "proxy": false,
+        "params": {
+            "method": "POST",
+            "data": {
+                address,
+                view_key,
+                "create_account": true,
+                "generated_locally": false
+            },
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
+    }).done(function(response) {
+        const new_address = br_result(response)?.result?.new_address,
+            is_live = (new_address === true || new_address === false);
+        deferred.resolve({
+            "is_live": is_live
+        });
+    }).fail(function() {
+        deferred.resolve({
+            "is_live": false
+        });
+    });
+    return deferred.promise();
+}
+
+// Tests an electrum-protocol RPC by querying a known transaction. Returns a Deferred resolving to {"is_live": bool}.
+function test_electrum(rpc_url, currency_name) {
+    const test_tx = glob_const.test_tx[currency_name],
+        deferred = $.Deferred();
+    api_proxy({
+        "api": currency_name,
+        "cachetime": 25,
+        "cachefolder": "1h",
+        "custom": "electrum",
+        "api_url": rpc_url,
+        "proxy": true,
+        "params": {
+            "method": "POST",
+            "cache": true,
+            "data": {
+                "id": sha_sub(rpc_url, 6),
+                "method": "blockchain.transaction.get",
+                "ref": test_tx,
+                "node": rpc_url
+            }
+        }
+    }).done(function(response) {
+        const tx_hash = q_obj(br_result(response), "result.tx_hash");
+        deferred.resolve({
+            "is_live": !!tx_hash
+        });
+    }).fail(function() {
+        deferred.resolve({
+            "is_live": false
+        });
+    });
+    return deferred.promise();
+}
+
+// Verifies that an RPC URL speaks the electrum protocol by checking that blockchain.scripthash.get_history returns
+// transactions in the expected electrum response shape (txs with a "version" field). Used as a deep-verification
+// step after test_electrum confirms basic reachability. Returns a Deferred resolving to {"is_live": bool}.
+function test_electrum_history(rpc_url, currency_name) {
+    const test_address = glob_const.test_address[currency_name],
+        script_pub = address_to_scripthash(test_address, currency_name),
+        deferred = $.Deferred();
+    api_proxy({
+        "api": currency_name,
+        "cachetime": 25,
+        "cachefolder": "1h",
+        "custom": "electrum",
+        "api_url": rpc_url,
+        "proxy": true,
+        "params": {
+            "method": "POST",
+            "cache": true,
+            "data": {
+                "id": "scanning",
+                "method": "blockchain.scripthash.get_history",
+                "ref": script_pub.hash,
+                "node": rpc_url
+            }
+        }
+    }).done(function(response) {
+        const result_array = q_obj(br_result(response), "result"),
+            first_tx = result_array && result_array[0],
+            is_live = !!(first_tx && first_tx.version);
+        deferred.resolve({
+            "is_live": is_live
+        });
+    }).fail(function() {
+        deferred.resolve({
+            "is_live": false
+        });
+    });
+    return deferred.promise();
+}
+
+// Tests a Nano RPC by sending the configured test_rpc_call payload. Returns a Deferred resolving to
+// {"is_live": bool, "node_vendor": string|null}. is_live is true if either rpc_version or node_vendor is present.
+function test_nano_rpc(rpc_url) {
+    const deferred = $.Deferred();
+    api_proxy({
+        "api": "nano",
+        "search": "test",
+        "cachetime": 25,
+        "cachefolder": "1h",
+        "api_url": rpc_url,
+        "params": {
+            "method": "POST",
+            "data": glob_let.test_rpc_call,
+            "headers": {
+                "Content-Type": "text/plain"
+            }
+        }
+    }).done(function(response) {
+        const result = br_result(response)?.result,
+            rpc_version = result?.rpc_version,
+            node_vendor = result?.node_vendor || null,
+            is_live = !!(rpc_version || node_vendor);
+        deferred.resolve({
+            "is_live": is_live,
+            "node_vendor": node_vendor
+        });
+    }).fail(function() {
+        deferred.resolve({
+            "is_live": false,
+            "node_vendor": null
+        });
+    });
+    return deferred.promise();
+}
+
 function validate_rpc_connection(input_section, node_config, currency_name) {
     node_config.custom = true;
     const error_message = tl("unabletoconnect"),
@@ -858,139 +965,40 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
         test_address = glob_const.test_address[currency_name];
     if (glob_let.ap_id === "apis") {
         if (currency_name === "ethereum" || glob_let.is_erc20t === true) {
-            const test_hash = glob_const.test_tx.ethereum, // random tx
-                rpc_payload = {
-                    "jsonrpc": "2.0",
-                    "id": 2,
-                    "method": "eth_getTransactionByHash",
-                    "params": [test_hash]
-                };
-            api_proxy({
-                "api_url": rpc_url,
-                "params": {
-                    "method": "POST",
-                    "data": rpc_payload,
-                    "headers": {
-                        "Content-Type": "application/json"
-                    }
+            test_eth_rpc(rpc_url).done(function(result) {
+                if (result.is_live) {
+                    mark_live(input_section, currency_name, node_config, "infura");
+                } else {
+                    mark_offline(input_section);
                 }
-            }).done(function(response) {
-                const parsed_data = br_result(response),
-                    response_hash = q_obj(parsed_data, "result.result.hash");
-                if (response_hash === test_hash) {
-                    input_section.addClass("live").removeClass("offline");
-                    node_config.name = "infura";
-                    pre_save_rpc_settings(currency_name, node_config, true);
-                    return
-                }
-                input_section.addClass("offline").removeClass("live");
-                popnotify("error", error_message);
-            }).fail(function(error) {
-                input_section.addClass("offline").removeClass("live");
-                popnotify("error", error_message);
-            }).always(function() {
                 closeloader();
             });
             return
         }
         if (is_btchain(currency_name)) {
-            const test_tx = glob_const.test_tx[currency_name];
-            api_proxy({
-                "api": currency_name,
-                "cachetime": 25,
-                "cachefolder": "1h",
-                "custom": "electrum",
-                "api_url": rpc_url,
-                "proxy": true,
-                "params": {
-                    "method": "POST",
-                    "cache": true,
-                    "data": {
-                        "id": sha_sub(rpc_url, 6),
-                        "method": "blockchain.transaction.get",
-                        "ref": test_tx,
-                        "node": rpc_url
-                    }
-                }
-            }).done(function(e) {
-                const parsed_data = br_result(e),
-                    api_result = q_obj(parsed_data, "result.tx_hash");
-                if (api_result) {
-                    const script_pub = address_to_scripthash(test_address, currency_name),
-                        script_hash = script_pub.hash,
-                        script_pub_key = script_pub.script_pub_key;
-                    api_proxy({
-                        "api": currency_name,
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "custom": "electrum",
-                        "api_url": rpc_url,
-                        "proxy": true,
-                        "params": {
-                            "method": "POST",
-                            "cache": true,
-                            "data": {
-                                "id": "scanning",
-                                "method": "blockchain.scripthash.get_history",
-                                "ref": script_hash,
-                                "node": rpc_url
-                            }
-                        }
-                    }).done(function(response) {
-                        const parsed_data2 = br_result(response),
-                            api_result2 = q_obj(parsed_data2, "result");
-                        if (api_result2) {
-                            const first_tx = api_result2[0];
-                            if (first_tx) {
-                                if (first_tx.version) {
-                                    input_section.addClass("live").removeClass("offline");
-                                    node_config.name = "electrum";
-                                    pre_save_rpc_settings(currency_name, node_config, true);
-                                    closeloader();
-                                    return
-                                }
-                            }
-                        }
-                        test_mempoolspace(input_section, node_config, currency_name);
-                    }).fail(function(xhr, stat, err) {
-                        test_mempoolspace(input_section, node_config, currency_name);
-                    });
+            test_electrum(rpc_url, currency_name).done(function(result) {
+                if (!result.is_live) {
+                    test_mempoolspace(input_section, node_config, currency_name);
                     return
                 }
-                test_mempoolspace(input_section, node_config, currency_name);
-            }).fail(function(xhr, stat, err) {
-                test_mempoolspace(input_section, node_config, currency_name);
+                test_electrum_history(rpc_url, currency_name).done(function(result2) {
+                    if (result2.is_live) {
+                        mark_live(input_section, currency_name, node_config, "electrum");
+                        closeloader();
+                    } else {
+                        test_mempoolspace(input_section, node_config, currency_name);
+                    }
+                });
             });
             return
         }
         if (currency_name === "nano") {
-            api_proxy({
-                "api": "nano",
-                "search": "test",
-                "cachetime": 25,
-                "cachefolder": "1h",
-                "api_url": rpc_url,
-                "params": {
-                    "method": "POST",
-                    "data": glob_let.test_rpc_call,
-                    "headers": {
-                        "Content-Type": "text/plain"
-                    }
+            test_nano_rpc(rpc_url).done(function(result) {
+                if (result.is_live) {
+                    mark_live(input_section, currency_name, node_config, "nano");
+                } else {
+                    mark_offline(input_section);
                 }
-            }).done(function(response) {
-                const parsed_data = br_result(response);
-                if (q_obj(parsed_data, "result.rpc_version")) {
-                    input_section.addClass("live").removeClass("offline");
-                    node_config.name = "nano";
-                    pre_save_rpc_settings(currency_name, node_config, true);
-                    return
-                }
-                input_section.addClass("offline").removeClass("live");
-                popnotify("error", error_message);
-            }).fail(function(xhr, stat, err) {
-                input_section.addClass("offline").removeClass("live");
-                popnotify("error", error_message);
-            }).always(function() {
                 closeloader();
             });
             return
@@ -1007,69 +1015,24 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                     }
                     const node_name = node_config.name;
                     if (node_name && node_name === "lws") {
-                        api_proxy({
-                            "api_url": rpc_url + "/login",
-                            "proxy": false,
-                            "params": {
-                                "method": "POST",
-                                "data": {
-                                    address,
-                                    view_key,
-                                    "create_account": true,
-                                    "generated_locally": false
-                                },
-                                "headers": {
-                                    "Content-Type": "application/json"
-                                }
+                        // use dummy XMR address, wait with creating an account until sharing a request. This way Point of Sale only request don't require LWS
+                        test_lws_login(rpc_url, test_address, glob_const.test_address.xmrvk).done(function(result) {
+                            if (result.is_live) {
+                                mark_live(input_section, currency_name, node_config);
+                            } else {
+                                mark_offline(input_section);
                             }
-                        }).done(function(e) {
-                            const parsed_data = br_result(e).result;
-                            if (parsed_data) {
-                                const new_address = parsed_data.new_address;
-                                if (new_address === true || new_address === false) { // confirm response
-                                    set_monero_lws_node_access(rpc_url, view_key); // save lws connection status
-                                    input_section.addClass("live").removeClass("offline");
-                                    pre_save_rpc_settings(currency_name, node_config, true);
-                                    return
-                                }
-                            }
-                            input_section.addClass("offline").removeClass("live");
-                            popnotify("error", error_message);
-                        }).fail(function(xhr, stat, err) {
-                            input_section.addClass("offline").removeClass("live");
-                            popnotify("error", error_message);
-                        }).always(function() {
                             closeloader();
                         });
                         return
                     }
-                    api_proxy({
-                        "api_url": rpc_url + "/get_transaction_pool_hashes",
-                        "proxy": rpc_url.includes(".onion"),
-                        "params": {
-                            "method": "POST",
-                            "headers": {
-                                "Content-Type": "application/json"
-                            }
+                    test_xmr_node(rpc_url).done(function(result) {
+                        if (result.is_live) {
+                            set_monero_lws_node_access(rpc_url, view_key); // save xmr node connection status
+                            mark_live(input_section, currency_name, node_config, "xmr_node");
+                        } else {
+                            mark_offline(input_section);
                         }
-                    }).done(function(e) {
-                        const parsed_data = br_result(e).result;
-                        if (parsed_data) {
-                            const txs_hashes = parsed_data.tx_hashes;
-                            if (txs_hashes && txs_hashes.length > 0) {
-                                set_monero_lws_node_access(rpc_url, view_key); // save xmr node connection status
-                                input_section.addClass("live").removeClass("offline");
-                                node_config.name = "xmr_node";
-                                pre_save_rpc_settings(currency_name, node_config, true);
-                                return
-                            }
-                        }
-                        input_section.addClass("offline").removeClass("live");
-                        popnotify("error", error_message);
-                    }).fail(function(xhr, stat, err) {
-                        input_section.addClass("offline").removeClass("live");
-                        popnotify("error", error_message);
-                    }).always(function() {
                         closeloader();
                     });
                 }
@@ -1145,8 +1108,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 test_socket.close();
                 close_socket("ws_submit").then(() => {
                     glob_let.sockets["ws_submit"] = null;
-                    input_section.addClass("live").removeClass("offline");
-                    pre_save_rpc_settings(currency_name, node_config, true);
+                    mark_live(input_section, currency_name, node_config);
                 });
                 return
             }
@@ -1158,8 +1120,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
         };
         test_socket.onerror = function(event) {
             close_socket("ws_submit").then(() => {
-                input_section.addClass("offline").removeClass("live");
-                popnotify("error", error_message);
+                mark_offline(input_section);
                 test_socket.close();
             });
         };
@@ -1191,19 +1152,15 @@ function test_mempoolspace(input_section, node_config, currency_name) {
             const first_tx = api_result[0];
             if (first_tx) {
                 if (first_tx.version) {
-                    input_section.addClass("live").removeClass("offline");
-                    node_config.name = "mempool.space";
-                    pre_save_rpc_settings(currency_name, node_config, true);
+                    mark_live(input_section, currency_name, node_config, "mempool.space");
                     closeloader();
                     return
                 }
             }
         }
-        input_section.addClass("offline").removeClass("live");
-        popnotify("error", error_message);
+        mark_offline(input_section);
     }).fail(function(error) {
-        input_section.addClass("offline").removeClass("live");
-        popnotify("error", error_message);
+        mark_offline(input_section);
     }).always(function() {
         closeloader();
     });
