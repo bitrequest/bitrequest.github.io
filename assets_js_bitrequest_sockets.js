@@ -8,6 +8,7 @@
 //handle_socket_close
 //reconnect_websocket
 //try_next_socket
+//build_socket
 
 // ** Lightning Network & NFC Handling: **
 //lightning_socket
@@ -422,6 +423,41 @@ function try_next_socket(current_node, is_layer2) {
             return fallback_node;
         }
     }
+}
+
+// Wraps the shared subscribe/ping/close/error skeleton around per-API logic.
+function build_socket(socket_node, wallet_address, opts) {
+    if (glob_let.sockets[wallet_address]) return;
+    const socket = glob_let.sockets[wallet_address] = new WebSocket(opts.endpoint),
+        subscribe_payload = JSON.stringify(opts.subscribe),
+        ping_payload = opts.ping ? JSON.stringify(opts.ping) : subscribe_payload,
+        ping_interval = opts.ping_interval || 55000;
+    socket.onopen = function(e) {
+        socket_info(socket_node, true);
+        socket.send(subscribe_payload);
+        glob_let.pinging[wallet_address] = setInterval(function() {
+            socket.send(ping_payload);
+            poll_animate();
+        }, ping_interval);
+    };
+    socket.onmessage = function(e) {
+        try {
+            const tx_details = opts.on_message(JSON.parse(e.data));
+            if (tx_details) {
+                close_socket().then(() => {
+                    start_transaction_monitor(tx_details);
+                });
+            }
+        } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+        }
+    };
+    socket.onclose = function(e) {
+        handle_socket_close(socket_node, wallet_address);
+    };
+    socket.onerror = function(e) {
+        handle_socket_fails(socket_node, wallet_address);
+    };
 }
 
 // ** Lightning Network & NFC Handling: **
@@ -869,190 +905,92 @@ function blockcypherws(socket_node, wallet_address) {
 
 // Establishes WebSocket connection to BlockCypher API for transaction confirmation monitoring with automatic ping maintenance
 function blockcypher_websocket(socket_node, wallet_address) {
-    if (glob_let.sockets[wallet_address]) {
-        return
-    }
-    const ws_endpoint = socket_node.url + request.currencysymbol + "/main",
-        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-    socket.onopen = function(e) {
-        socket_info(socket_node, true);
-        socket.send(JSON.stringify({
+    build_socket(socket_node, wallet_address, {
+        "endpoint": socket_node.url + request.currencysymbol + "/main",
+        "subscribe": {
             "event": "tx-confirmation",
             "address": wallet_address,
             "token": get_blockcypher_apikey()
-        }));
-        glob_let.pinging[wallet_address] = setInterval(function() {
-            socket.send(JSON.stringify({
-                "event": "ping"
-            }));
-            poll_animate();
-        }, 55000);
-    };
-    socket.onmessage = function(e) {
-        const tx_data = JSON.parse(e.data);
-        if (tx_data.event === "pong") return
-        const tx_hash = tx_data.hash;
-        if (!tx_hash) return
-        close_socket().then(() => {
+        },
+        "ping": {
+            "event": "ping"
+        },
+        "on_message": function(msg_data) {
+            if (msg_data.event === "pong") return null;
+            if (!msg_data.hash) return null;
             const setconfirmations = request.set_confirmations || 0,
-                tx_details = blockcypher_poll_data(tx_data, setconfirmations, request.currencysymbol, wallet_address);
+                tx_details = blockcypher_poll_data(msg_data, setconfirmations, request.currencysymbol, wallet_address);
             if (tx_details.double_spend) {
                 const alert_content = "<h2 class='icon-warning'>Double spend detected</h2>";
                 popdialog(alert_content, "canceldialog");
-                return
+                return null;
             }
-            start_transaction_monitor(tx_details);
-        });
-    };
-    socket.onclose = function(e) {
-        handle_socket_close(socket_node, wallet_address);
-    };
-    socket.onerror = function(e) {
-        handle_socket_fails(socket_node, wallet_address);
-        return
-    };
+            return tx_details;
+        }
+    });
 }
 
 // Establishes WebSocket connection to Blockchain.info for Bitcoin address monitoring with transaction validation
 function blockchain_btc_socket(socket_node, wallet_address) {
-    if (glob_let.sockets[wallet_address]) {
-        return
-    }
-    const ws_endpoint = socket_node.url,
-        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-    socket.onopen = function(e) {
-        socket_info(socket_node, true);
-        socket.send(JSON.stringify({
+    build_socket(socket_node, wallet_address, {
+        "endpoint": socket_node.url,
+        "subscribe": {
             "op": "addr_sub",
             "addr": wallet_address
-        }));
-        glob_let.pinging[wallet_address] = setInterval(function() {
-            socket.send(JSON.stringify({
-                "op": "ping"
-            }));
-            poll_animate();
-        }, 55000);
-    };
-    socket.onmessage = function(e) {
-        try {
-            const tx_data = JSON.parse(e.data).x,
-                tx_hash = tx_data.hash;
-            if (!tx_hash) return
-            const setconfirmations = request.set_confirmations || 0,
-                tx_details = blockchain_ws_data(tx_data, setconfirmations, request.currencysymbol, wallet_address);
-            if (tx_details) {
-                close_socket().then(() => {
-                    start_transaction_monitor(tx_details);
-                });
-            }
-        } catch (error) {
-            console.error("Error parsing WebSocket message:", error);
+        },
+        "ping": {
+            "op": "ping"
+        },
+        "on_message": function(msg_data) {
+            const tx_data = msg_data.x;
+            if (!tx_data || !tx_data.hash) return null;
+            const setconfirmations = request.set_confirmations || 0;
+            return blockchain_ws_data(tx_data, setconfirmations, request.currencysymbol, wallet_address);
         }
-    };
-    socket.onclose = function(e) {
-        handle_socket_close(socket_node, wallet_address);
-    };
-    socket.onerror = function(e) {
-        handle_socket_fails(socket_node, wallet_address);
-        return
-    };
+    });
 }
 
 // Establishes WebSocket connection to Blockchain.info for BCH address monitoring with CashAddr format handling
 function blockchain_bch_socket(socket_node, wallet_address) {
-    if (glob_let.sockets[wallet_address]) {
-        return
-    }
-    const ws_endpoint = socket_node.url,
-        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-    socket.onopen = function(e) {
-        socket_info(socket_node, true);
-        const clean_address = (wallet_address.indexOf("bitcoincash:") > -1) ? wallet_address.split("bitcoincash:").pop() : wallet_address;
-        socket.send(JSON.stringify({
+    const clean_address = (wallet_address.indexOf("bitcoincash:") > -1) ? wallet_address.split("bitcoincash:").pop() : wallet_address;
+    build_socket(socket_node, wallet_address, {
+        "endpoint": socket_node.url,
+        "subscribe": {
             "op": "addr_sub",
             "addr": "bitcoincash:" + clean_address
-        }));
-        glob_let.pinging[wallet_address] = setInterval(function() {
-            socket.send(JSON.stringify({
-                "op": "ping"
-            }));
-            poll_animate();
-        }, 55000);
-    };
-    socket.onmessage = function(e) {
-        try {
-            const tx_data = JSON.parse(e.data).x,
-                tx_hash = tx_data.hash;
-            if (!tx_hash) return
+        },
+        "ping": {
+            "op": "ping"
+        },
+        "on_message": function(msg_data) {
+            const tx_data = msg_data.x;
+            if (!tx_data || !tx_data.hash) return null;
             const legacy_format = bch_legacy(wallet_address),
-                setconfirmations = request.set_confirmations || 0,
-                tx_details = blockchain_ws_data(tx_data, setconfirmations, request.currencysymbol, wallet_address, legacy_format);
-            if (tx_details) {
-                close_socket().then(() => {
-                    start_transaction_monitor(tx_details);
-                });
-            }
-        } catch (error) {
-            console.error("Error parsing WebSocket message:", error);
+                setconfirmations = request.set_confirmations || 0;
+            return blockchain_ws_data(tx_data, setconfirmations, request.currencysymbol, wallet_address, legacy_format);
         }
-    };
-    socket.onclose = function(e) {
-        handle_socket_close(socket_node, wallet_address);
-    };
-    socket.onerror = function(e) {
-        handle_socket_fails(socket_node, wallet_address);
-        return
-    };
+    });
 }
 
 // Establishes WebSocket connection to mempool.space for real-time Bitcoin transaction monitoring with address tracking
 function mempoolspace_btc_socket(socket_node, wallet_address) {
-    if (glob_let.sockets[wallet_address]) {
-        return
-    }
-    const ws_endpoint = socket_node.url,
-        mempool_socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-    mempool_socket.onopen = function(e) {
-        socket_info(socket_node, true);
-        mempool_socket.send(JSON.stringify({
+    build_socket(socket_node, wallet_address, {
+        "endpoint": socket_node.url,
+        "subscribe": {
             "track-address": wallet_address
-        }));
-        glob_let.pinging[wallet_address] = setInterval(function() {
-            mempool_socket.send(JSON.stringify({
-                "action": "ping"
-            }));
-            poll_animate();
-        }, 55000);
-    };
-    mempool_socket.onmessage = function(e) {
-        try {
-            const ws_data = JSON.parse(e.data),
-                tx_batch = ws_data["address-transactions"];
-            if (tx_batch) {
-                const tx_data = tx_batch[0];
-                if (tx_data) {
-                    const tx_hash = tx_data.txid;
-                    if (!tx_hash) return
-                    const setconfirmations = request.set_confirmations || 0,
-                        tx_details = mempoolspace_ws_data(tx_data, setconfirmations, request.currencysymbol, wallet_address);
-                    if (tx_details) {
-                        close_socket().then(() => {
-                            start_transaction_monitor(tx_details);
-                        });
-                    }
-                }
-            }
-        } catch (error) {
-            console.error("Error parsing WebSocket message:", error);
+        },
+        "ping": {
+            "action": "ping"
+        },
+        "on_message": function(msg_data) {
+            const tx_batch = msg_data["address-transactions"];
+            if (!tx_batch) return null;
+            const tx_data = tx_batch[0];
+            if (!tx_data || !tx_data.txid) return null;
+            const setconfirmations = request.set_confirmations || 0;
+            return mempoolspace_ws_data(tx_data, setconfirmations, request.currencysymbol, wallet_address);
         }
-    };
-    mempool_socket.onclose = function(e) {
-        handle_socket_close(socket_node, wallet_address);
-    };
-    mempool_socket.onerror = function(e) {
-        handle_socket_fails(socket_node, wallet_address);
-        return
-    };
+    });
 }
 
 // Establishes WebSocket connection to chain.so for Bitcoin, Litecoin, Dogecoin address monitoring with transaction validation  
@@ -1108,7 +1046,7 @@ function init_eth_sockets(params, token_contracts) {
     } = params;
     // Always scan for layer 1
     if (payment_type === "ethereum") {
-        if (socket_node.name === "alchemy") {
+        if (socket_node.name === glob_const.main_alchemy_socket || socket_node.name === "alchemy") {
             alchemy_eth_websocket(socket_node, wallet_address); // L1 Alchemy
         } else {
             web3_eth_websocket(socket_node, wallet_address); // L1 Infura
@@ -1123,19 +1061,15 @@ function init_eth_sockets(params, token_contracts) {
 
 // Establishes WebSocket connection to Alchemy API for monitoring pending Ethereum transactions with address filtering
 function alchemy_eth_websocket(socket_node, wallet_address) {
-    if (glob_let.sockets[wallet_address]) {
-        return
-    }
     const base_url = socket_node.url,
         main_alchemy_socket = glob_const.main_alchemy_socket,
         base_url_length = base_url.length,
         main_socket_length = main_alchemy_socket.length,
         has_apikey = str_includes(base_url, main_alchemy_socket) && ((base_url_length - main_socket_length) > 25),
-        ws_endpoint = has_apikey ? complete_url(base_url) : base_url + get_alchemy_apikey(),
-        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-    socket.onopen = function(e) {
-        socket_info(socket_node, true);
-        const ping_payload = JSON.stringify({
+        ws_endpoint = has_apikey ? complete_url(base_url) : base_url + get_alchemy_apikey();
+    build_socket(socket_node, wallet_address, {
+        "endpoint": ws_endpoint,
+        "subscribe": {
             "jsonrpc": "2.0",
             "id": 1,
             "method": "eth_subscribe",
@@ -1143,35 +1077,14 @@ function alchemy_eth_websocket(socket_node, wallet_address) {
                 "toAddress": [wallet_address],
                 "hashesOnly": false
             }]
-        });
-        socket.send(ping_payload);
-        glob_let.pinging[wallet_address] = setInterval(function() {
-            socket.send(ping_payload);
-            poll_animate();
-        }, 55000);
-    };
-    socket.onmessage = function(e) {
-        try {
-            const msg_data = JSON.parse(e.data),
-                tx_data = q_obj(msg_data, "params.result");
-            if (tx_data && tx_data.hash && str_match(tx_data.to, wallet_address)) {
-                const setconfirmations = request.set_confirmations || 0,
-                    tx_details = infura_block_data(tx_data, setconfirmations, request.currencysymbol);
-                close_socket().then(() => {
-                    start_transaction_monitor(tx_details);
-                });
-            }
-        } catch (error) {
-            console.error("Error parsing WebSocket message:", error);
+        },
+        "on_message": function(msg_data) {
+            const tx_data = q_obj(msg_data, "params.result");
+            if (!tx_data || !tx_data.hash || !str_match(tx_data.to, wallet_address)) return null;
+            const setconfirmations = request.set_confirmations || 0;
+            return infura_block_data(tx_data, setconfirmations, request.currencysymbol);
         }
-    };
-    socket.onclose = function(e) {
-        handle_socket_close(socket_node, wallet_address);
-    };
-    socket.onerror = function(e) {
-        handle_socket_fails(socket_node, wallet_address);
-        return
-    };
+    });
 }
 
 // Establishes WebSocket connection to Ethereum node for monitoring new blocks with RPC-based transaction filtering
@@ -1317,15 +1230,10 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
 
 // Establishes WebSocket connection for Nano network with confirmation subscription and XRB/NANO prefix handling
 function nano_socket(socket_node, wallet_address) {
-    if (glob_let.sockets[wallet_address]) {
-        return
-    }
-    const normalized_address = (wallet_address.match("^xrb")) ? "nano_" + wallet_address.split("_").pop() : wallet_address, // change nano address prefix xrb_ to nano untill websocket support
-        ws_endpoint = socket_node.url,
-        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-    socket.onopen = function(e) {
-        socket_info(socket_node, true);
-        socket.send(JSON.stringify({
+    const normalized_address = (wallet_address.match("^xrb")) ? "nano_" + wallet_address.split("_").pop() : wallet_address; // change nano address prefix xrb_ to nano untill websocket support
+    build_socket(socket_node, wallet_address, {
+        "endpoint": socket_node.url,
+        "subscribe": {
             "action": "subscribe",
             "topic": "confirmation",
             "all_local_accounts": true,
@@ -1333,41 +1241,21 @@ function nano_socket(socket_node, wallet_address) {
                 "accounts": [normalized_address]
             },
             "ack": true
-        }));
-        glob_let.pinging[wallet_address] = setInterval(function() {
-            socket.send(JSON.stringify({
-                "action": "ping"
-            }));
-            poll_animate();
-        }, 55000);
-    };
-    socket.onmessage = function(e) {
-        try {
-            const msg_data = JSON.parse(e.data),
-                tx_data = (msg_data.message) ? msg_data.message : (msg_data.account) ? msg_data : null;
-            if (tx_data) {
-                if (tx_data.account === wallet_address) return // block outgoing transactions
-                if (!tx_data.hash) return
-                const reciever = tx_data?.block?.link_as_account;
-                if (reciever && str_includes(reciever, wallet_address === false)) return; // block non matching transactions
-                const tx_details = nano_scan_data(tx_data),
-                    tx_time = tx_details.transactiontime,
-                    time_delta = Math.abs(tx_time - now_utc());
-                if (time_delta < 60000) { // filter transactions longer then a minute ago
-                    close_socket().then(() => {
-                        start_transaction_monitor(tx_details);
-                    });
-                }
-            }
-        } catch (error) {
-            console.error("Error parsing WebSocket message:", error);
+        },
+        "ping": {
+            "action": "ping"
+        },
+        "on_message": function(msg_data) {
+            const tx_data = (msg_data.message) ? msg_data.message : (msg_data.account) ? msg_data : null;
+            if (!tx_data) return null;
+            if (tx_data.account === wallet_address) return null; // block outgoing transactions
+            if (!tx_data.hash) return null;
+            const reciever = tx_data?.block?.link_as_account;
+            if (reciever && !str_includes(reciever, wallet_address)) return null; // block non matching transactions
+            const tx_details = nano_scan_data(tx_data),
+                tx_time = tx_details.transactiontime,
+                time_delta = Math.abs(tx_time - now_utc());
+            return (time_delta < 60000) ? tx_details : null; // filter transactions longer then a minute ago
         }
-    };
-    socket.onclose = function(e) {
-        handle_socket_close(socket_node, wallet_address);
-    };
-    socket.onerror = function(e) {
-        handle_socket_fails(socket_node, wallet_address);
-        return
-    };
+    });
 }

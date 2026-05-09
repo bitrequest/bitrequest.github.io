@@ -668,14 +668,7 @@ function poll_monero_rpc(rd, api_data, rdo) {
             return
         }
         handle_scan_failure(null, rd, api_data, rdo);
-    }).fail(function(xhr, stat, err) {
-        const is_proxy_error = is_proxy_fail(this.url),
-            error_data = xhr || stat || err;
-        handle_scan_failure({
-            "error": error_data,
-            "is_proxy": is_proxy_error
-        }, rd, api_data, rdo);
-    }).always(function() {
+    }).fail(scan_fail(rd, api_data, rdo)).always(function() {
         update_api_source(rdo, api_data);
     });
 }
