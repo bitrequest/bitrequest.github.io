@@ -8,17 +8,8 @@
  * Requirements: PHP 8.0+, bcmath, OpenSSL 3.x with secp256k1
  */
 
-// === secp256k1 constants (hex, converted to decimal on first use) ===
-define("SECP256K1_P_HEX",  "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
-define("SECP256K1_N_HEX",  "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");
-define("SECP256K1_GX_HEX", "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798");
-define("SECP256K1_GY_HEX", "483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8");
-
-// Lazy-init decimal versions
-function _sp() {static $v; return $v ?? ($v = _hex2dec(SECP256K1_P_HEX));}
-function _sn() {static $v; return $v ?? ($v = _hex2dec(SECP256K1_N_HEX));}
-function _sgx() {static $v; return $v ?? ($v = _hex2dec(SECP256K1_GX_HEX));}
-function _sgy() {static $v; return $v ?? ($v = _hex2dec(SECP256K1_GY_HEX));}
+// === Shared secp256k1 primitives (constants, helpers, EC arithmetic) ===
+require_once __DIR__ . "/../secp256k1.php";
 
 // === Spark operator configuration (mainnet) ===
 define("SPARK_OPERATORS", [
@@ -68,119 +59,10 @@ function spark_operator_points() {
 }
 
 // ==========================================================
-// HEX <-> DECIMAL (for bcmath)
+// (Helpers _hex2dec, _dec2hex, _bcmod_pos, _bcinvert and EC
+//  arithmetic secp256k1_decompress / _add / _double / _mul /
+//  _pubkey / _pubkey_compressed live in ../secp256k1.php)
 // ==========================================================
-
-function _hex2dec($hex) {
-	$dec = "0";
-	for ($i = 0; $i < strlen($hex); $i++) {
-		$dec = bcadd(bcmul($dec, "16"), (string)hexdec($hex[$i]));
-	}
-	return $dec;
-}
-
-function _dec2hex($dec, $pad = 64) {
-	if (bccomp($dec, "0") == 0) return str_pad("0", $pad, "0", STR_PAD_LEFT);
-	$hex = "";
-	$tmp = $dec;
-	while (bccomp($tmp, "0") > 0) {
-		$hex = dechex((int)bcmod($tmp, "16")) . $hex;
-		$tmp = bcdiv($tmp, "16", 0);
-	}
-	return str_pad($hex, $pad, "0", STR_PAD_LEFT);
-}
-
-function _bcmod_pos($a, $m) {
-	$r = bcmod($a, $m);
-	if (bccomp($r, "0") < 0) $r = bcadd($r, $m);
-	return $r;
-}
-
-function _bcinvert($a, $m) {
-	$a = _bcmod_pos($a, $m);
-	$old_r = $a; $r = $m;
-	$old_s = "1"; $s = "0";
-	while (bccomp($r, "0") != 0) {
-		$q = bcdiv($old_r, $r, 0);
-		$tmp = $r; $r = bcsub($old_r, bcmul($q, $r)); $old_r = $tmp;
-		$tmp = $s; $s = bcsub($old_s, bcmul($q, $s)); $old_s = $tmp;
-	}
-	return _bcmod_pos($old_s, $m);
-}
-
-// ==========================================================
-// EC POINT ARITHMETIC (secp256k1 / bcmath)
-// ==========================================================
-
-function spark_ec_decompress($compressed_hex) {
-	$p = _sp();
-	$prefix = substr($compressed_hex, 0, 2);
-	$x = _hex2dec(substr($compressed_hex, 2));
-	$y_sq = _bcmod_pos(bcadd(bcpowmod($x, "3", $p), "7"), $p);
-	$exp = bcdiv(bcadd($p, "1"), "4", 0);
-	$y = bcpowmod($y_sq, $exp, $p);
-	$y_is_odd = bcmod($y, "2") !== "0";
-	if (($prefix === "02" && $y_is_odd) || ($prefix === "03" && !$y_is_odd)) {
-		$y = bcsub($p, $y);
-	}
-	return [_dec2hex($x), _dec2hex($y)];
-}
-
-function spark_ec_add($px_hex, $py_hex, $qx_hex, $qy_hex) {
-	$p = _sp();
-	$px = _hex2dec($px_hex); $py = _hex2dec($py_hex);
-	$qx = _hex2dec($qx_hex); $qy = _hex2dec($qy_hex);
-	if (bccomp($px, $qx) == 0 && bccomp($py, $qy) == 0) {
-		return spark_ec_double($px_hex, $py_hex);
-	}
-	$dx = _bcmod_pos(bcsub($qx, $px), $p);
-	$dy = _bcmod_pos(bcsub($qy, $py), $p);
-	$s = _bcmod_pos(bcmul($dy, _bcinvert($dx, $p)), $p);
-	$rx = _bcmod_pos(bcsub(bcsub(bcpowmod($s, "2", $p), $px), $qx), $p);
-	$ry = _bcmod_pos(bcsub(bcmul($s, bcsub($px, $rx)), $py), $p);
-	return [_dec2hex($rx), _dec2hex($ry)];
-}
-
-function spark_ec_double($px_hex, $py_hex) {
-	$p = _sp();
-	$px = _hex2dec($px_hex); $py = _hex2dec($py_hex);
-	$num = _bcmod_pos(bcmul("3", bcpowmod($px, "2", $p)), $p);
-	$den = _bcmod_pos(bcmul("2", $py), $p);
-	$s = _bcmod_pos(bcmul($num, _bcinvert($den, $p)), $p);
-	$rx = _bcmod_pos(bcsub(bcpowmod($s, "2", $p), bcmul("2", $px)), $p);
-	$ry = _bcmod_pos(bcsub(bcmul($s, bcsub($px, $rx)), $py), $p);
-	return [_dec2hex($rx), _dec2hex($ry)];
-}
-
-function spark_ec_mul($scalar_hex, $px_hex, $py_hex) {
-	$k = _hex2dec($scalar_hex);
-	$rx = null; $ry = null;
-	$bits = "";
-	$tmp = $k;
-	while (bccomp($tmp, "0") > 0) {
-		$bits = bcmod($tmp, "2") . $bits;
-		$tmp = bcdiv($tmp, "2", 0);
-	}
-	for ($i = 0; $i < strlen($bits); $i++) {
-		if ($rx !== null) list($rx, $ry) = spark_ec_double($rx, $ry);
-		if ($bits[$i] === "1") {
-			if ($rx === null) { $rx = $px_hex; $ry = $py_hex; }
-			else list($rx, $ry) = spark_ec_add($rx, $ry, $px_hex, $py_hex);
-		}
-	}
-	return [$rx, $ry];
-}
-
-function spark_ec_pubkey($privkey_hex) {
-	list($x, $y) = spark_ec_mul($privkey_hex, SECP256K1_GX_HEX, SECP256K1_GY_HEX);
-	return "04" . $x . $y;
-}
-
-function spark_ec_pubkey_compressed($privkey_hex) {
-	list($x, $y) = spark_ec_mul($privkey_hex, SECP256K1_GX_HEX, SECP256K1_GY_HEX);
-	$y_is_odd = bcmod(_hex2dec($y), "2") !== "0";
-	return ($y_is_odd ? "03" : "02") . $x;
-}
 
 // ==========================================================
 // ECIES ENCRYPTION (ecies/rs compatible)
@@ -192,15 +74,15 @@ function spark_ecies_encrypt_bcmath($plaintext_bytes, $recipient_pubkey_hex) {
 	$eph_dec = _bcmod_pos(_hex2dec(bin2hex(random_bytes(32))), bcsub($n, "1"));
 	$eph_dec = bcadd($eph_dec, "1");
 	$eph_priv_hex = _dec2hex($eph_dec);
-	$eph_pub_hex = spark_ec_pubkey($eph_priv_hex);
+	$eph_pub_hex = secp256k1_pubkey($eph_priv_hex);
 	// ECDH: shared secret = ephemeral * recipient
 	$cached = spark_operator_points();
 	if (isset($cached[$recipient_pubkey_hex])) {
 		list($rpx, $rpy) = $cached[$recipient_pubkey_hex];
 	} else {
-		list($rpx, $rpy) = spark_ec_decompress($recipient_pubkey_hex);
+		list($rpx, $rpy) = secp256k1_decompress($recipient_pubkey_hex);
 	}
-	list($sx, $sy) = spark_ec_mul($eph_priv_hex, $rpx, $rpy);
+	list($sx, $sy) = secp256k1_mul($eph_priv_hex, $rpx, $rpy);
 	// Derive AES key via HKDF
 	$ikm = hex2bin($eph_pub_hex) . hex2bin("04" . $sx . $sy);
 	$aes_key = hash_hkdf("sha256", $ikm, 32, "", "");
@@ -220,12 +102,12 @@ function spark_shamir_split($secret_hex, $threshold = SPARK_THRESHOLD, $num_shar
 	$n = _sn();
 	$secret_dec = _hex2dec($secret_hex);
 	$coefficients = [$secret_dec];
-	$proofs = [spark_ec_pubkey_compressed($secret_hex)];
+	$proofs = [secp256k1_pubkey_compressed($secret_hex)];
 	for ($i = 1; $i < $threshold; $i++) {
 		$c_dec = _bcmod_pos(_hex2dec(bin2hex(random_bytes(32))), $n);
 		if (bccomp($c_dec, "0") == 0) $c_dec = "1";
 		$coefficients[] = $c_dec;
-		$proofs[] = spark_ec_pubkey_compressed(_dec2hex($c_dec));
+		$proofs[] = secp256k1_pubkey_compressed(_dec2hex($c_dec));
 	}
 	$shares = [];
 	for ($i = 0; $i < $num_shares; $i++) {
@@ -544,7 +426,7 @@ function spark_preimage_check() {
 	$test = @openssl_encrypt("test", "aes-256-gcm", str_repeat("\x00", 32), OPENSSL_RAW_DATA, str_repeat("\x00", 16), $tag, "", 16);
 	if ($test === false) return "AES-256-GCM with 16-byte nonce not supported";
 	try {
-		$pub = spark_ec_pubkey_compressed("0000000000000000000000000000000000000000000000000000000000000001");
+		$pub = secp256k1_pubkey_compressed("0000000000000000000000000000000000000000000000000000000000000001");
 		if ($pub !== "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798") {
 			return "EC point multiplication mismatch";
 		}
