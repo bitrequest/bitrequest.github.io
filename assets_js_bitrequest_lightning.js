@@ -864,7 +864,7 @@ function trigger_ln() {
                     return
                 }
                 if (nwc) {
-                    const nwc_regex = /^nostr\+walletconnect:\/\/([0-9a-f]{64})\?relay=wss:\/\/([^&]+)&secret=([0-9a-f]{64})(&.*)?$/,
+                    const nwc_regex = /^nostr\+walletconnect:\/\/([0-9a-f]{64})\?relay=wss:\/\/([^&]+)(?:&relay=wss:\/\/[^&]+)*&secret=([0-9a-f]{64})(&.*)?$/,
                         match = node_key.match(nwc_regex);
                     if (!match) {
                         popnotify("error", tl("invalidkeyformat"));
