@@ -413,10 +413,6 @@ fixer.io endpoint through the proxy; success = PHP works).
 
 ## Where to look next
 
-- Adding a coin: [`bitrequest_add_coin_guide.md`](bitrequest_add_coin_guide.md)
-- Adding a Lightning backend: [`CONTRIBUTING_LIGHTNING.md`](CONTRIBUTING_LIGHTNING.md)
-- Adding a fiat-rate / crypto-rate API: [`CONTRIBUTING_FIAT_API.md`](CONTRIBUTING_FIAT_API.md)
-- Adding a WebSocket source: [`CONTRIBUTING_SOCKETS.md`](CONTRIBUTING_SOCKETS.md)
-- DOM data attribute schema: [`DOM_DATA.md`](DOM_DATA.md)
+- Adding a coin: [`add_coin_guide.md`](add_coin_guide.md)
 - Proxy setup: [`proxy/README.md`](proxy/README.md)
 - Translations: [`TRANSLATE_PROMPT.md`](TRANSLATE_PROMPT.md)
