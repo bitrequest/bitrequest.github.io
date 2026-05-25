@@ -3,9 +3,9 @@
  * 
  * STANDALONE USAGE (outside Bitrequest):
  * ----------------------------------------
- * <script src="assets_js_lib_sjcl.js"></script>
- * <script src="assets_js_lib_crypto_utils.js"></script>
- * <script src="assets_js_lib_xmr_utils.js"></script>
+ * <script src="assets/js/lib/sjcl.js"></script>
+ * <script src="assets/js/lib/crypto_utils.js"></script>
+ * <script src="assets/js/lib/xmr_utils.js"></script>
  * <script>
  *   const keys = XmrUtils.xmr_getpubs(secret_spend_key, 0);
  *   const amount = XmrUtils.decode_rct_amount(encrypted, shared_secret);

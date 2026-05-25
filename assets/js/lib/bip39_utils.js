@@ -3,9 +3,9 @@
  * 
  * STANDALONE USAGE (outside Bitrequest):
  * ----------------------------------------
- * <script src="assets_js_lib_sjcl.js"></script>
- * <script src="assets_js_lib_crypto_utils.js"></script>
- * <script src="assets_js_lib_bip39_utils.js"></script>
+ * <script src="assets/js/lib/sjcl.js"></script>
+ * <script src="assets/js/lib/crypto_utils.js"></script>
+ * <script src="assets/js/lib/bip39_utils.js"></script>
  * <script>
  *   const mnemonic = Bip39Utils.generate_mnemonic(12);
  *   const seed = Bip39Utils.mnemonic_to_seed(mnemonic);

@@ -3,8 +3,8 @@
  * 
  * STANDALONE USAGE (outside Bitrequest):
  * ----------------------------------------
- * <script src="assets_js_lib_sjcl.js"></script>
- * <script src="assets_js_lib_crypto_utils.js"></script>
+ * <script src="assets/js/lib/sjcl.js"></script>
+ * <script src="assets/js/lib/crypto_utils.js"></script>
  * <script>
  *   const bytes = CryptoUtils.hex_to_bytes("crypto");
  *   const addr = CryptoUtils.pub_to_address_bech32("bc", pubkey);
