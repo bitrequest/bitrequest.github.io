@@ -414,5 +414,5 @@ fixer.io endpoint through the proxy; success = PHP works).
 ## Where to look next
 
 - Adding a coin: [`add_coin_guide.md`](add_coin_guide.md)
-- Proxy setup: [`../proxy/README.md`](proxy/README.md)
+- Proxy setup: [`proxy/README.md`](../proxy/README.md)
 - Translations: [`TRANSLATE_PROMPT.md`](translate_prompt.md)
