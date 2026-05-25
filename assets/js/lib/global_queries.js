@@ -841,12 +841,12 @@ function play_audio(audio, payment) {
 function init_audio_context() {
     if (glob_let.audio_ctx) return;
     glob_let.audio_ctx = new(window.AudioContext || window.webkitAudioContext)();
-    load_audio("funk", "assets/styles/sounds/funk.mp3");
-    load_audio("cashier", "assets/styles/sounds/cashier.mp3");
-    load_audio("collect", "assets/styles/sounds/collect.mp3");
-    load_audio("blip", "assets/styles/sounds/blip.mp3");
-    load_audio("waterdrop", "assets/styles/sounds/waterdrop.mp3");
-    load_audio("howl", "assets/styles/sounds/howl.mp3");
+    load_audio("funk", "assets/sounds/funk.mp3");
+    load_audio("cashier", "assets/sounds/cashier.mp3");
+    load_audio("collect", "assets/sounds/collect.mp3");
+    load_audio("blip", "assets/sounds/blip.mp3");
+    load_audio("waterdrop", "assets/sounds/waterdrop.mp3");
+    load_audio("howl", "assets/sounds/howl.mp3");
     $(document).off("click touchstart", init_audio_context);
 }
 
