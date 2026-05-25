@@ -2155,21 +2155,21 @@ const glob_config = {
         },
         {
             "name": "fixer",
-            "base_url": "http://data.fixer.io/api/",
+            "base_url": "https://data.fixer.io/api/",
             "key_param": "access_key=",
             "api_key": null,
             "sign_up": "https://fixer.io/signup/free/"
         },
         {
             "name": "exchangeratesapi",
-            "base_url": "http://api.exchangeratesapi.io/",
+            "base_url": "https://api.exchangeratesapi.io/",
             "key_param": "access_key=",
             "api_key": null,
             "sign_up": "https://exchangeratesapi.io"
         },
         {
             "name": "currencylayer",
-            "base_url": "http://api.currencylayer.com/",
+            "base_url": "https://api.currencylayer.com/",
             "key_param": "access_key=",
             "api_key": null,
             "sign_up": "https://currencylayer.com/product"
