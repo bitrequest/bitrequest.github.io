@@ -260,7 +260,7 @@ sequenceDiagram
 ## The API proxy contract
 
 Every external API call goes through `api_proxy()` in `global_queries.js`
-(line ~1526). It does one of three things:
+(line ~1469). It does one of three things:
 
 1. **Direct call** (`ad.proxy === false` or coin has a public no-key API):
    `$.ajax` straight to the third party.
@@ -300,15 +300,29 @@ For Lightning, the contract is different: `POST <proxy>/proxy/v1/ln/api/`
 with `fn` (function: `ln-create-invoice`, `ln-invoice-status`, etc.) and
 `imp` (`lnd` / `core-lightning` / `lnbits` / `nwc` / `spark`). The server
 dispatches via `if ($imp === ...)` branches inside each top-level function
-in `v1/ln/api/index.php`. See `CONTRIBUTING_LIGHTNING.md`.
+in `v1/ln/api/index.php`. See [`proxy/README.md`](../proxy/README.md) for the
+Lightning endpoint reference.
 
 ### Dispatch routing
 
 When a request is being checked (either as an initial scan or as a tx poll),
 the path from "we need to talk to a chain" to "the right per-chain handler
-runs" goes through three dispatch tables. The branch order in
-`route_crypto_api` and `init_socket` is significant — see the comment headers
-above those functions before reordering.
+runs" goes through three dispatch tables.
+
+`route_crypto_api` is a plain two-table lookup: try
+`CRYPTO_API_DISPATCH_BY_PROVIDER[api_data.name]`, else
+`CRYPTO_API_DISPATCH_BY_PAYMENT[rd.payment]`, else `finalize_request_state`.
+The two keyspaces are disjoint — provider-routed coins use providers absent
+from the payment table, and the payment-routed coins (nimiq, kaspa, monero)
+use bespoke providers absent from the provider table — so order doesn't
+matter. The one invariant: if a payment-routed coin ever gains a provider
+that also lives in the provider table, add an explicit handler. See the
+comment header above the function.
+
+`init_socket`, by contrast, *does* have significant ordering: it resolves
+across dimensions (monero, then ethereum/erc20, then the payment table), so
+the erc20 flag can override a payment-keyed lookup. See its comment header
+before reordering.
 
 ```mermaid
 flowchart TD
@@ -316,15 +330,11 @@ flowchart TD
     Q1 -- yes --> RCA[route_crypto_api<br/><code>monitors.js</code>]
     Q1 -- no --> RBR[route_blockchain_rpc<br/><code>monitors.js</code>]
 
-    RCA --> Q2{provider in<br/>first-seven list?<br/>mempool.space, blockchain.info,<br/>blockcypher, etherscan, alchemy,<br/>ethplorer, blockchair}
-    Q2 -- yes --> BP[CRYPTO_API_DISPATCH_BY_PROVIDER]
-    Q2 -- no --> Q3{payment === 'nimiq'?}
-    Q3 -- yes --> BPMT[CRYPTO_API_DISPATCH_BY_PAYMENT]
-    Q3 -- no --> Q4{provider === 'dash.org'?}
-    Q4 -- yes --> BP
-    Q4 -- no --> Q5{kaspa / monero?}
-    Q5 -- yes --> BPMT
-    Q5 -- no --> Done([finalize_request_state])
+    RCA --> L1{name in<br/>CRYPTO_API_DISPATCH_BY_PROVIDER?}
+    L1 -- yes --> BP[provider handler]
+    L1 -- no --> L2{payment in<br/>CRYPTO_API_DISPATCH_BY_PAYMENT?<br/>nimiq / kaspa / monero}
+    L2 -- yes --> BPMT[payment handler]
+    L2 -- no --> Done([finalize_request_state])
 
     RBR --> Q6{is_btchain payment?}
     Q6 -- yes --> CBH[current_block_height<br/><code>fetchblocks.js</code>]
@@ -397,14 +407,14 @@ fixer.io endpoint through the proxy; success = PHP works).
   service worker may serve stale code — DevTools → Application → Service
   Workers → "Update on reload" while developing.
 - **One file per concern.** New websocket integration? `sockets.js`. New
-  blockchain explorer? `fetchblocks.js`. New coin? See `bitrequest_add_coin_guide.md`.
+  blockchain explorer? `fetchblocks.js`. New coin? See [`add_coin_guide.md`](add_coin_guide.md).
 - **Vanilla JS + jQuery.** No frameworks, no React, no transpiling.
 - **Indentation:** 4 spaces.
 - **Strings:** double quotes.
 - **Functions:** snake_case. Variables: snake_case. Globals: `glob_*`.
 - **Comments above functions are doc comments**: one-line description of
   what the function does, what it returns, what side effects it has.
-- **DOM is a data store** (see `DOM_DATA.md`). Most state attached to
+- **DOM is a data store.** Most state attached to
   list items lives in `.data()` calls, not JS objects.
 - **No `"use strict"`** historically. New files should opt in to catch
   implicit globals.
@@ -415,4 +425,4 @@ fixer.io endpoint through the proxy; success = PHP works).
 
 - Adding a coin: [`add_coin_guide.md`](add_coin_guide.md)
 - Proxy setup: [`proxy/README.md`](../proxy/README.md)
-- Translations: [`TRANSLATE_PROMPT.md`](translate_prompt.md)
+- Translations: [`translate_prompt.md`](translate_prompt.md)

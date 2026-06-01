@@ -30,7 +30,7 @@ Integrate crypto checkout into your online store.
 
 ## Supported Cryptocurrencies
 
-- **Bitcoin** — Including Lightning Network (LND, LNbits, LNURL, Boltcard/NFC)
+- **Bitcoin** — Including Lightning Network (LND, Core Lightning, LNbits, Spark, NWC, LNURL, Boltcard/NFC)
 - **Ethereum** — Plus L2 networks: Base, Arbitrum, Polygon, BSC, and ERC-20 tokens
 - **Litecoin**
 - **Monero** — Private payments with view-key scanning
@@ -84,13 +84,13 @@ Integrate crypto checkout into your online store.
 
 ## Translations
 
-Bitrequest is available in English, Dutch, French, Spanish, and German. Want to add your language? See [`TRANSLATE_PROMPT.md`](TRANSLATE_PROMPT.md) — a complete guide for generating and submitting a new translation file.
+Bitrequest is available in English, Dutch, French, Spanish, German, Chinese, Hindi, and Japanese. Want to add your language? See [`docs/translate_prompt.md`](docs/translate_prompt.md) — a complete guide for generating and submitting a new translation file.
 
 ---
 
 ## For contributors
 
-Code lives under [`assets/`](assets/) — first-party app code in [`assets/js/bitrequest/`](assets/js/bitrequest/), vendored and utility libs in [`assets/js/lib/`](assets/js/lib/). The PHP proxy sits in [`proxy/`](proxy/). Start with [`ARCHITECTURE.md`](ARCHITECTURE.md) for a tour of the codebase: file responsibilities, the two globals, the request lifecycle, and the proxy contract. For adding a coin specifically, see [`bitrequest_add_coin_guide.md`](bitrequest_add_coin_guide.md).
+Code lives under [`assets/`](assets/) — first-party app code in [`assets/js/bitrequest/`](assets/js/bitrequest/), vendored and utility libs in [`assets/js/lib/`](assets/js/lib/). The PHP proxy sits in [`proxy/`](proxy/). Start with [`docs/architecture.md`](docs/architecture.md) for a tour of the codebase: file responsibilities, the four globals, the request lifecycle, and the proxy contract. For adding a coin specifically, see [`docs/add_coin_guide.md`](docs/add_coin_guide.md).
 
 ---
 

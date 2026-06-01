@@ -19,15 +19,13 @@ Before starting, the coin must meet the following prerequisites:
 
 Bitrequest uses a layered architecture where each coin touches multiple files. The system is built around a central config object (`glob_config.bitrequest_coin_data`) that defines everything about a coin — from address validation to API endpoints, wallet recommendations, and UI settings. Other files then reference the coin's `currency` string to route it through payment monitoring, transaction scanning, WebSocket connections, and address derivation.
 
-The files are named with underscores replacing the original directory separators — for example, `assets/js/bitrequest/config.js` corresponds to `assets/js/bitrequest/config.js`.
-
 ---
 
 ## Step 1: Define the Coin in the Config
 
 **File:** `assets/js/bitrequest/config.js`
 
-This is the master file. Every coin lives as an object inside the `glob_config.bitrequest_coin_data` array (starts around line 217). Each entry has four top-level sections: `currency`, `active`, `data`, `wallets`, and `settings`.
+This is the master file. Every coin lives as an object inside the `glob_config.bitrequest_coin_data` array (starts around line 217). Each entry has five top-level keys: `currency`, `active`, `data`, `wallets`, and `settings`.
 
 ### 1a. Add the coin data object
 
@@ -259,22 +257,22 @@ The standard return shape:
 
 **File:** `assets/js/bitrequest/monitors.js`
 
-### 4a. Add to `route_crypto_api()` (around line 294)
+### 4a. Register your scanner in the dispatch table
 
-This dispatcher decides which scanning function to call based on the coin or API provider:
+`route_crypto_api` is a two-table lookup, not a branch list. Add your coin to the `CRYPTO_API_DISPATCH_BY_PAYMENT` table (keyed by `rd.payment`, around line 230):
 
 ```javascript
-if (rd.payment === "yourcoin") {
-    initialize_yourcoin_scan(rd, api_data, rdo);
-    return
-}
+const CRYPTO_API_DISPATCH_BY_PAYMENT = {
+    // ... existing coins ...
+    "yourcoin": initialize_yourcoin_scan
+};
 ```
 
-Insert this **before** the final `finalize_request_state(rdo)` fallback.
+If your coin is instead reached by a third-party *provider* name (`api_data.name`) rather than by payment type, add it to `CRYPTO_API_DISPATCH_BY_PROVIDER` (around line 218). The two keyspaces must stay disjoint — see the comment header above `route_crypto_api`.
 
-### 4b. Add to `route_blockchain_rpc()` (if your coin uses direct RPC)
+### 4b. Direct-RPC coins (if your coin uses node RPC)
 
-If your coin connects to nodes via RPC rather than third-party APIs, also add routing in `route_blockchain_rpc()` (around line 352).
+If your coin connects to nodes via RPC rather than third-party APIs, add it to the `BLOCKCHAIN_RPC_DISPATCH` table (keyed by `rd.payment`, around line 237) — that's what `route_blockchain_rpc()` looks up. BTC-family coins are handled separately via the `is_btchain()` check in that function.
 
 ---
 
@@ -424,7 +422,7 @@ Most new coins will **not** belong here — this is only for coins that share Bi
 | 2 | `assets/js/lib/global_queries.js` | WebSocket/node URL constants (if needed) |
 | 3 | `assets/js/bitrequest/assets.js` | Base64 coin icon |
 | 4 | `assets/js/bitrequest/fetchblocks.js` | Transaction scanning + data parsing functions |
-| 5 | `assets/js/bitrequest/monitors.js` | Route coin to your scanner in `route_crypto_api()` |
+| 5 | `assets/js/bitrequest/monitors.js` | Register coin in the `CRYPTO_API_DISPATCH_*` / `BLOCKCHAIN_RPC_DISPATCH` table |
 | 6 | `assets/js/bitrequest/sockets.js` | WebSocket or polling strategy |
 | 7 | `assets/js/bitrequest/bip39.js` | Derivation capability flags + test registration |
 | 8 | `assets/js/lib/bip39_utils.js` | Key-to-address formatting branch |

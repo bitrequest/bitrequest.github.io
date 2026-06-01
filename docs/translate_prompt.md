@@ -6,7 +6,7 @@ Use this prompt with an AI assistant (Claude, ChatGPT, etc.) to generate a trans
 
 1. Copy the prompt below.
 2. Replace `[YOUR LANGUAGE]`, `[COUNTRYCODE]`, and `[FLAG]` with your language, ISO 639-1 code, and country flag emoji (e.g. `German` / `de` / `🇩🇪`, `Japanese` / `ja` / `🇯🇵`, `Portuguese` / `pt` / `🇵🇹`).
-3. Paste the prompt into an AI assistant along with the English source file (`assets/js/bitrequest/lang/en.js`). Optionally include existing translations (e.g. `_nl.js`, `_fr.js`, `_es.js`) for additional context.
+3. Paste the prompt into an AI assistant along with the English source file (`assets/js/bitrequest/lang/en.js`). Optionally include existing translations (e.g. `lang/nl.js`, `lang/fr.js`, `lang/es.js`) for additional context.
 4. Review the output carefully — AI translations need human verification, especially for crypto terminology.
 5. Test the file in Bitrequest before submitting a pull request.
 
@@ -25,7 +25,7 @@ You are translating a JavaScript language file for Bitrequest, an open-source, n
 
 3. **Do NOT translate HTML tags or attributes.** Preserve all `<span>`, `<a>`, `<br/>` tags and their attributes (`id`, `class`, `data-*`, `href`, `target`) exactly as they are.
 
-4. **Rename the function** from `lang_en` to `lang_[COUNTRYCODE]`.
+4. **Rename the function** from `lang_en` to `lang_[COUNTRYCODE]`. If the code contains a hyphen, replace it with an underscore in the function name (e.g. `zh-cn` → `lang_zh_cn`).
 
 5. **Keep string lengths similar** to the English original where possible (UI space is limited).
 
@@ -93,11 +93,11 @@ Return the complete translated JavaScript file, ready to use. Keep all comments 
 
 ## After generating the translation
 
-1. Save the output as `assets_js_bitrequest_lang_[COUNTRYCODE].js`
+1. Save the output as `assets/js/bitrequest/lang/[countrycode].js` (lowercase; replace any hyphen in the code with an underscore — e.g. code `zh-cn` → file `lang/zh_cn.js`)
 2. Register your language in `assets/js/bitrequest/lang_meta.js` by adding an entry to the `LANG_META` object:
 ```js
 "[COUNTRYCODE]": {"lang": "[YOUR LANGUAGE]", "flag": "[FLAG]", "fn": "lang_[COUNTRYCODE]"}
 ```
-   Bitrequest loads only the active language at runtime — there's no longer a `<script>` tag to add to `index.html`. The dynamic loader looks up the `fn` field to resolve which function the file defines.
+   The `LANG_META` key keeps the original code as-is (hyphens included, e.g. `zh-cn`), but the `fn` value and the filename use underscores (`lang_zh_cn` / `lang/zh_cn.js`). Bitrequest loads only the active language at runtime — there's no longer a `<script>` tag to add to `index.html`. The dynamic loader looks up the `fn` field to resolve which function the file defines.
 3. **Test everything** — verify variables render correctly, strings fit in the UI, and crypto terminology is natural. Pick your language in settings; the loader will fetch your file on demand.
 4. Submit a pull request to the [Bitrequest repository](https://github.com/bitrequest/bitrequest.github.io)
