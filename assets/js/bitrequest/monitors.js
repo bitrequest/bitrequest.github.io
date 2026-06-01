@@ -252,28 +252,17 @@ function route_api_request(rd, api_data, rdo) {
 }
 
 // Routes cryptocurrency requests to specific API endpoints based on provider capabilities.
+// Invariant: CRYPTO_API_DISPATCH_BY_PROVIDER (keyed on api_data.name) and
+// CRYPTO_API_DISPATCH_BY_PAYMENT (keyed on rd.payment) have disjoint keyspaces — the
+// payment-routed coins (nimiq/kaspa/monero) use bespoke providers absent from the
+// provider table, so no request resolves in both. The provider-first || precedence is
+// therefore unambiguous. If a payment-routed coin ever also gains a provider-table
+// provider, that precedence becomes load-bearing — add an explicit handler key then.
 function route_crypto_api(rd, api_data, rdo) {
-    // First seven provider checks (mempool.space → blockchair).
-    const provider_order_1 = ["mempool.space", "blockchain.info", "blockcypher",
-        "etherscan", "alchemy", "ethplorer", "blockchair"
-    ];
-    if (provider_order_1.indexOf(api_data.name) > -1) {
-        CRYPTO_API_DISPATCH_BY_PROVIDER[api_data.name](rd, api_data, rdo);
-        return
-    }
-    // nimiq sits between blockchair and dash.org — preserved.
-    if (rd.payment === "nimiq") {
-        CRYPTO_API_DISPATCH_BY_PAYMENT.nimiq(rd, api_data, rdo);
-        return
-    }
-    if (api_data.name === "dash.org") {
-        CRYPTO_API_DISPATCH_BY_PROVIDER["dash.org"](rd, api_data, rdo);
-        return
-    }
-    // Remaining payment checks (kaspa, monero).
-    const by_payment = CRYPTO_API_DISPATCH_BY_PAYMENT[rd.payment];
-    if (by_payment) {
-        by_payment(rd, api_data, rdo);
+    const handler = CRYPTO_API_DISPATCH_BY_PROVIDER[api_data.name]
+        || CRYPTO_API_DISPATCH_BY_PAYMENT[rd.payment];
+    if (handler) {
+        handler(rd, api_data, rdo);
         return
     }
     finalize_request_state(rdo);

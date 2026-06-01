@@ -553,6 +553,11 @@ function bip39(dat) {
             </div>\
         </div>\
     </div>").data(dialog_data);
+    // hasbip but no readable phrase = decrypt failed; refuse rather than fabricate a new seed
+    if (glob_let.hasbip && !is_restore && !saved_phrase) {
+        topnotify(tl("seederror"));
+        return
+    }
     if (inj(ui_state)) return // xss filter
     $("#sd_panel").html(markup).addClass(ui_state);
     glob_const.body.addClass("seed_dialog");

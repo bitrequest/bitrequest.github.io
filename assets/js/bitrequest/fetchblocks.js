@@ -2030,9 +2030,11 @@ function electrum_scan_data(data, setconfirmations, ccsymbol, script_pub, latest
         height = data.height || 0,
         timestamp = data.timestamp,
         now = now_utc(),
-        now_correction = parseInt(now / 1000) - 8640,
-        time_correction = timestamp < now_correction ? now : timestamp, // correct weird timestamp in mempool with current timestamp
-        transactiontime = normalize_timestamp(time_correction) - 3000,
+        // Confirmed txs (height > 0) carry a real block time — use it.
+        // Fall back to "now" only for mempool/unconfirmed (height 0 or -1)
+        // or a missing/zero timestamp.
+        time_correction = (height > 0 && timestamp > 0) ? timestamp : now,
+        transactiontime = normalize_timestamp(time_correction),
         confirmations = latest_block ? get_block_confirmations(height, latest_block) : height;
     let outputsum = 0;
     if (outputs) {

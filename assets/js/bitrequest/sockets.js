@@ -166,17 +166,14 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
     }
     glob_let.socket_attempt[sha_sub(socket_node.url || node_name, 15)] = true;
 
-    // Original branch order is monero → ethereum/erc20 → other coins.
-    // Preserve that explicitly so payment_type="monero" + erc20=true still
-    // routes to monero (matches pre-refactor behavior).
-    let handler;
-    if (payment_type === "monero") {
-        handler = SOCKET_HANDLERS.monero;
-    } else if (payment_type === "ethereum" || request.erc20) {
-        handler = SOCKET_HANDLERS.ethereum;
-    } else {
-        handler = SOCKET_HANDLERS[payment_type];
-    }
+    // erc20 is a cross-cutting flag, not a payment key: an ERC20 token's
+    // payment_type isn't "ethereum", so the flag must override the table lookup
+    // and route it to the ethereum socket. That precedence is the one piece of
+    // ordering here that does real work; everything else is a plain table lookup
+    // (monero included — SOCKET_HANDLERS.monero is reached via the fallback).
+    const handler = (payment_type === "ethereum" || request.erc20)
+        ? SOCKET_HANDLERS.ethereum
+        : SOCKET_HANDLERS[payment_type];
     if (handler) handler(socket_node, wallet_address, retry);
 }
 

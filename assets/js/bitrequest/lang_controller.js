@@ -62,8 +62,9 @@ function systemlang() { // get system language
         (tl_short) ? lang_single : "en";
 }
 
+const tl_cache = {}; // resolved no-data strings, keyed "langcode:id" (langcode is const per session)
+
 function tl(id, dat) {
-    const data = (dat) ? dat : {};
     if (id === "obj") {
         const languages = {};
         $.each(LANG_META, function(code, meta) {
@@ -71,12 +72,27 @@ function tl(id, dat) {
             languages[code] = {
                 "lang": meta.lang,
                 "flag": meta.flag,
-                "obj": typeof fn === "function" ? fn(id, data) : null
+                "obj": typeof fn === "function" ? fn(id, dat || {}) : null
             };
         });
         return languages;
     }
-    // Fast path: only the selected language + English fallback.
+    // No-data lookups are deterministic per language — memoize so each lang function
+    // (which rebuilds its full ~500-key object per call) runs at most once per id
+    // instead of on every call. Calls WITH data interpolate and bypass the cache.
+    if (!dat) {
+        const key = langcode + ":" + id,
+            cached = tl_cache[key];
+        if (cached !== undefined) {
+            return cached;
+        }
+        return tl_cache[key] = tl_resolve(id, {});
+    }
+    return tl_resolve(id, dat);
+}
+
+// Resolve via the selected language, fall back to English, then the raw id.
+function tl_resolve(id, data) {
     try {
         const selected_meta = LANG_META[langcode],
             selected_fn = selected_meta && window[selected_meta.fn],
