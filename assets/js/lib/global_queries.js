@@ -64,7 +64,7 @@ const br_bipobj = br_get_local("bpdat", true),
     glob_const = {
         // --- App metadata ---
         "apptitle": "Bitrequest",
-        "proxy_version": "0.035",
+        "proxy_version": "0.034",
         "androidpackagename": br_androidpackagename,
         "approot": br_approot,
         "hostname": br_hostname,
@@ -1476,7 +1476,7 @@ function api_proxy(ad, p_proxy) {
         }),
         proxy_url = custom_url || api_url_data.api_url_key,
         active_proxy = p_proxy || d_proxy(),
-        is_onion = proxy_url.includes(".onion"),
+        is_onion = proxy_url ? proxy_url.includes(".onion") : false,
         payload = q_obj(ad, "params.data");
     // add tor proxy and stringify payload
     if (payload) {

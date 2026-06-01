@@ -289,20 +289,7 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                         "method": "GET"
                     }
                 },
-                "parse": (api_result, rd, rdo) => {
-                    const tx_input = api_result.input,
-                        amount_hex = tx_input ? tx_input.slice(74) : null,
-                        token_value = amount_hex ? hex_to_number_string(amount_hex) : q_obj(api_result.operations[0], "intValue"),
-                        confirmation_count = api_result.confirmations < 0 ? 0 : api_result.confirmations,
-                        tx_data = {
-                            "timestamp": api_result.timestamp,
-                            "hash": tx_hash,
-                            "confirmations": confirmation_count,
-                            "value": token_value,
-                            "decimals": rd.decimals
-                        };
-                    return infura_erc20_poll_data(tx_data, rdo.setconfirmations, rd.currencysymbol, network);
-                },
+                "parse": (api_result, rd, rdo) => ethplorer_poll_data(api_result, rdo.setconfirmations, rd.currencysymbol, network),
                 "display_on_match": true,
                 network
             });
@@ -1529,6 +1516,10 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
         rpc_url = build_rpc_endpoint_url(api_data),
         node_url = network_type ? api_data.url : rpc_url || glob_const.main_eth_node,
         tx_hash = rd.txhash;
+    if (!node_url) { // L2 node not resolved yet (cold load) — fail over instead of building a dead request
+        handle_scan_failure(null, rd, api_data, rdo, network_type);
+        return
+    }
     let matched_tx = false;
     api_proxy(eth_params(node_url, 25, "eth_blockNumber", [])).done(function(block_response) {
             const latest_block = inf_result(block_response);
@@ -2030,11 +2021,9 @@ function electrum_scan_data(data, setconfirmations, ccsymbol, script_pub, latest
         height = data.height || 0,
         timestamp = data.timestamp,
         now = now_utc(),
-        // Confirmed txs (height > 0) carry a real block time — use it.
-        // Fall back to "now" only for mempool/unconfirmed (height 0 or -1)
-        // or a missing/zero timestamp.
-        time_correction = (height > 0 && timestamp > 0) ? timestamp : now,
-        transactiontime = normalize_timestamp(time_correction),
+        now_correction = parseInt(now / 1000) - 8640,
+        time_correction = timestamp < now_correction ? now : timestamp, // correct weird timestamp in mempool with current timestamp
+        transactiontime = normalize_timestamp(time_correction) - 3000,
         confirmations = latest_block ? get_block_confirmations(height, latest_block) : height;
     let outputsum = 0;
     if (outputs) {
@@ -2309,6 +2298,27 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
     };
 }
 
+// Poll twin of ethplorer_scan_data for ethplorer/binplorer getTxInfo responses
+// (same provider, same structure). Token amount + decimals come from operations[0];
+// hash, confirmations and timestamp from the top level.
+function ethplorer_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
+    const op = q_obj(data, "operations.0") || {},
+        raw_value = op.value,
+        token_decimals = q_obj(op, "tokenInfo.decimals"),
+        ccval = (token_decimals && raw_value != null) ? parseFloat((raw_value / 10 ** token_decimals).toFixed(8)) : null,
+        confirmations = data.confirmations < 0 ? 0 : (data.confirmations || 0),
+        transactiontime = normalize_timestamp(data.timestamp);
+    return {
+        ccval,
+        transactiontime,
+        "txhash": data.hash || null,
+        confirmations,
+        setconfirmations,
+        ccsymbol,
+        eth_layer2
+    };
+}
+
 // Processes Nano transaction data with raw-to-NANO conversion and local timestamp handling
 function nano_scan_data(data, tx_hash) {
     const ccval = data.amount ? parseFloat((data.amount / 1e30).toFixed(8)) : null,
@@ -2347,7 +2357,7 @@ function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) {
 function infura_erc20_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
     const raw_value = data.value || null,
         token_decimals = data.decimals || null,
-        ccval = token_decimals ? parseFloat((raw_value / 10 ** token_decimals).toFixed(8)) : null,
+        ccval = (token_decimals && raw_value != null) ? parseFloat((raw_value / 10 ** token_decimals).toFixed(8)) : null,
         transactiontime = normalize_timestamp(data.timestamp);
     return {
         ccval,
