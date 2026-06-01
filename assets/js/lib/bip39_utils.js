@@ -103,6 +103,17 @@ const bip32_configs = {
         "pk_vbytes": {
             "wif": 128
         }
+    },
+    "kaspa": {
+        "root_path": "m/44'/111111'/0'/0/",
+        "prefix": {
+            "pub": 0,
+            "pubx": 59716398,
+            "privx": 59715316
+        },
+        "pk_vbytes": {
+            "wif": 128
+        }
     }
 };
 
