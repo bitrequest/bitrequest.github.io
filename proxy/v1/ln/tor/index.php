@@ -108,6 +108,7 @@ function curl_get_tor($pl) {
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($ch, CURLOPT_MAXREDIRS, 3); // cap redirect chain (onion services follow redirects here)
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 20);
 		

@@ -120,6 +120,42 @@
 		) !== false;
 	}
 
+	// Per-API allowlist of destination host suffixes. A server-held key is only
+	// attached when the request host matches one of these for that API name —
+	// otherwise the key could be exfiltrated by pointing api_url at an attacker host.
+	function api_host_allowed($api_name, $url) {
+		static $allow = [
+			"coinmarketcap"    => ["pro-api.coinmarketcap.com"],
+			"fixer"            => ["data.fixer.io"],
+			"etherscan"        => ["api.etherscan.io"],
+			"ethplorer"        => ["api.ethplorer.io", "api.binplorer.com"], // binplorer normalizes to the ethplorer key
+			"blockcypher"      => ["api.blockcypher.com"],
+			"bitly"            => ["api-ssl.bitly.com"],
+			"blockchair"       => ["api.blockchair.com"],
+			"currencylayer"    => ["api.currencylayer.com"],
+			"exchangeratesapi" => ["api.exchangeratesapi.io"],
+			"infura"           => ["infura.io"],     // matches mainnet/arbitrum-mainnet/polygon-mainnet/bsc-mainnet.infura.io
+			"alchemy"          => ["g.alchemy.com"], // matches eth-/arb-/polygon-/base-mainnet.g.alchemy.com
+		];
+		if (!isset($allow[$api_name])) {
+			return false; // no entry -> never attach a server key
+		}
+		$host = parse_url($url, PHP_URL_HOST);
+		if (!$host) {
+			return false;
+		}
+		$host = strtolower($host);
+		foreach ($allow[$api_name] as $suffix) {
+			$suffix = strtolower($suffix);
+			// Leading-dot suffix match: "infura.io" matches infura.io and
+			// *.infura.io, but not evilinfura.io or infura.io.attacker.com.
+			if ($host === $suffix || str_ends_with($host, "." . $suffix)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	// Sanitizes user input for safe use in file paths
 	function safe_filename($input) {
 		if (!$input || !is_string($input)) {

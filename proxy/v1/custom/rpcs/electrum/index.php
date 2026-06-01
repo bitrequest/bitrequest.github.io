@@ -177,7 +177,29 @@ function socket_fetch_ssl($pl) {
 	if (!isset($pl["node"])) {
 		return ["error" => "Missing required node parameter", "error_code" => $ERROR_MISSING_PARAMS];
 	}
-	
+
+	// SSRF guard: $pl["node"] is client-supplied ("host:port"). Validate it
+	// resolves to a public address and connect to that pinned IP, so it can't be
+	// pointed at 127.0.0.1 / 169.254.169.254 / an internal host (and can't be
+	// DNS-rebound after the check). .onion is handled earlier; cert verification
+	// stays off below because electrum servers are self-signed by convention.
+	$node_host = $pl["node"];
+	$node_port = 50002;
+	$colon = strrpos($node_host, ":");
+	if ($colon !== false) {
+		$node_port = (int) substr($node_host, $colon + 1);
+		$node_host = substr($node_host, 0, $colon);
+	}
+	$node_host = trim($node_host, "[]"); // bare IPv6 if it came bracketed
+	$url_host = (strpos($node_host, ":") !== false) ? "[" . $node_host . "]" : $node_host;
+	$safe = resolve_safe_url("https://" . $url_host . ":" . $node_port);
+	if (!$safe) {
+		return ["error" => "Node host not allowed", "error_code" => $ERROR_SSL_CONNECTION];
+	}
+	$connect_target = (strpos($safe["ip"], ":") !== false)
+		? "[" . $safe["ip"] . "]:" . $node_port  // IPv6 literal needs brackets
+		: $safe["ip"] . ":" . $node_port;
+
 	$request = request_data($pl);
 	$jsonRequest = json_encode($request) . "\n";
 	$socket = null;
@@ -191,9 +213,9 @@ function socket_fetch_ssl($pl) {
 			]
 		]);
 		
-		// Connect to the SSL server
+		// Connect to the validated, pinned IP (not the raw client host)
 		$socket = stream_socket_client(
-			"ssl://" . $pl["node"], 
+			"ssl://" . $connect_target, 
 			$errno, 
 			$errstr, 
 			10, 

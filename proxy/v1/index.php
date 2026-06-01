@@ -113,8 +113,15 @@ try {
     // Define data
     $data_var = $payload ?: null;
 
-    // Define key
-    $accesstoken = isset($keys) && isset($apiname) && isset($keys[$apiname]) ? $keys[$apiname] : false;
+    // Define key — a server-held key is only attached if api_url's host is
+    // allow-listed for this api name, so it can't be exfiltrated to an attacker
+    // host. User-supplied $apikey and keyless calls are unaffected.
+    $server_key = (isset($keys) && $apiname && isset($keys[$apiname])) ? $keys[$apiname] : false;
+    if ($server_key && !api_host_allowed($apiname, $apiurl)) {
+        echo json_encode(["ping" => create_error_response("403", "Host not allowed for API key")]);
+        exit;
+    }
+    $accesstoken = $server_key;
     $auth_token = $apikey ?: $accesstoken;
 
     // Construct headers

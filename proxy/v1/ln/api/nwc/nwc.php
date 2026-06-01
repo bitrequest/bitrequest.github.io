@@ -55,7 +55,7 @@ function nwc_request(string $nwc_uri, string $method, array $params): array {
  * Create a Lightning invoice.
  * Returns array with keys: invoice, payment_hash, expires_at
  */
-function nwc_create_invoice(string $nwc_uri, int $amount_sats, string $description = "", int $expiry): array {
+function nwc_create_invoice(string $nwc_uri, int $amount_sats, string $description, int $expiry = 60): array {
     return nwc_request($nwc_uri, "make_invoice", [
         "amount" => $amount_sats,
         "description" => $description,

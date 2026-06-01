@@ -1,6 +1,6 @@
 <?php	
 // PROXY
-const VERSION = "0.034";
+const VERSION = "0.035";
 const CACHE_DURATIONS = [
 	"2m" => 6220800,  // 2 months in seconds
 	"1w" => 604800,   // 1 week in seconds
@@ -214,66 +214,89 @@ function curl_get($url, $data, $headers) {
 			return error_object("404", "Tor file not found");
 		}
 
-		// Resolve and validate the URL. resolve_safe_url returns the IP that we
-		// pin via CURLOPT_RESOLVE below so curl can't do its own DNS lookup —
-		// without that, an attacker could race the resolver (DNS rebinding) and
-		// have curl connect to a private IP after we validated a public one.
-		$resolved = resolve_safe_url($url);
-		if (!$resolved) {
-			return error_object("403", "URL not allowed");
-		}
-
 		// Strip the tls_wildcard control flag out of the headers array before
 		// sending the rest to the remote endpoint.
 		[$headers, $tls_wildcard] = extract_tls_wildcard($headers);
 
-		$ch = curl_init();
-		curl_setopt_array($ch, [
-			CURLOPT_URL => $url,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_CONNECTTIMEOUT => 3,
-			CURLOPT_TIMEOUT => 5,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_MAXREDIRS => 3,
-			// Pin DNS: tell curl to use the IP we validated for this host:port,
-			// instead of resolving the hostname itself.
-			CURLOPT_RESOLVE => [
-				$resolved["host"] . ":" . $resolved["port"] . ":" . $resolved["ip"],
-			],
-			// Restrict to HTTP/HTTPS so a malicious redirect can't push us into
-			// file://, gopher://, dict://, etc.
-			CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
-			CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
-		]);
+		// Follow redirects manually so EVERY hop is re-validated. curl's own
+		// CURLOPT_FOLLOWLOCATION only DNS-pins the first host: a public URL could
+		// 302 us to 127.0.0.1 / 169.254.169.254 / a private host and curl would
+		// resolve and follow it unchecked. Re-running resolve_safe_url per hop
+		// closes that, while still letting legitimate redirects through.
+		$current_url = $url;
+		$max_redirects = 3;
 
-		if (!empty($headers)) {
-			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-		}
+		for ($hop = 0; $hop <= $max_redirects; $hop++) {
+			// Resolve and validate this hop. resolve_safe_url returns the IP we
+			// pin via CURLOPT_RESOLVE so curl can't do its own DNS lookup —
+			// without that, an attacker could race the resolver (DNS rebinding)
+			// and have curl connect to a private IP after we validated a public one.
+			$resolved = resolve_safe_url($current_url);
+			if (!$resolved) {
+				return error_object("403", "URL not allowed");
+			}
 
-		if ($tls_wildcard) {
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-		}
+			$ch = curl_init();
+			curl_setopt_array($ch, [
+				CURLOPT_URL => $current_url,
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_CONNECTTIMEOUT => 3,
+				CURLOPT_TIMEOUT => 5,
+				// We handle redirects ourselves (below); never let curl follow.
+				CURLOPT_FOLLOWLOCATION => false,
+				// Pin DNS: use the IP we validated for this host:port instead of
+				// letting curl resolve the hostname itself.
+				CURLOPT_RESOLVE => [
+					$resolved["host"] . ":" . $resolved["port"] . ":" . $resolved["ip"],
+				],
+				// Restrict to HTTP/HTTPS so we can't be pushed into file://, gopher://, etc.
+				CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+			]);
 
-		if (!empty($data)) {
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-		}
+			if (!empty($headers)) {
+				curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+			}
 
-		$result = curl_exec($ch);
-		if (curl_errno($ch)) {
-			$error = curl_error($ch);
+			if ($tls_wildcard) {
+				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+				curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+			}
+
+			if (!empty($data)) {
+				curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+			}
+
+			$result = curl_exec($ch);
+			if (curl_errno($ch)) {
+				$error = curl_error($ch);
+				curl_close($ch);
+				return error_object("411", $error);
+			}
+
+			$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+			// Redirect: re-validate the target on the next iteration.
+			// CURLINFO_REDIRECT_URL resolves relative Location headers to absolute.
+			if ($http_code >= 300 && $http_code < 400) {
+				$location = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+				curl_close($ch);
+				if (!$location || $hop >= $max_redirects) {
+					return error_object("411", "too many redirects");
+				}
+				$current_url = $location;
+				continue;
+			}
+
 			curl_close($ch);
-			return error_object("411", $error);
+
+			if ($http_code >= 400) {
+				return error_object($http_code, "HTTP error");
+			}
+
+			return $result ?: error_object("411", "no result");
 		}
 
-		$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		curl_close($ch);
-
-		if ($http_code >= 400) {
-			return error_object($http_code, "HTTP error");
-		}
-
-		return $result ?: error_object("411", "no result");
+		return error_object("411", "too many redirects");
 	} catch (Exception $e) {
 		return error_object("500", "cURL error: " . $e->getMessage());
 	}
