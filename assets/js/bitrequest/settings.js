@@ -497,66 +497,24 @@ function edit_theme() {
                 "elements": ddat
             });
         popdialog(content, "triggersubmit");
-        let options = $("#themeformbox").find(".options"),
-            get_session_themes = br_get_session("themes", true);
-        if (get_session_themes) {
-            $.each(get_session_themes, function(key, value) {
-                options.append("<span data-pe='none'>" + value + "</span>");
-            });
-            return
-        }
-        api_proxy({
-            "api_url": d_proxy() + "/proxy/v1/themes/"
-        }).done(function(data) {
-            const api_result = br_result(data);
-            if (api_result) {
-                const data = api_result.result;
-                if (data) {
-                    if (data.error) {
-                        theme_not_found();
-                        return
-                    }
-                    $.each(data, function(key, value) {
-                        options.append("<span data-pe='none'>" + value + "</span>");
-                    });
-                    br_set_session("themes", data, true);
-                    return
-                }
-            }
-            theme_not_found();
-        }).fail(function(error) {
-            console.error("Error fetching themes:", error);
-            theme_not_found();
+        let options = $("#themeformbox").find(".options");
+        $.each(glob_const.themes, function(key, value) {
+            options.append("<span data-pe='none'>" + value + "</span>");
         });
+        br_set_session("themes", data, true);
     });
 }
 
 function select_theme() {
     $(document).on("mousedown", "#themeformbox .selectbox > .options span", function() {
-        const filename = $(this).text();
-        if (filename === "default.css") {
-            theme_not_found();
-            return
-        }
-        const version = $("#ua").attr("data-version");
-        $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + filename + "?v=" + version);
+        $("link#theme").attr("href", "assets/styles/themes/" + $(this).text());
     })
 }
 
 function cancel_theme() {
     $(document).on("click", "#canceltheme", function() {
         const filename = $("#themesettings").data("selected");
-        if (filename) {
-            if (filename === "default.css") {
-                theme_not_found();
-                canceldialog();
-                return
-            }
-            $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + filename + "?v=" + version);
-            canceldialog();
-            return
-        }
-        theme_not_found();
+        $("link#theme").attr("href", "assets/styles/themes/" + filename);
         canceldialog();
     })
 }
@@ -569,11 +527,6 @@ function submit_theme() {
         notify("Data saved");
         save_settings();
     })
-}
-
-function theme_not_found() {
-    const version = $("#ua").attr("data-version");
-    $("link#theme").attr("href", "assets/styles/themes/default.css?v=" + version);
 }
 
 // ** SECURITY: **
