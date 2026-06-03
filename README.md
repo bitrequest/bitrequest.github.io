@@ -1,19 +1,11 @@
 [<img src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store.svg" height="50">](https://apps.apple.com/app/id1484815377)
 [<img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" height="50">](https://play.google.com/store/apps/details?id=io.bitrequest.app)
 
-* [About](https://github.com/bitrequest/bitrequest.github.io/wiki)
-* [Privacy / Disclaimer](https://github.com/bitrequest/bitrequest.github.io/wiki/Privacy)
-* [Terms and conditions](https://github.com/bitrequest/bitrequest.github.io/wiki/Terms-and-conditions)
-
----
-
 ## Bitrequest
 
 Create and share cryptocurrency payment requests. Non-custodial, privacy-focused app for accepting crypto payments — in-store or online.
 
-**[Try it now → bitrequest.io](https://bitrequest.io)**
-
----
+[bitrequest.io](https://bitrequest.io)
 
 ## Use Cases
 
@@ -24,14 +16,15 @@ Accept crypto payments at your shop, market stall, or business. Get instant paym
 Send payment requests to friends or customers via link, QR code, or NFC. Lock amounts to fiat value to avoid volatility.
 
 ### E-commerce
-Integrate crypto checkout into your online store.
+Integrate crypto checkout into your online store.  
+[woocommerce](https://github.com/bitrequest/bitrequest-woocommerce)
 
 ---
 
 ## Supported Cryptocurrencies
 
 - **Bitcoin** — Including Lightning Network (LND, Core Lightning, LNbits, Spark, NWC, LNURL, Boltcard/NFC)
-- **Ethereum** — Plus L2 networks: Base, Arbitrum, Polygon, BSC, and ERC-20 tokens
+- **Ethereum** — L2 networks: Base, Arbitrum, Polygon, BSC, and ERC-20 tokens
 - **Litecoin**
 - **Monero** — Private payments with view-key scanning
 - **Kaspa**
@@ -48,7 +41,6 @@ Integrate crypto checkout into your online store.
 ### Requests
 - Create payment requests in crypto or fiat (170+ currencies)
 - Share via URL, QR code, or NFC
-- Real-time payment notifications
 - Request history, receipts, and CSV export
 
 ### Addresses
@@ -68,9 +60,9 @@ Integrate crypto checkout into your online store.
 ## Privacy & Security
 
 - **Non-custodial** — Your keys stay on your device
-- **No account required** — Works offline after install
 - **Open source** — Fully auditable code
-- **TOR support** — Optional privacy routing
+- **No account required**
+* [Privacy / Disclaimer](https://github.com/bitrequest/bitrequest.github.io/wiki/Privacy)
 
 ---
 
@@ -79,18 +71,6 @@ Integrate crypto checkout into your online store.
 - **Web:** Visit [bitrequest.io](https://bitrequest.io) and install as app
 - **iOS:** [App Store](https://apps.apple.com/app/id1484815377)
 - **Android:** [Google Play](https://play.google.com/store/apps/details?id=io.bitrequest.app)
-
----
-
-## Translations
-
-Bitrequest is available in English, Dutch, French, Spanish, German, Chinese, Hindi, and Japanese. Want to add your language? See [`docs/translate_prompt.md`](docs/translate_prompt.md) — a complete guide for generating and submitting a new translation file.
-
----
-
-## For contributors
-
-Code lives under [`assets/`](assets/) — first-party app code in [`assets/js/bitrequest/`](assets/js/bitrequest/), vendored and utility libs in [`assets/js/lib/`](assets/js/lib/). The PHP proxy sits in [`proxy/`](proxy/). Start with [`docs/architecture.md`](docs/architecture.md) for a tour of the codebase: file responsibilities, the four globals, the request lifecycle, and the proxy contract. For adding a coin specifically, see [`docs/add_coin_guide.md`](docs/add_coin_guide.md).
 
 ---
 
@@ -107,6 +87,4 @@ Code lives under [`assets/`](assets/) — first-party app code in [`assets/js/bi
 
 AGPL-3.0
 
----
-
-*Lightweight crypto payments for everyone — [bitrequest.io](https://bitrequest.io)*
+* [Terms and conditions](https://github.com/bitrequest/bitrequest.github.io/wiki/Terms-and-conditions)
