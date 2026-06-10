@@ -12,6 +12,13 @@ single-page web app that lets anyone accept crypto payments, hand-coded in
 vanilla JS with jQuery as the DOM library. No build tools, no bundler, no
 package manager, no runtime dependencies beyond what ships in `assets/js/`.
 
+Conceptually it is a **payment observer**, not a payment processor: the app is
+never in the money flow. It generates addresses and payment URIs, then watches
+the settlement layer — explorers, RPC nodes, websockets — to verify that the
+payment arrived. There is nothing to custody and no transaction to execute;
+verification is the product. Most of the codebase (`fetchblocks.js`,
+`monitors.js`, `polling.js`, `sockets.js`) is that observer machinery.
+
 Everything cryptographic happens **client-side**. Private keys never leave the
 device. A small PHP "proxy" sits between the client and third-party APIs to:
 

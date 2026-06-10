@@ -5,6 +5,8 @@
 
 Create and share cryptocurrency payment requests. Non-custodial, privacy-focused app for accepting crypto payments — in-store or online.
 
+Bitrequest is a **payment observer**, not a payment processor: payments go straight from your customer's wallet to yours, and the app only verifies on-chain that they arrived. Nothing to custody, nothing to freeze, no one to ask permission.
+
 [bitrequest.io](https://bitrequest.io)
 
 ## Use Cases
@@ -59,6 +61,7 @@ Integrate crypto checkout into your online store.
 
 ## Privacy & Security
 
+- **Payment observer** — Bitrequest is never in the money flow; it observes the blockchain to verify payments, it doesn't process them
 - **Non-custodial** — Your keys stay on your device
 - **Open source** — Fully auditable code
 - **No account required**
