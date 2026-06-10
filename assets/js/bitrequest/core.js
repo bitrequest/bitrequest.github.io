@@ -419,6 +419,7 @@ function finish_functions() {
     }, 100);
     render_requests();
     render_changes();
+    check_rr();
 
     // ** Utility Functions: **
     check_params();
@@ -1060,7 +1061,7 @@ function payrequest() {
             amount_remaining = amountshort(total_amount, received_amount, fiat_value, is_crypto),
             payment_amount = (amount_remaining && is_insufficient === true) ? amount_remaining : total_amount,
             lightning_data = request_data.lightning,
-            lightning_params = (lightning_data && lightning_data.invoice) ? "&d=" + btoa(JSON.stringify({
+            lightning_params = (lightning_data && lightning_data.invoice) ? "&d=" + b64encode_url(JSON.stringify({
                 "imp": lightning_data.imp,
                 "proxy": lightning_data.proxy_host,
                 "nid": lightning_data.nid,
@@ -1628,14 +1629,6 @@ function proxy_alert(version) {
     }
 }
 
-// Finds ERC20 token metadata by currency name from cache
-function fetch_symbol(currency_name) {
-    const token_list = get_cached_tokens();
-    return token_list.find(function(token) {
-        return token.name === currency_name;
-    }) || {};
-}
-
 // Toggles fixed navigation based on scroll position
 function toggle_fixed_nav(scroll_pos) {
     const header_height = $(".showmain #header").outerHeight();
@@ -2059,7 +2052,7 @@ function popdialog(content, callback_name, trigger_elem, is_custom, should_repla
 
 // Binds function to dialog execution button
 function execute(trigger_elem, callback_name) {
-    $(document).on("click", "#execute", function(e) {
+    $(document).off("click", "#execute").on("click", "#execute", function(e) {
         e.preventDefault();
         window[callback_name](trigger_elem);
     })
@@ -2105,13 +2098,11 @@ function canceldialog(bypass) {
     const popup = $("#popup");
     glob_const.body.removeClass("blurmain themepu");
     popup.removeClass("active");
+    $(document).off("click", "#execute");
     const timeout = setTimeout(function() {
         popup.removeClass("showpu");
         $("#dialogbody").html("");
         $("#actions").removeClass("custom");
-        $(document).off("click", "#execute");
-        // reset Globals
-        s_id = null;
     }, 600, function() {
         clearTimeout(timeout);
     });
@@ -2146,7 +2137,7 @@ function render_attributes(attr_data) {
 // HTML rendering
 // Generates HTML dialog box with customizable icon, title and content sections
 function template_dialog(dialog_data) {
-    const validation_class = dialog_data.validated ? " validated" : "",
+    const elements = Array.isArray(dialog_data.elements) ? render_html(dialog_data.elements) : dialog_data.elements,
         dialog_structure = [{
             "div": {
                 "id": dialog_data.id,
@@ -2165,13 +2156,26 @@ function template_dialog(dialog_data) {
                     {
                         "div": {
                             "class": "pfwrap",
-                            "content": render_html(dialog_data.elements)
+                            "content": elements
                         }
                     }
                 ]
             }
         }]
     return render_html(dialog_structure);
+}
+
+// Standard dialog submit button.
+function submit_input(extra_attr) {
+    return {
+        "input": {
+            "class": "submit",
+            "attr": Object.assign({
+                "type": "submit",
+                "value": tl("okbttn")
+            }, extra_attr)
+        }
+    };
 }
 
 // Updates document title and meta tags
@@ -2665,26 +2669,26 @@ function show_pk() {
             return
         }
         $("#optionsbox").html("");
-        const addr_data = $("#ad_info_wrap").data(),
-            currency = addr_data.currency,
-            key_data = key_cc(),
-            derive_data = {
-                "dpath": addr_data.dpath,
-                "key": key_data.key,
-                "cc": key_data.cc
-            },
-            derived_keys = derive_x(derive_data),
-            key_object = br_format_keys(key_data.seed, derived_keys, addr_data.bip32dat, addr_data.derive_index, currency),
-            private_key = key_object.privkey;
         all_pinpanel({
-            "func": show_pk_cb,
-            "args": private_key
+            "func": show_pk_cb
         }, true, true)
     })
 }
 
 // Callback that displays private key in UI and updates QR code
-function show_pk_cb(private_key) {
+function show_pk_cb() {
+    const addr_data = $("#ad_info_wrap").data(),
+        currency = addr_data.currency,
+        key_data = key_cc();
+    if (!key_data) return
+    const derive_data = {
+            "dpath": addr_data.dpath,
+            "key": key_data.key,
+            "cc": key_data.cc
+        },
+        derived_keys = derive_x(derive_data),
+        key_object = br_format_keys(key_data.seed, derived_keys, addr_data.bip32dat, addr_data.derive_index, currency),
+        private_key = key_object.privkey;
     $("#show_pk").text(tl("hide"));
     $("#pkspan").text(private_key);
     $("#qrcode").qrcode(private_key);
@@ -2713,34 +2717,35 @@ function show_vk() {
             return
         }
         $("#optionsbox").html("");
-        let xmr_keys = {};
-        if (view_key === "derive") {
-            const addr_data = $("#ad_info_wrap").data(),
-                key_data = key_cc(),
-                derive_data = {
-                    "dpath": addr_data.dpath,
-                    "key": key_data.key,
-                    "cc": key_data.cc
-                },
-                derived_keys = derive_x(derive_data),
-                root_key = derived_keys.key,
-                secret_key = sc_reduce32(fasthash(root_key));
-            xmr_keys = xmr_getpubs(secret_key, addr_data.derive_index);
-        } else {
-            xmr_keys = {
-                "stat": true,
-                "svk": view_key
-            }
-        }
         all_pinpanel({
             "func": show_vk_cb,
-            "args": xmr_keys
+            "args": view_key
         }, true, true)
     })
 }
 
 // Callback that displays view key details in UI with proper formatting
-function show_vk_cb(key_data) {
+function show_vk_cb(view_key) {
+    let key_data = {};
+    if (view_key === "derive") {
+        const addr_data = $("#ad_info_wrap").data(),
+            seed_data = key_cc();
+        if (!seed_data) return
+        const derive_data = {
+                "dpath": addr_data.dpath,
+                "key": seed_data.key,
+                "cc": seed_data.cc
+            },
+            derived_keys = derive_x(derive_data),
+            root_key = derived_keys.key,
+            secret_key = sc_reduce32(fasthash(root_key));
+        key_data = xmr_getpubs(secret_key, addr_data.derive_index);
+    } else {
+        key_data = {
+            "stat": true,
+            "svk": view_key
+        }
+    }
     const view_key_text = key_data.svk ? "<br/><strong style='color:#8d8d8d'>" + tl("secretviewkey") + "</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + key_data.svk + "</span><br/>" : "",
         spend_key_text = key_data.ssk ? "<br/><strong style='color:#8d8d8d'>" + tl("secretspendkey") + "</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + key_data.ssk + "</span>" : ""
     $("#show_vk").text(tl("hide"));
@@ -3712,9 +3717,6 @@ function receipt() {
             pdf_name = "bitrequest_" + tl("receipt") + "_" + request_id + ".pdf",
             dialog_elems = [{
                 "div": {
-                    "class": "popform"
-                },
-                "div": {
                     "id": "backupactions",
                     "content": [{
                             "div": {
@@ -4184,23 +4186,6 @@ function cmst_callback(address_item) {
     clear_savedurl();
 }
 
-// Adds a new seed ID to localStorage whitelist
-function add_seed_whitelist(seed_id) {
-    const stored_whitelist = br_get_local("swl", true),
-        seed_list = get_default_object(stored_whitelist);
-    if (!seed_list.includes(seed_id)) {
-        seed_list.push(seed_id);
-    }
-    br_set_local("swl", seed_list, true);
-}
-
-// Verifies if seed ID exists in whitelist
-function seed_wl(seed_id) {
-    const stored_whitelist = br_get_local("swl", true),
-        seed_list = get_default_object(stored_whitelist);
-    return seed_list.includes(seed_id);
-}
-
 // Adds new address to localStorage whitelist
 function add_address_whitelist(wallet_address) {
     const stored_whitelist = br_get_local("awl", true),
@@ -4308,8 +4293,11 @@ function check_intents(encoded_scheme) {
     if (encoded_scheme == "false") {
         return
     }
-    const decoded_url = decodeb64_flex(encoded_scheme),
-        protocol = decoded_url.split(":")[0];
+    const decoded_url = b64decode_url(encoded_scheme);
+    if (!decoded_url) {
+        return
+    }
+    const protocol = decoded_url.split(":")[0];
     if (protocol) {
         if (protocol === "eclair" || protocol === "acinq" || protocol === "lnbits") {
             const warning_content = "<h2 class='icon-warning'>" + tl("proto", {
@@ -4335,7 +4323,7 @@ function check_intents(encoded_scheme) {
                 connection_data = renderlnconnect(decoded_url);
             if (connection_data) {
                 const rest_url = connection_data.resturl,
-                    macaroon = connection_data.macaroon || scheme_obj.rune;
+                    macaroon = connection_data.macaroon || connection_data.rune;
                 // wait for settings to be rendered
                 if (rest_url && macaroon) {
                     setTimeout(function() {

@@ -5,6 +5,7 @@ $(document).ready(function() {
     handle_rpc_node_selection();
     submit_rpcnode();
     delete_rpc_node();
+    delete_lws_node();
     toggle_lws();
 });
 
@@ -207,7 +208,7 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                                 tport = port_arr[1];
                             }
                         }
-                        const port = tport ? ((/^\d/.test(tport)) ? ":" + port : ":" + tport.slice(1)) : "",
+                        const port = tport ? ((/^\d/.test(tport)) ? ":" + tport : ":" + tport.slice(1)) : "",
                             rpc_url2 = url + port,
                             node_exists = objectkey_in_array(existing_nodes, "url", rpc_url2);
                         if (!node_exists) {
@@ -330,47 +331,47 @@ function fetch_xmr_nodes(node_url, predefined_nodes, custom_nodes) {
                                     "url": node,
                                     "display": true,
                                     custom
-                                }
-                            fetch_timeout = setTimeout(function() {
-                                api_proxy({
-                                    "api_url": node + "/get_transaction_pool_hashes",
-                                    "proxy": node.includes(".onion"),
-                                    "params": {
-                                        "method": "POST",
-                                        "headers": {
-                                            "Content-Type": "application/json"
+                                },
+                                fetch_timeout = setTimeout(function() {
+                                    api_proxy({
+                                        "api_url": node + "/get_transaction_pool_hashes",
+                                        "proxy": node.includes(".onion"),
+                                        "params": {
+                                            "method": "POST",
+                                            "headers": {
+                                                "Content-Type": "application/json"
+                                            }
                                         }
-                                    }
-                                }).done(function(e) {
-                                    const response = br_result(e).result;
-                                    if (response) {
-                                        const txs_hashes = response.tx_hashes;
-                                        if (txs_hashes && txs_hashes.length > 0) {
-                                            const is_selected = node === node_url;
-                                            create_rpc_node_element(api_options, true, node_id, node_config, is_selected);
-                                            node_list_obj.push({
-                                                node_id,
-                                                node,
-                                                custom
+                                    }).done(function(e) {
+                                        const response = br_result(e).result;
+                                        if (response) {
+                                            const txs_hashes = response.tx_hashes;
+                                            if (txs_hashes && txs_hashes.length > 0) {
+                                                const is_selected = node === node_url;
+                                                create_rpc_node_element(api_options, true, node_id, node_config, is_selected);
+                                                node_list_obj.push({
+                                                    node_id,
+                                                    node,
+                                                    custom
+                                                });
+                                            }
+                                        }
+                                    }).always(function() {
+                                        inner_count++;
+                                        if (done) return
+                                        if (inner_count >= count) { // done
+                                            done = true;
+                                            const margin_timeout = setTimeout(function() {
+                                                br_set_session("monero_rpc", node_list_obj, true);
+                                                rpc_list.addClass("show_select");
+                                            }, 500, function() {
+                                                clearTimeout(margin_timeout);
                                             });
                                         }
-                                    }
-                                }).always(function() {
-                                    inner_count++;
-                                    if (done) return
-                                    if (inner_count >= count) { // done
-                                        done = true;
-                                        const margin_timeout = setTimeout(function() {
-                                            br_set_session("monero_rpc", node_list_obj, true);
-                                            rpc_list.addClass("show_select");
-                                        }, 500, function() {
-                                            clearTimeout(margin_timeout);
-                                        });
-                                    }
+                                    });
+                                }, delay_time, function() {
+                                    clearTimeout(fetch_timeout);
                                 });
-                            }, delay_time, function() {
-                                clearTimeout(fetch_timeout);
-                            });
                         }
                     });
                 }
@@ -381,10 +382,10 @@ function fetch_xmr_nodes(node_url, predefined_nodes, custom_nodes) {
 
 // Pick a random node
 function get_random_node(predefined_nodes, node_name) {
-    const custom_nodes = predefined_nodes.filter(node => node_name);
-    if (custom_nodes.length) {
-        const random_index = Math.floor(Math.random() * custom_nodes.length);
-        return custom_nodes[random_index];
+    const matching_nodes = predefined_nodes.filter(node => node.name === node_name);
+    if (matching_nodes.length) {
+        const random_index = Math.floor(Math.random() * matching_nodes.length);
+        return matching_nodes[random_index];
     }
     return null;
 }
@@ -529,7 +530,7 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
                 "id": 1,
                 "method": "eth_subscribe",
                 "params": ["logs", {
-                    "address": test_address,
+                    "address": glob_const.test_address.ethereum,
                     "topics": []
                 }]
             });
@@ -605,10 +606,14 @@ function handle_rpc_node_selection() {
             return
         }
         const dialog_box = $("#settingsbox"),
-            node_select_input = dialog_box.find("#rpc_main_input");
-        node_select_input.removeData().data(node_config);
-        dialog_box.find(".options .optionwrap").removeClass("rpc_selected");
+            list_box = node_option.closest(".selectbox");
+        list_box.find(".options .optionwrap").removeClass("rpc_selected");
         node_option.addClass("rpc_selected");
+        if (list_box.attr("id") === "lws_list") {
+            return
+        }
+        const node_select_input = dialog_box.find("#rpc_main_input");
+        node_select_input.removeData().data(node_config);
         if (node_config.custom) return
         dialog_box.find("#rpc_url_input").val("");
     })
@@ -1063,7 +1068,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 "id": 1,
                 "method": "eth_subscribe",
                 "params": ["logs", {
-                    "address": test_address,
+                    "address": glob_const.test_address.ethereum,
                     "topics": []
                 }]
             });
@@ -1082,8 +1087,8 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                         pass = true;
                     } else if (currency_name === "ethereum" && resp.result && resp.jsonrpc) {
                         pass = true;
-                    } else if (glob_let.is_erc20t === true) {
-                        pass = false;
+                    } else if (glob_let.is_erc20t === true && resp.result && resp.jsonrpc) {
+                        pass = true;
                     } else if (currency_name === "nano" && resp.ack) {
                         pass = true;
                     }
@@ -1202,7 +1207,7 @@ function save_lws_settings(currency_name, node_config, is_new_node) {
 
 // Manages removal of custom RPC nodes with safeguards for default nodes
 function delete_rpc_node() {
-    $(document).on("click", "#settingsbox .options .opt_icon_box .icon-bin", function(e) {
+    $(document).on("click", "#settingsbox #rpc_list .opt_icon_box .icon-bin, #settingsbox #api_list .opt_icon_box .icon-bin", function(e) {
         e.preventDefault();
         const delete_btn = $(this),
             dialog_box = $("#settingsbox"),
@@ -1215,7 +1220,7 @@ function delete_rpc_node() {
                 node_url = node_config.url,
                 is_default = node_config.default !== false,
                 nodes_container = dialog_box.find(".options"),
-                matching_nodes = nodes_container.find("span[data-value='" + node_url + "']"),
+                matching_nodes = delete_btn.closest(".selectbox").find(".options span[data-value='" + node_url + "']"),
                 has_duplicates = matching_nodes.length > 1;
             if (is_default === true && !has_duplicates) {
                 play_audio("funk");
@@ -1234,6 +1239,49 @@ function delete_rpc_node() {
                 settings_item.data("options", filtered_nodes);
                 notify(tl("rpcnoderemoved"));
                 $("#rpc_url_input").val("");
+                save_cc_settings(currency_name, true);
+            }
+        }
+        return
+    })
+}
+
+// Manages removal of custom Monero-lws nodes. Mirrors delete_rpc_node but is
+// keyed to the "apis" settings node and its lws_options array. Scoped to
+// #lws_list so it never fires on RPC rows — all three selectboxes render
+// identical .icon-bin markup.
+function delete_lws_node() {
+    $(document).on("click", "#settingsbox #lws_list .opt_icon_box .icon-bin", function(e) {
+        e.preventDefault();
+        const delete_btn = $(this),
+            dialog_box = $("#settingsbox"),
+            currency_name = dialog_box.find("#rpc_input_box").attr("data-currency"),
+            settings_item = cs_node(currency_name, "apis"),
+            custom_nodes = settings_item.data("lws_options");
+        if (custom_nodes && custom_nodes.length) {
+            const node_element = delete_btn.closest(".optionwrap"),
+                node_config = node_element.data(),
+                node_url = node_config.url,
+                is_default = node_config.default !== false,
+                matching_nodes = delete_btn.closest(".selectbox").find(".options span[data-value='" + node_url + "']"),
+                has_duplicates = matching_nodes.length > 1;
+            if (is_default === true && !has_duplicates) {
+                play_audio("funk");
+                topnotify(tl("removedefaultnode"));
+                return
+            }
+            const node_name = node_url || node_config.name,
+                user_confirmed = confirm(tl("confirmremovenode", {
+                    "thisval": node_name
+                }));
+            if (user_confirmed) {
+                const filtered_nodes = custom_nodes.filter(node => node.url !== node_url);
+                node_element.slideUp(500, function() {
+                    $(this).remove();
+                });
+                settings_item.data("lws_options", filtered_nodes);
+                notify(tl("rpcnoderemoved"));
+                $("#lws_url_input").val("");
                 save_cc_settings(currency_name, true);
             }
         }

@@ -38,8 +38,6 @@ const br_bipobj = br_get_local("bpdat", true),
     br_androidpackagename = "io.bitrequest.app",
     br_useragent = navigator.userAgent || navigator.vendor || window.opera,
     br_lower_useragent = br_useragent.toLowerCase(),
-    br_timezoneoffset = new Date().getTimezoneOffset(),
-    br_timezone = br_timezoneoffset * 60000,
     br_has_ndef = ("NDEFReader" in window),
     br_referrer = document.referrer,
     br_exp_referrer = "android-app://" + br_androidpackagename,
@@ -95,8 +93,6 @@ const br_bipobj = br_get_local("bpdat", true),
         "wl": navigator.wakeLock,
         "deviceid": null,
         "phpsupport": false, // set true by core.js → checkphp on PHP-capable host
-        "timezone": br_timezone,
-        "timezoneoffset": br_timezoneoffset,
 
         // --- DOM references (cached jQuery selectors) ---
         "body": $("body"),
@@ -176,7 +172,7 @@ const br_bipobj = br_get_local("bpdat", true),
 
         // --- Audio ---
         "audio_buffers": {},
-        
+
         // --- Themes ---
         "themes": ["aurora.css", "forest_canopy.css", "malignant_glare.css", "oceanic_depth.css", "solar_flare.css", "terminal_entry.css", "twilight_grove.css"],
 
@@ -440,7 +436,7 @@ function parse_datetime_string(date_string) {
     const [date, time] = date_string.split(" "),
         [year, month, day] = date.split("-"),
         [hours, minutes, seconds] = time.split(":");
-    return new Date(year, parseInt(month, 10) - 1, day, hours, minutes, seconds);
+    return new Date(Date.UTC(year, parseInt(month, 10) - 1, day, hours, minutes, seconds));
 }
 
 // Converts ISO timestamp string to milliseconds since epoch
@@ -603,23 +599,54 @@ function b64urldecode(str) {
     }
 }
 
-// Decode as URL-Safe Base64 with standard b64 fallback
-function decodeb64_flex(input) {
-    let decoded_string = null;
+// Encodes any JS string (full Unicode) to URL-safe base64.
+// btoa alone throws on code points > 0xFF (CJK, emoji, ₹ ...), so encode to
+// UTF-8 bytes first. Counterpart of b64decode_url.
+function b64encode_url(str) {
+    const utf8_bytes = new TextEncoder().encode(str);
+    let binary = "";
+    for (let i = 0; i < utf8_bytes.length; i++) {
+        binary += String.fromCharCode(utf8_bytes[i]);
+    }
+    return cleanb64(btoa(binary));
+}
+
+// Decodes base64 from a URL parameter to a string, or false on failure.
+// Tolerates both URL-safe ('-'/'_') and standard ('+'/'/') alphabets, and maps
+// spaces back to '+': legacy share links used raw btoa, and parse_url_params'
+// form-decoding turned every '+' into a space. Base64 never legitimately
+// contains spaces, so this restores those payloads byte-exact.
+// Bytes are interpreted as UTF-8 (new links); if that fails they're kept as
+// Latin-1 (legacy links that btoa'd accented chars directly).
+function b64decode_url(str) {
+    if (typeof str !== "string" || !str) return false;
+    const normalized = str.replace(/ /g, "+").replace(/-/g, "+").replace(/_/g, "/");
     try {
-        let b64_urlsafe = input.replace(/-/g, "+").replace(/_/g, "/");
-        while (b64_urlsafe.length % 4) {
-            b64_urlsafe += "=";
+        const binary = atob(normalized),
+            bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
         }
-        decoded_string = atob(b64_urlsafe);
-        return decoded_string;
-    } catch (e) {
         try {
-            decoded_string = atob(input);
-            return decoded_string;
+            return new TextDecoder("utf-8", {
+                "fatal": true
+            }).decode(bytes);
         } catch (e) {
-            console.error("Could not decode Base64 string:", e);
+            return binary; // legacy Latin-1 payload
         }
+    } catch (e) {
+        return false;
+    }
+}
+
+// Decodes a base64 URL parameter containing JSON, or null on any failure
+function parse_b64_json(str) {
+    const decoded = b64decode_url(str);
+    if (decoded === false) return null;
+    try {
+        return JSON.parse(decoded);
+    } catch (e) {
+        return null;
     }
 }
 
@@ -676,25 +703,6 @@ function is_array(e) {
 
 // Traverses nested object properties using dot notation path string
 function q_obj(obj, path) {
-    try {
-        const path_parts = path.split(".");
-        for (let i = 0; i < path_parts.length; i++) {
-            if (obj === null || typeof obj !== "object") {
-                return false
-            }
-            obj = obj[path_parts[i]];
-        }
-        return obj;
-    } catch (e) {
-        console.error(e.name, e.message);
-        return false
-    }
-}
-
-// Like q_obj but returns `undefined` on miss instead of `false`. Safer for
-// API fields that can legitimately hold `false`/`0`/`""`. New code should
-// prefer this; existing q_obj call sites migrate file-by-file as touched.
-function q_path(obj, path) {
     if (obj == null) return undefined;
     const parts = path.split(".");
     for (let i = 0; i < parts.length; i++) {
@@ -1134,7 +1142,9 @@ function renderlnconnect(str) {
 
 // Generates cryptographically secure random integer within specified range
 function generate_random_number(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
+    const range_buffer = new Uint32Array(1);
+    crypto.getRandomValues(range_buffer);
+    return min + (range_buffer[0] % (max - min + 1));
 }
 
 // Returns random element from array using Math.random() distribution
@@ -1167,8 +1177,8 @@ function fk() {
         "custom": "gk",
         "api_url": "x" // dummy value, don't remove
     }).done(function(e) {
-        const res = br_result(e);
-        result = res.result,
+        const res = br_result(e),
+            result = res.result,
             key_obj = result.k;
         if (key_obj) {
             init_keys(key_obj, false);
@@ -1205,6 +1215,7 @@ function check_params(params, app) {
     }
     if (url_params.sbu) {
         check_systembu(url_params.sbu);
+        return
     }
     if (url_params.csv) {
         check_csvexport(url_params.csv);
@@ -1325,12 +1336,14 @@ function parse_url_params(str) {
 
 // Validates base64 encoded metadata
 function scanmeta(val) {
-    const decoded = (val?.length > 5) ? atob(val) : false,
-        has_xss = inj(decoded);
-    if (has_xss) { //xss detection
+    if (!(val?.length > 5)) {
+        return false
+    }
+    const decoded = b64decode_url(val);
+    if (decoded === false) { // undecodable param: treat as unsafe rather than throwing on app load
         return true
     }
-    return false
+    return inj(decoded);
 }
 
 function decode_entities(str) {
@@ -1410,7 +1423,7 @@ function inj(val) {
     if (/&(#|[\w]+);/i.test(url_decoded)) {
         entity_decoded = decode_entities(url_decoded);
     }
-    const xss_pattern = /<\s*[\/]?\s*(script|img|svg|iframe|object|details|embed|style|math|link|video|audio|form|input|button|marquee|isindex|body|meta|base|applet|param|frameset|frame)|on\w+\s*=|javascript:|vbscript:|data:text\/(html|javascript)|expression\(|href\s*=\s*["']?\s*javascript:|src\s*=\s*["']?\s*(javascript:|data:)|formaction\s*=\s*["']?\s*javascript:|action\s*=\s*["']?\s*javascript:|style\s*=.*(?:expression|url\(javascript:)|(alert|confirm|prompt|eval)\s*[\(\`]/i;
+    const xss_pattern = /<\s*[\/]?\s*(script|img|svg|iframe|object|details|embed|style|math|link|video|audio|form|input|button|marquee|isindex|body|meta|base|applet|param|frameset|frame)|\bon\w+\s*=|javascript:|vbscript:|data:text\/(html|javascript)|expression\(|href\s*=\s*["']?\s*javascript:|src\s*=\s*["']?\s*(javascript:|data:)|formaction\s*=\s*["']?\s*javascript:|action\s*=\s*["']?\s*javascript:|style\s*=.*(?:expression|url\(javascript:)/i;
     if (xss_pattern.test(value) || xss_pattern.test(url_decoded) || xss_pattern.test(entity_decoded)) {
         inj_alert(value);
         return true;
@@ -1714,7 +1727,7 @@ function filter_list_match(list, data_key, data_value) {
 function get_request_id() {
     if (!is_openrequest()) return
     try {
-        return filter_list_match($("#requestlist").find("li.rqli"), "rqdata", btoa(JSON.stringify(request.dataobject)).slice(0, -2)).data("requestid");
+        return filter_list_match($("#requestlist").find("li.rqli"), "rqdata", b64encode_url(JSON.stringify(request.dataobject)).slice(0, -2)).data("requestid");
     } catch (err) {
         console.error(err.name, err.message);
         return false
@@ -1893,7 +1906,7 @@ function strip_key_from_url(url) {
 // Normalizes URL format with protocol and trailing slash
 function complete_url(url) {
     const withProtocol = url.indexOf("://") > -1 ? url : "https://" + url;
-    return withProtocol.slice(-1) === "/" ? withProtocol : withProtocol;
+    return withProtocol.slice(-1) === "/" ? withProtocol : withProtocol + "/";
 }
 
 // Retrieves active proxy configuration from DOM data

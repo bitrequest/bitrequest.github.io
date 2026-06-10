@@ -615,7 +615,7 @@ main {
 }
 
 #request_history>span {
-    top: 0.16em;
+    top: -0.05em;
     left: 0.11em;
     font-size: 70%;
 }
@@ -1729,7 +1729,8 @@ li[data-checked="false"] .checkbox:before,
 }
 
 #dialogbody h2 {
-    font-size: 170%;
+    font-size: 160%;
+    margin-bottom:0.5em;
 }
 
 #dialogbody h2:before {

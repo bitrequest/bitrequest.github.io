@@ -259,8 +259,8 @@ function route_api_request(rd, api_data, rdo) {
 // therefore unambiguous. If a payment-routed coin ever also gains a provider-table
 // provider, that precedence becomes load-bearing — add an explicit handler key then.
 function route_crypto_api(rd, api_data, rdo) {
-    const handler = CRYPTO_API_DISPATCH_BY_PROVIDER[api_data.name]
-        || CRYPTO_API_DISPATCH_BY_PAYMENT[rd.payment];
+    const handler = CRYPTO_API_DISPATCH_BY_PROVIDER[api_data.name] ||
+        CRYPTO_API_DISPATCH_BY_PAYMENT[rd.payment];
     if (handler) {
         handler(rd, api_data, rdo);
         return
@@ -1396,7 +1396,7 @@ function check_api(payment) {
 function tx_data(rd) {
     const requestid = rd.requestid,
         thislist = $("#" + requestid),
-        request_date = rd.inout === "incoming" ? rd.timestamp : rd.requestdate,
+        request_date = rd.requesttype === "incoming" ? rd.timestamp : rd.requestdate,
         request_timestamp = request_date - 30000, // 30 seconds compensation for unexpected results
         get_confirmations = rd.set_confirmations,
         setconfirmations = get_confirmations ? parseInt(get_confirmations) : 1,

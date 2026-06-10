@@ -573,7 +573,7 @@ function continue_request(contracts) {
         currency_check = is_erc20 ? "ethereum" : payment_currency,
         encoded_data = url_params.d,
         has_data = encoded_data && encoded_data.length > 5,
-        decoded_data = has_data ? JSON.parse(atob(encoded_data)) : null, // decode data param if exists;
+        decoded_data = has_data ? parse_b64_json(encoded_data) : null, // decode data param if exists;
         is_lightning = decoded_data && decoded_data.imp, // check for lightning;
         is_lnd_only = recipient_address === "lnurl",
         is_valid_address = is_lnd_only ? true : check_address(recipient_address, currency_check); // validate address 
@@ -976,7 +976,7 @@ function lnd_put(proxy_url, proxy_key, payload) {
         proceed_pf();
     }).fail(function(xhr, status, error) {
         const is_proxy = q_obj(helper, "lnd.lnurl");
-        if (is_proxy === false) {
+        if (!is_proxy) {
             const saved_proxy = s_lnd_proxy();
             if (saved_proxy === false) {
                 if (get_next_proxy()) {
@@ -1032,9 +1032,9 @@ function proceed_pf(error_obj) {
     }
     if (glob_const.offline) { // no price conversion when app is offline
         render_currencypool({
-            "EUR": 1,
-            "USD": 1.169
-        }, 0, 000015, "coinmarketcap", "fixer", 0, 0);
+            "eur": 1,
+            "usd": 1.169
+        }, 0.000016, "coinmarketcap", "fixer", 0, 0);
         return
     }
     const selected_crypto_api = $("#cmcapisettings").data("selected"),
@@ -1992,7 +1992,7 @@ function validate_request_data(lnurl) {
     const url_params = get_urlparameters(),
         request_name = $("input#requestname").val(),
         request_title = $("input#requesttitle").val(),
-        is_valid = request_name.length > 2 && request_title.length > 1,
+        is_valid = request_name.length > 2 && request_title.length > 1 && !inj(request_name) && !inj(request_title),
         share_button = $("#sharebutton"),
         page = url_params.p,
         payment = url_params.payment,
@@ -2036,7 +2036,7 @@ function validate_request_data(lnurl) {
         if (request.eth_l2s.length) {
             data_object.l2 = request.eth_l2s;
         }
-        new_url = current_url + "&d=" + btoa(JSON.stringify(data_object));
+        new_url = current_url + "&d=" + b64encode_url(JSON.stringify(data_object));
         request.requestname = request_name,
             request.requesttitle = request_title;
         share_button.addClass("sbactive");
@@ -2662,10 +2662,10 @@ function share(current_button) {
             currency_id = request.cmcid,
             currency_symbol = request.currencysymbol,
             has_data = data_param && data_param.length > 5,
-            data_object = has_data ? JSON.parse(atob(data_param)) : null, // decode data param if exists
-            request_name = has_data ? data_object.n : request.saved_name,
-            request_title = has_data ? data_object.t : "",
-            is_lightning = has_data ? !!data_object.imp : false,
+            data_object = has_data ? parse_b64_json(data_param) : null, // decode data param if exists
+            request_name = data_object ? data_object.n : request.saved_name,
+            request_title = data_object ? data_object.t : "",
+            is_lightning = data_object ? !!data_object.imp : false,
             new_data_string = has_data ? "&d=" + data_param : "", // construct data param if exists
             is_ipfs = glob_const.thishostname.includes("ipfs") || glob_const.thishostname.includes("bitrequest.crypto"),
             shared_host = is_ipfs ? glob_const.c_host : "https://bitrequest.github.io", // check for IFPS
@@ -3128,7 +3128,7 @@ function save_payment_request(direct, lightning_url) {
         current_timestamp = now_utc(), // UTC
         request_data_hash = current_data && current_data.length > 5 ? current_data : null, // check if data param exists
         request_meta_hash = current_meta && current_meta.length > 5 ? current_meta : null, // check if meta param exists
-        data_object = request_data_hash ? JSON.parse(atob(request_data_hash)) : null, // decode data param if exists
+        data_object = request_data_hash ? parse_b64_json(request_data_hash) : null, // decode data param if exists
         request_name = request.requestname,
         request_timestamp = payment_timestamp || (data_object && data_object.ts) || (current_request_type === "incoming" ? null : current_timestamp), // null is unknown timestamp
         unhashed_request_data = current_payment + current_currency + amount_string + current_address + request_name + request.requesttitle + confirmation_string + lightning_id,

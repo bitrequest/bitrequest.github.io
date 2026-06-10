@@ -86,16 +86,9 @@ function setup_confirmation_editor() {
                                 }
                             }
                         },
-                        {
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": tl("okbttn"),
-                                    "data-currency": currency
-                                }
-                            }
-                        }
+                        submit_input({
+                            "data-currency": currency
+                        })
                     ]
                 }
             }],
@@ -220,16 +213,10 @@ function setup_explorer_selection() {
                                         }
                                     }
                                 ]
-                            },
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": tl("okbttn"),
-                                    "data-currency": currency
-                                }
                             }
-                        }]
+                        }, submit_input({
+                            "data-currency": currency
+                        })]
                     }
                 }],
                 dialog_html = template_dialog({
@@ -378,7 +365,7 @@ function display_xpub_details(currency, xpub_key) {
                         <p class='adbox adboxl select' data-type='Xpub'>" + xpub_key + "</p>\
                     </div>\
                 </div>\
-        <li>",
+        </li>",
         dialog_content = $("<div id='ad_info_wrap'><h2>" + currency_icon + " <span>" + currency + " " + tl("Key derivations") + "</span></h2><ul>" + xpub_box + "<div id='d_paths'></div>\
         </li>\
     </ul>\
@@ -837,16 +824,10 @@ function setup_soundbyte_selection() {
                                         }
                                     }
                                 ]
-                            },
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": tl("okbttn"),
-                                    "data-currency": currency
-                                }
                             }
-                        }]
+                        }, submit_input({
+                            "data-currency": currency
+                        })]
                     }
                 }],
                 dialog_html = template_dialog({

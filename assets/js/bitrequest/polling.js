@@ -247,8 +247,8 @@ function xmr_get_latest_block_hash(api_data, vk, spk) {
                 const start_index = pre_start_index + 1; // first potential block
                 if (latest_block_height >= start_index) {
                     const range = create_range_array(start_index, latest_block_height),
-                        indexed_blocks = glob_let.xmr_indexed.blocks;
-                    filtered_range = (indexed_blocks.length > 0) ? remove_array_items(range, indexed_blocks) : range;
+                        indexed_blocks = glob_let.xmr_indexed.blocks,
+                        filtered_range = (indexed_blocks.length > 0) ? remove_array_items(range, indexed_blocks) : range;
                     if (filtered_range.length) {
                         xmr_process_block_range(api_data, filtered_range, vk, spk);
                         return
@@ -626,8 +626,8 @@ function poll_monero_rpc(rd, api_data, rdo) {
         let matched_tx = false;
         if (rpc_result && rpc_result.txs) {
             const incoming = filter_incoming_transactions(rpc_result, vk, spk),
-                parsed_tx = xmr_tx_data(incoming[0], rdo.setconfirmations);
-            if (parsed_tx.txhash === tx_hash && parsed_tx.ccval) {
+                parsed_tx = incoming.length ? xmr_tx_data(incoming[0], rdo.setconfirmations) : false;
+            if (parsed_tx && parsed_tx.txhash === tx_hash && parsed_tx.ccval) {
                 matched_tx = parsed_tx;
                 if (rdo.source === "requests") {
                     const tx_item = create_transaction_item(parsed_tx);

@@ -1486,7 +1486,6 @@ function phrase_info_pu(selected_coin) {
                 wallet_element = $("<ul id='formbox_ul' class='clearfix" + display_class + "'>" + wallet_list + "</ul>");
             let xpub_element = "",
                 segwit_element = "";
-            console.log(xpub_key);
             if (xpub_key) {
                 console.log("xpub_key");
                 xpub_element = $("<div class='xpub_ib clearfix" + display_class + "' data-xpub='" + xpub_key + "'>\

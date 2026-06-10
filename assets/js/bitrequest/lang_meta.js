@@ -40,16 +40,6 @@ const LANG_META = {
         "lang": "Japanese",
         "flag": "🇯🇵",
         "fn": "lang_ja"
-    },
-    "ai": {
-        "lang": "AI",
-        "flag": "🤖",
-        "fn": "lang_ai"
-    },
-    "ia": {
-        "lang": "Deep AI",
-        "flag": "👾",
-        "fn": "lang_ai2"
     }
 };
 

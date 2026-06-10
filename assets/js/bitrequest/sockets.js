@@ -171,9 +171,9 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
     // and route it to the ethereum socket. That precedence is the one piece of
     // ordering here that does real work; everything else is a plain table lookup
     // (monero included — SOCKET_HANDLERS.monero is reached via the fallback).
-    const handler = (payment_type === "ethereum" || request.erc20)
-        ? SOCKET_HANDLERS.ethereum
-        : SOCKET_HANDLERS[payment_type];
+    const handler = (payment_type === "ethereum" || request.erc20) ?
+        SOCKET_HANDLERS.ethereum :
+        SOCKET_HANDLERS[payment_type];
     if (handler) handler(socket_node, wallet_address, retry);
 }
 
@@ -337,23 +337,6 @@ function handle_socket_close(socket_node, socket_id) {
         socket_info(socket_node, false);
         console.log("Disconnected from " + socket_node.url);
         glob_let.ws_timer = 0;
-    });
-}
-
-// Implements delayed reconnection logic for Kaspa WebSocket with rate limiting and state validation
-function reconnect_websocket(recon_data) {
-    if (!recon_data) return
-    const close_code = recon_data.trigger,
-        wallet_address = recon_data.address;
-    if (close_code !== 1000 || !wallet_address || glob_const.paymentdialogbox.attr("data-status") !== "new") return
-    const elapsed_time = now_utc() - glob_let.ws_timer;
-    if (elapsed_time < 10000) return
-    const retry_timeout = setTimeout(function() {
-        if (is_openrequest()) {
-            recon_data.function(recon_data.node, wallet_address);
-        }
-    }, 2000, function() {
-        clearTimeout(retry_timeout);
     });
 }
 
@@ -1024,7 +1007,7 @@ function init_eth_sockets(params, token_contracts) {
             web3_eth_websocket(socket_node, wallet_address); // L1 Infura
         }
     } else {
-        web3_erc20_websocket(socket_node, wallet_address, token_contracts.main);
+        web3_erc20_websocket(socket_node, wallet_address, token_contracts.main, sha_sub(socket_node.url + "main", 15));
     }
     if (retry) return
     // Check for layer 2

@@ -122,15 +122,7 @@ function edit_account_name() {
                                 }
                             }
                         },
-                        {
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": tl("okbttn")
-                                }
-                            }
-                        }
+                        submit_input()
                     ]
                 }
             }],
@@ -228,15 +220,7 @@ function select_default_currency() {
                                 "content": "<h3>" + tl("setasdefault") + switch_panel(switchmode, " global") + "</h3>"
                             }
                         },
-                        {
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": tl("okbttn")
-                                }
-                            }
-                        }
+                        submit_input()
                     ]
                 }
             }],
@@ -374,15 +358,7 @@ function select_language() {
                                 ]
                             }
                         },
-                        {
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": tl("okbttn")
-                                }
-                            }
-                        }
+                        submit_input()
                     ]
                 }
             }],
@@ -457,15 +433,7 @@ function edit_theme() {
                                     ]
                                 }
                             },
-                            {
-                                "input": {
-                                    "class": "submit",
-                                    "attr": {
-                                        "type": "submit",
-                                        "value": tl("okbttn")
-                                    }
-                                }
-                            }
+                            submit_input()
                         ]
                     }
                 },
@@ -501,7 +469,6 @@ function edit_theme() {
         $.each(glob_const.themes, function(key, value) {
             options.append("<span data-pe='none'>" + value + "</span>");
         });
-        br_set_session("themes", data, true);
     });
 }
 
@@ -597,15 +564,7 @@ function select_lock_timeout() {
                                 }
                             }
                         },
-                        {
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": tl("okbttn")
-                                }
-                            }
-                        }
+                        submit_input()
                     ]
                 }
             }],
@@ -1389,15 +1348,7 @@ function pin_dialog(data, cb) {
                             }
                         }
                     },
-                    {
-                        "input": {
-                            "class": "submit",
-                            "attr": {
-                                "type": "submit",
-                                "value": tl("okbttn")
-                            }
-                        }
-                    }
+                    submit_input()
                 ]
             }
         }],
@@ -1580,15 +1531,7 @@ function dphrase_dialog(data) {
                                 }
                             }
                         },
-                        {
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": tl("okbttn")
-                                }
-                            }
-                        }
+                        submit_input()
                     ]
                 }
             }
@@ -1954,19 +1897,33 @@ function should_include_request(status, type, incl_paid, incl_ins, incl_new, inc
 }
 
 // Converts array of objects into CSV formatted string with headers
+// Escapes a single CSV cell: RFC 4180 quoting, plus a leading apostrophe to
+// neutralize spreadsheet formula injection ("=", "+", "-", "@" — request names
+// arrive from shared URLs, i.e. payer-controlled input opened in the
+// merchant's Excel/LibreOffice).
+function csv_cell(value) {
+    let cell = String(value ?? "");
+    if (/^[=+\-@\t\r]/.test(cell)) {
+        cell = "'" + cell;
+    }
+    if (/[",\n\r]/.test(cell)) {
+        cell = '"' + cell.replace(/"/g, '""') + '"';
+    }
+    return cell;
+}
+
 function render_csv(arr) {
     const headers = [],
         inner_headers = [],
         body = [];
     $.each(arr[0], function(key, value) {
-        inner_headers.push(key);
+        inner_headers.push(csv_cell(key));
     });
     headers.push(inner_headers.join(","));
     $.each(arr, function(i, val) {
         const inner_body = [];
         $.each(val, function(key, value) {
-            const cell = value.replace(/,/g, ".");
-            inner_body.push(cell);
+            inner_body.push(csv_cell(value));
         });
         body.push(inner_body.join(","));
     });
@@ -2196,15 +2153,7 @@ function urlshortener() {
                                     }
                                 }
                             },
-                            {
-                                "input": {
-                                    "class": "submit",
-                                    "attr": {
-                                        "type": "submit",
-                                        "value": tl("okbttn")
-                                    }
-                                }
-                            }
+                            submit_input()
                         ]
                     }
                 }
@@ -2375,15 +2324,7 @@ function configure_crypto_api() {
                                 }
                             }
                         },
-                        {
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": tl("okbttn")
-                                }
-                            }
-                        }
+                        submit_input()
                     ]
                 }
             }],
@@ -2506,15 +2447,7 @@ function configure_fiat_api() {
                                 }
                             }
                         },
-                        {
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": tl("okbttn")
-                                }
-                            }
-                        }
+                        submit_input()
                     ]
                 }
             }],
@@ -3397,15 +3330,7 @@ function permissions_callback() {
                             ]
                         }
                     },
-                    {
-                        "input": {
-                            "class": "submit",
-                            "attr": {
-                                "type": "submit",
-                                "value": tl("okbttn")
-                            }
-                        }
-                    }
+                    submit_input()
                 ]
             }
         }],
@@ -3736,8 +3661,8 @@ function check_teaminvite(ro) {
                     cd = countdown(expires_in * 1000),
                     cd_format = countdown_format(cd),
                     bpdat_seedid = q_obj(br_dat, "bitrequest_cashier.seedid"),
-                    update = (bpdat_seedid == glob_let.cashier_seedid) && (bpdat_seedid !== false),
-                    master_account = (bpdat_seedid === glob_let.bipid) && (bpdat_seedid !== false),
+                    update = Boolean(bpdat_seedid) && (bpdat_seedid == glob_let.cashier_seedid),
+                    master_account = Boolean(bpdat_seedid) && (bpdat_seedid === glob_let.bipid),
                     teamid = br_get_local("teamid", true),
                     teamid_arr = get_default_object(teamid),
                     is_installed = teamid_arr.includes(ro),

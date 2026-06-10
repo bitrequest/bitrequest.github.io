@@ -504,16 +504,9 @@ function edit_l2(callback, l2_contacts) {
                                 "content": apibox
                             }
                         },
-                        {
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": tl("okbttn"),
-                                    "data-currency": thiscurrency
-                                }
-                            }
-                        }
+                        submit_input({
+                            "data-currency": thiscurrency
+                        })
                     ]
                 }
             }],
@@ -584,7 +577,7 @@ function save_layer2_settings() {
             if (apibox_item.length) {
                 const l2_apis = apibox_item.find(".l2_apis");
                 if (l2_apis.length) {
-                    l2_type_obj = {};
+                    const l2_type_obj = {};
                     l2_apis.each(function() {
                         const this_nw = $(this),
                             input = this_nw.find(".selectbox > input"),
@@ -837,7 +830,7 @@ function update_network_status(sn, stat) {
         l2_length = Object.keys(l2_object).length,
         l2_pref = (l2_length > 1) ? "L2's:" : "L2:";
     l2_object[network] = val;
-    let nw_li = "<li>" + l2_pref + "</i>",
+    let nw_li = "<li>" + l2_pref + "</li>",
         empty = true,
         offline_count = 0,
         all_l2s = glob_const.eth_l2s,

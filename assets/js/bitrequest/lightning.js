@@ -148,10 +148,10 @@ function render_lightning_interface(replace) {
             "</div>" +
             "</div>" +
             "</li>" +
-            "<ul>" +
+            "</ul>" +
             "</div>" +
             "</div>",
-            content = template_dialog_temp({
+            content = template_dialog({
                 "id": "lnsettingsbox",
                 "icon": "icon-power",
                 "title": node_title,
@@ -181,36 +181,6 @@ function render_lightning_interface(replace) {
             $("#dialogbody").slideDown(300);
         }
     }
-}
-
-// Generates formatted HTML dialog template with specified parameters
-function template_dialog_temp(dialog_data) {
-    const validated_class = dialog_data.validated ? " validated" : "",
-        dialog_object = [{
-            "div": {
-                "id": dialog_data.id,
-                "class": "formbox",
-                "content": [{
-                        "h2": {
-                            "class": dialog_data.icon,
-                            "content": dialog_data.title
-                        }
-                    },
-                    {
-                        "div": {
-                            "class": "popnotify"
-                        }
-                    },
-                    {
-                        "div": {
-                            "class": "pfwrap",
-                            "content": dialog_data.elements
-                        }
-                    }
-                ]
-            }
-        }]
-    return render_html(dialog_object);
 }
 
 // Returns Lightning Network settings DOM node
@@ -247,8 +217,8 @@ function node_option_li(node_info, selected, action, proxy_url, proxy_key) {
             if (error) {
                 const default_error = tl("unabletoconnect"),
                     error_message = error.message || (typeof error === "string" ? error : default_error),
-                    error_code = error.code;
-                locked = error_code && (error_code === 1 || error_code === 2) ? "locked" : null;
+                    error_code = error.code,
+                    locked = error_code && (error_code === 1 || error_code === 2) ? "locked" : null;
                 if (action === "append") {
                     lightning_option_li(false, node_info, selected, locked, proxy_url);
                     popnotify("error", error_message);
@@ -498,8 +468,8 @@ function create_proxy_option(option_list, is_live, key, proxy_info, selected, pr
 // Manages visibility toggling of Lightning Network proxy configuration UI
 function toggle_proxy_drawer() {
     $(document).on("click", "#lnsettingsbox #toggle_lnd", function() {
-        const proxy_drawer = $("#add_proxy_drawer");
-        proxy_input = $("#lnd_proxy_url_input");
+        const proxy_drawer = $("#add_proxy_drawer"),
+            proxy_input = $("#lnd_proxy_url_input");
         if (proxy_drawer.is(":visible")) {
             proxy_input.blur();
             proxy_drawer.slideUp(200);
@@ -782,8 +752,8 @@ function trigger_ln() {
             test_create_invoice(implementation, current_proxy, null, null);
             return
         }
-        const node_credentials = $("#lnd_credentials");
-        nwc = implementation === "nwc";
+        const node_credentials = $("#lnd_credentials"),
+            nwc = implementation === "nwc";
         if (node_credentials.is(":visible")) {
             const node_host_input = $("#lnd_credentials .cs_" + implementation + ":visible .lnd_host"),
                 node_key_input = $("#lnd_credentials .cs_" + implementation + ":visible .invoice_macaroon"),
