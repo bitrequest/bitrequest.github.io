@@ -1390,11 +1390,6 @@ const glob_config = {
                             "name": "xmr_node",
                             "url": "https://node.bitrequest.app:18090",
                             "display": true
-                        },
-                        {
-                            "name": "xmr_node",
-                            "url": "https://moneronode.org:18081",
-                            "display": true
                         }
                     ],
                     "options": [],
