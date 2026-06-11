@@ -22,7 +22,7 @@
 // by the fetch handler (cache successful same-origin responses).
 // ============================================================
 
-const CODE_CACHE_VERSION = "v0.327",
+const CODE_CACHE_VERSION = "v0.328",
 	CODE_CACHE = "bitrequest-code-" + CODE_CACHE_VERSION,
 	STATIC_CACHE = "bitrequest-static-v1", // bump only if you replace a static asset in-place
 	OFFLINE_FALLBACK = "index.html";
