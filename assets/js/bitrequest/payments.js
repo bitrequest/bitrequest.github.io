@@ -2728,7 +2728,7 @@ function shorten_url(shared_title, shared_url, site_thumb, unguessable, url_hash
             }
         }
         if (url_service === "bitly") {
-            bitly_shorten(shared_url, shared_title, url_hash);
+            bitly_shorten(shared_url, shared_title, url_hash, url_service, site_thumb);
             return
         }
         if (is_custom_service) {
@@ -2740,7 +2740,7 @@ function shorten_url(shared_title, shared_url, site_thumb, unguessable, url_hash
 }
 
 // Processes Bitly API URL shortening
-function bitly_shorten(shared_url, shared_title, url_hash) {
+function bitly_shorten(shared_url, shared_title, url_hash, service, site_thumb) {
     api_proxy({
         "api": "bitly",
         "search": "bitlinks",
@@ -2756,6 +2756,10 @@ function bitly_shorten(shared_url, shared_title, url_hash) {
         }
     }).done(function(response) {
         const data = br_result(response).result;
+        if (data.error) {
+            custom_shorten(service, shared_url, shared_title, site_thumb, url_hash);
+            return
+        }
         if (data.id) {
             const link_id = data.id.split("/").pop(),
                 short_url = glob_const.approot + "?i=4bR" + link_id;
@@ -2767,6 +2771,7 @@ function bitly_shorten(shared_url, shared_title, url_hash) {
         }
         share_request(shared_url, shared_title);
     }).fail(function() {
+        console.log("jaap");
         share_request(shared_url, shared_title);
     });
 }
