@@ -62,7 +62,7 @@ const br_bipobj = br_get_local("bpdat", true),
     glob_const = {
         // --- App metadata ---
         "apptitle": "Bitrequest",
-        "proxy_version": "0.034",
+        "proxy_version": "0.036",
         "androidpackagename": br_androidpackagename,
         "approot": br_approot,
         "hostname": br_hostname,

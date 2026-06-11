@@ -80,6 +80,9 @@ function nwc_nip04_shared($privkey_hex, $peer_xonly_hex) {
     return hex2bin(str_pad($sx, 64, "0", STR_PAD_LEFT));
 }
 
+// NIP-04 (unauthenticated AES-CBC) is deprecated but spec-valid here: the event
+// signature covers content, so integrity doesn't rely on the cipher. NIP-44
+// migration needs info-event negotiation — not yet implemented.
 function nwc_nip04_encrypt($plaintext, $privkey_hex, $peer_xonly_hex) {
     $secret = nwc_nip04_shared($privkey_hex, $peer_xonly_hex);
     $iv = random_bytes(16);

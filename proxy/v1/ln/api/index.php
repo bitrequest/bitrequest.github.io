@@ -195,7 +195,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 		$host = $key = false;
 		$type = "lnurl";
 		$isproxy = false;
-		$nid = $get_nid ? $get_nid : ($post_nid ? $post_nid : false);
+		$nid = safe_filename($get_nid ? $get_nid : ($post_nid ? $post_nid : false));
 
 		// Check for cached credentials
 		if ($nid) {
@@ -383,16 +383,16 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 				if ($lnget) {
 					// Notify payment server about spark/nwc invoice generation, this might take up to 5 seconds.
 					if ($imp === "nwc" || $imp === "spark") {
-				        $status = json_encode([
-				            "pid" => $get_pid,
-				            "status" => "generate",
-				            "rqtype" => $type_text
-				        ]);
-			            $postheaders = [
-			                "post: " . $status,
-			                "tls_wildcard" => true
-			            ];
-			            curl_get(TOR_PROXY . ":8030/", $status, $postheaders);
+						$status = json_encode([
+							"pid" => $get_pid,
+							"status" => "generate",
+							"rqtype" => $type_text
+						]);
+						$postheaders = [
+							"post: " . $status,
+							"tls_wildcard" => true
+						];
+						curl_get(TOR_PROXY . ":8030/", $status, $postheaders);
 					}
 				}
 				$result = create_invoice($imp, $get_pid, $host, $key, $specified_amount, $memo, $type, null, "lnurl", $desc_hash, $meta, $p_expiry);
@@ -722,25 +722,25 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 		}
 		
 		if ($imp === "nwc") {
-		    try {
-		        $result = nwc_list_transactions($key, 50);
-		        if (isset($result["invoices"]) && is_array($result["invoices"])) {
-		            $connected = true;
-		        } else {
-		            $connected = false;
-		        }
-		    } catch (Exception $e) {
-		        // list_transactions not supported — fall back to get_info
-		        try {
-		            $info = nwc_get_info($key);
-		            $connected = isset($info["alias"]) || isset($info["methods"]);
-		            $result = $connected ? ["nwc" => "connected"] : ["error" => "get_info failed"];
-		        } catch (Exception $e2) {
-		            $connected = false;
-		            $result = ["error" => $e2->getMessage()];
-		        }
-		    }
-		    return process_invoice_result($result, $connected, $type, $pingtest);
+			try {
+				$result = nwc_list_transactions($key, 50);
+				if (isset($result["invoices"]) && is_array($result["invoices"])) {
+					$connected = true;
+				} else {
+					$connected = false;
+				}
+			} catch (Exception $e) {
+				// list_transactions not supported — fall back to get_info
+				try {
+					$info = nwc_get_info($key);
+					$connected = isset($info["alias"]) || isset($info["methods"]);
+					$result = $connected ? ["nwc" => "connected"] : ["error" => "get_info failed"];
+				} catch (Exception $e2) {
+					$connected = false;
+					$result = ["error" => $e2->getMessage()];
+				}
+			}
+			return process_invoice_result($result, $connected, $type, $pingtest);
 		}
 
 		if ($imp === "spark") {

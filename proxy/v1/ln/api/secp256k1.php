@@ -65,6 +65,9 @@ function _bcinvert($a, $m) {
         $tmp = $r; $r = bcsub($old_r, bcmul($q, $r)); $old_r = $tmp;
         $tmp = $s; $s = bcsub($old_s, bcmul($q, $s)); $old_s = $tmp;
     }
+    if (bccomp($old_r, "1") != 0) {
+        throw new Exception("_bcinvert: value not invertible (gcd != 1)");
+    }
     return _bcmod_pos($old_s, $m);
 }
 
@@ -74,10 +77,19 @@ function _bcinvert($a, $m) {
 function secp256k1_decompress($compressed_hex) {
     $p = _sp();
     $prefix = substr($compressed_hex, 0, 2);
+    if ($prefix !== "02" && $prefix !== "03") {
+        throw new Exception("secp256k1_decompress: bad prefix");
+    }
     $x = _hex2dec(substr($compressed_hex, 2));
+    if (bccomp($x, "0") < 0 || bccomp($x, $p) >= 0) {
+        throw new Exception("secp256k1_decompress: x out of range");
+    }
     $y_sq = _bcmod_pos(bcadd(bcpowmod($x, "3", $p), "7"), $p);
     $exp = bcdiv(bcadd($p, "1"), "4", 0);
     $y = bcpowmod($y_sq, $exp, $p);
+    if (bccomp(bcpowmod($y, "2", $p), $y_sq) !== 0) {
+        throw new Exception("secp256k1_decompress: point not on curve");
+    }
     $y_is_odd = bcmod($y, "2") !== "0";
     if (($prefix === "02" && $y_is_odd) || ($prefix === "03" && !$y_is_odd)) {
         $y = bcsub($p, $y);
@@ -113,7 +125,14 @@ function secp256k1_double($px_hex, $py_hex) {
     return [_dec2hex($rx), _dec2hex($ry)];
 }
 
-/** Scalar * point using double-and-add. */
+/**
+ * Scalar * point using double-and-add.
+ *
+ * NOT constant-time (per-bit branch + variable-time bcmath). Accepted: this is
+ * the fallback only — native @noble is the default path — and a remote timing
+ * attack on multi-second bcmath ops over a network is impractical. (Keys here
+ * can be long-lived server secrets, so this does NOT rest on per-request keys.)
+ */
 function secp256k1_mul($scalar_hex, $px_hex, $py_hex) {
     $k = _hex2dec($scalar_hex);
     $rx = null; $ry = null;
