@@ -2771,7 +2771,6 @@ function bitly_shorten(shared_url, shared_title, url_hash, service, site_thumb) 
         }
         share_request(shared_url, shared_title);
     }).fail(function() {
-        console.log("jaap");
         share_request(shared_url, shared_title);
     });
 }
