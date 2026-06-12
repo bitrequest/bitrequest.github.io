@@ -111,9 +111,6 @@ function main_input_focus() {
 
 // ** Swipe Controls: **
 
-// Module-scope timestamp shared between swipe_start (writes) and swipe_end
-// (reads). Previously this was an implicit global created by an unprefixed
-// assignment inside swipe_start — overlapping gestures could stomp it.
 let startswipetime = 0;
 
 // Initializes vertical swipe detection for the payment dialog
@@ -1131,17 +1128,22 @@ function get_cc_exchangerates(api_list, selected_api) {
     });
 }
 
+// Shared proxy-failover step for rate-fetch fallbacks: if another proxy is
+// available, resets the attempt tracker for this API list and re-runs the
+// fetch through it. Returns true when a retry was started.
+function retry_with_next_proxy(api_list, retry) {
+    if (get_next_proxy()) {
+        glob_let.api_attempt[api_list] = {};
+        retry();
+        return true
+    }
+    return false
+}
+
 // Implements fallback logic for failed cryptocurrency rate fetches using alternative APIs and proxies
 function cc_fail(api_list, selected_api, error_object, is_proxy_failure) {
-    function next_proxy() { // try next proxy
-        if (get_next_proxy()) {
-            glob_let.api_attempt[api_list] = {};
-            get_cc_exchangerates(api_list, selected_api);
-            return true
-        }
-        return false
-    }
-    if (is_proxy_failure && next_proxy()) { // Try next proxy if proxy fails
+    const proxy_retry = () => retry_with_next_proxy(api_list, () => get_cc_exchangerates(api_list, selected_api));
+    if (is_proxy_failure && proxy_retry()) { // Try next proxy if proxy fails
         return
     }
     const next_crypto_api = try_next_api(api_list, selected_api);
@@ -1149,7 +1151,7 @@ function cc_fail(api_list, selected_api, error_object, is_proxy_failure) {
         get_cc_exchangerates(api_list, next_crypto_api);
         return
     }
-    if (next_proxy()) { // Try next proxy after trying all api's
+    if (proxy_retry()) { // Try next proxy after trying all api's
         return
     }
     no_xrate_result(selected_api, error_object);
@@ -1309,15 +1311,8 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
 
 // Manages fallback logic for failed fiat rate fetches through alternative APIs and proxies
 function next_fiat_api(api_list, selected_fiat_api, error_object, crypto_rate, currency_list, crypto_api, cache_age, is_proxy_failure) {
-    function next_proxy() { // try next proxy
-        if (get_next_proxy()) {
-            glob_let.api_attempt[api_list] = {};
-            get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currency_list, crypto_api, cache_age);
-            return true
-        }
-        return false
-    }
-    if (is_proxy_failure && next_proxy()) { // Try next proxy if proxy fails
+    const proxy_retry = () => retry_with_next_proxy(api_list, () => get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currency_list, crypto_api, cache_age));
+    if (is_proxy_failure && proxy_retry()) { // Try next proxy if proxy fails
         return
     }
     const next_fiat_api = try_next_api(api_list, selected_fiat_api);
@@ -1325,7 +1320,7 @@ function next_fiat_api(api_list, selected_fiat_api, error_object, crypto_rate, c
         get_fiat_exchangerate(api_list, next_fiat_api, crypto_rate, currency_list, crypto_api, cache_age);
         return
     }
-    if (next_proxy()) { // Try next proxy after trying all api's
+    if (proxy_retry()) { // Try next proxy after trying all api's
         return
     }
     no_xrate_result(selected_fiat_api, error_object);
@@ -1341,6 +1336,33 @@ function no_xrate_result(api, error_obj) {
 }
 
 // ** UI State Management: **
+
+// Returns the full rate entry {currency, xrate, currencyname[, ccpool]} or undefined
+function get_xrate_entry(currency) {
+    const rates_list = helper ? helper.xrates : null;
+    if (!rates_list || !currency) return undefined;
+    return rates_list.find(entry => entry.currency === currency);
+}
+
+// Exchange rate for a currency (replaces .cpool[data-currency=...] data-xrate reads)
+function get_xrate(currency) {
+    const entry = get_xrate_entry(currency);
+    return entry ? entry.xrate : undefined;
+}
+
+// Currency display name (replaces .cpool[data-currency=...] data-currencyname reads)
+function get_xrate_currencyname(currency) {
+    const entry = get_xrate_entry(currency);
+    return entry ? entry.currencyname : undefined;
+}
+
+// Crypto rate in EUR (replaces $(".ccpool").attr("data-xrate") reads)
+function get_crypto_xrate() {
+    const rates_list = helper ? helper.xrates : null;
+    if (!rates_list) return undefined;
+    const entry = rates_list.find(item => item.ccpool === true);
+    return entry ? entry.xrate : undefined;
+}
 
 // Processes and displays multi-currency exchange rates with Lightning Network status information
 function render_currencypool(data, crypto_rate, crypto_api, fiat_api, cache_age_crypto, cache_age_fiat) {
@@ -1359,7 +1381,8 @@ function render_currencypool(data, crypto_rate, crypto_api, fiat_api, cache_age_
     exchange_rates_list.push({
         "currency": request.currencysymbol,
         "xrate": crypto_rate_euro,
-        "currencyname": request.payment
+        "currencyname": request.payment,
+        "ccpool": true // marks the crypto-rate entry, mirroring the .ccpool class
     });
     $.each(data, function(current_currency, rate) {
         const parsed_rate = (rate / current_rate) / 1,
@@ -1387,19 +1410,18 @@ function render_currencypool(data, crypto_rate, crypto_api, fiat_api, cache_age_
 // Renders comprehensive payment dialog UI with currency conversions, QR codes, and dynamic form elements
 function get_payment(ccrateeuro, ccapi) {
     closeloader();
-    const currency_pool = $("#paymentdialog .cpool[data-currency='" + request.uoa + "']"),
-        currency_name = currency_pool.attr("data-currencyname"),
-        fiat_pool = $("#paymentdialog .cpool[data-currency='" + request.fiatcurrency + "']"),
-        fiat_name = fiat_pool.attr("data-currencyname"),
-        local_pool = $("#paymentdialog .cpool[data-currency='" + request.localcurrency + "']"),
-        local_name = local_pool.attr("data-currencyname");
+    // Rates and names come from helper.xrates (set in render_currencypool just
+    // before this runs) instead of querying the hidden .cpool DOM nodes.
+    const currency_name = get_xrate_currencyname(request.uoa),
+        fiat_name = get_xrate_currencyname(request.fiatcurrency),
+        local_name = get_xrate_currencyname(request.localcurrency);
     // extend global request object
     request.currencyname = currency_name;
     request.fiatcurrencyname = fiat_name;
     request.localcurrencyname = local_name;
     // continue vars
-    const exchange_rate = currency_pool.attr("data-xrate"),
-        fiat_rate = fiat_pool.attr("data-xrate"),
+    const exchange_rate = get_xrate(request.uoa),
+        fiat_rate = get_xrate(request.fiatcurrency),
         has_name = request.requestname && request.requestname.length > 1, // check if requestname is set
         has_title = request.requesttitle && request.requesttitle.length > 1, // check if requesttitle is set
         title_str = has_title ? request.requesttitle : "",
@@ -1505,13 +1527,13 @@ function get_payment(ccrateeuro, ccapi) {
             <div id='shareformbox'>\
                 <div id='shareformib' class='inputbreak'>\
                     <form id='shareform' disabled='' autocorrect='off' autocapitalize='sentences' spellcheck='off'>\
-                        <label>" + tl("whatsyourname") + "<input type='text' placeholder='Name' id='requestname' class='linkcolor' value='" + init_name + "'" + readonly_attr + "></label>\
-                        <label>" + tl("whatsitfor") + "<input type='text' placeholder='" + tl("forexample") + ": " + tl("lunch") + " 🥪' id='requesttitle' value='" + title_str + "' data-ph1=' " + tl("festivaltickets") + "' data-ph2=' " + tl("coffee") + " ☕' data-ph3=' " + tl("present") + " 🎁' data-ph4=' " + tl("snowboarding") + " 🏂' data-ph5=' " + tl("movietheater") + " 📽️' data-ph6=' " + tl("lunch") + " 🥪' data-ph7=' " + tl("shopping") + " 🛒' data-ph8=' " + tl("videogame") + " 🎮' data-ph9=' " + tl("drinks") + " 🥤' data-ph10=' " + tl("concerttickets") + " 🎵' data-ph11=' " + tl("camping") + " ⛺' data-ph12=' " + tl("taxi") + " 🚕' data-ph13=' " + tl("zoo") + " 🦒'></label>\
+                        <label>" + tl("whatsyourname") + "<input type='text' placeholder='Name' id='requestname' class='linkcolor' value='" + escape_attr(init_name) + "'" + readonly_attr + "></label>\
+                        <label>" + tl("whatsitfor") + "<input type='text' placeholder='" + tl("forexample") + ": " + tl("lunch") + " 🥪' id='requesttitle' value='" + escape_attr(title_str) + "' data-ph1=' " + tl("festivaltickets") + "' data-ph2=' " + tl("coffee") + " ☕' data-ph3=' " + tl("present") + " 🎁' data-ph4=' " + tl("snowboarding") + " 🏂' data-ph5=' " + tl("movietheater") + " 📽️' data-ph6=' " + tl("lunch") + " 🥪' data-ph7=' " + tl("shopping") + " 🛒' data-ph8=' " + tl("videogame") + " 🎮' data-ph9=' " + tl("drinks") + " 🥤' data-ph10=' " + tl("concerttickets") + " 🎵' data-ph11=' " + tl("camping") + " ⛺' data-ph12=' " + tl("taxi") + " 🚕' data-ph13=' " + tl("zoo") + " 🦒'></label>\
                     </form>" + fallback_html +
         "</div>\
                 <div id='sharebox' class='inputbreak'>" + share_btn + "</div>\
             </div>",
-        name_display = (request.requesttype === "outgoing") ? "" : (has_name ? tl("to") + " " + request.requestname + ":" : ""),
+        name_display = (request.requesttype === "outgoing") ? "" : (has_name ? tl("to") + " " + escape_html(request.requestname) + ":" : ""),
         wallet_text = tl("openwallet"),
         lightning_btn = (request.payment === "bitcoin") ? "<div class='button openwallet_lnd' id='openwallet_lnd' data-currency='bitcoin'><span class='icon-folder-open'>" + wallet_text + "</span></div>" : "",
         payment_methods = "\
@@ -1694,7 +1716,7 @@ function set_lightning_qr(a, message) {
     const ln = helper.lnd,
         m = message && message.length > 1 ? "&m=" + encodeURIComponent(message) : "",
         nid = ln.lnurl === false ? ln.nid : "",
-        url = glob_let.lnd_ph + "/proxy/v1/ln/?i=" + ln.imp + "&id=" + request.typecode + ln.pid + nid + "&a=" + (a * 100000000000).toFixed(0) + m,
+        url = glob_let.lnd_ph + "/proxy/v1/ln/?i=" + ln.imp + "&id=" + request.typecode + ln.pid + nid + "&a=" + (a * glob_const.msats_per_btc).toFixed(0) + m,
         lnurl = lnurl_encode("lnurl", url).toUpperCase();
     $("#qrcode_lnd").html("").qrcode(lnurl);
     set_lightning_uris(lnurl, a);
@@ -1839,7 +1861,7 @@ function sync_input_values(input_node, value, placeholder) {
 
 // Calculates cryptocurrency value based on input amount and exchange rate
 function calculate_crypto_amount(current_amount, current_rate) { // get ccrate
-    return parseFloat(((current_amount / current_rate) * $("#paymentdialogbox .ccpool").attr("data-xrate")).toFixed(6));
+    return parseFloat(((current_amount / current_rate) * get_crypto_xrate()).toFixed(6));
 }
 
 // Handles real-time input mirroring across payment dialog
@@ -2769,15 +2791,16 @@ function bitly_shorten(shared_url, shared_title, url_hash, service, site_thumb) 
             }
             return
         }
-        share_request(shared_url, shared_title);
+        custom_shorten(service, shared_url, shared_title, site_thumb, url_hash);
     }).fail(function() {
-        share_request(shared_url, shared_title);
+        custom_shorten(service, shared_url, shared_title, site_thumb, url_hash);
     });
 }
 
 // Manages custom proxy server URL shortening
 function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash) {
-    const server = service || d_proxy(),
+    const is_custom_service = service && String(service).indexOf("http") === 0,
+        server = is_custom_service ? service : d_proxy(),
         request_data = btoa(JSON.stringify({
             "sharedurl": shared_url,
             "sitethumb": site_thumb
@@ -2799,7 +2822,7 @@ function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash)
         if (data) {
             if (data.error) {
                 notify(server + ": " + data.error, 500000, "yes");
-                bitly_shorten(shared_url, shared_title, url_hash);
+                share_request(shared_url, shared_title);
                 return
             }
             const request_id = data.shorturl;
@@ -2816,9 +2839,9 @@ function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash)
                 return
             }
         }
-        bitly_shorten(shared_url, shared_title, url_hash);
+        share_request(shared_url, shared_title);
     }).fail(function() {
-        bitly_shorten(shared_url, shared_title, url_hash);
+        share_request(shared_url, shared_title);
     });
 }
 
@@ -3225,7 +3248,7 @@ function save_payment_request(direct, lightning_url) {
             request.requestid = request_id,
             request.iscrypto = is_crypto_currency,
             request.fiatcurrency = is_crypto_currency ? request.localcurrency : current_currency,
-            request.currencyname = $("#xratestats .cpool[data-currency='" + current_currency + "']").attr("data-currencyname"),
+            request.currencyname = get_xrate_currencyname(current_currency),
             request.cc_amount = parseFloat($("#open_wallet").attr("data-rel"));
         const number_amount = Number(current_amount),
             is_zero_amount = number_amount === 0 || isNaN(number_amount);

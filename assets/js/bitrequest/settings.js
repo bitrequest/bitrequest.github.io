@@ -709,13 +709,15 @@ function backup_database() {
                                         "id": "triggerdownload",
                                         "class": "button icon-download",
                                         "attr": {
-                                            "href": "data:text/json;charset=utf-16le;base64," + json +
-                                                "' download='" + filename,
+                                            // href and download are separate attributes; the old code
+                                            // smuggled download='filename' inside the href string via a
+                                            // quote-breakout, which escape_attr (correctly) neutralizes.
+                                            "href": "data:text/json;charset=utf-16le;base64," + json,
                                             "title": filename,
                                             "data-date": new Date(now_utc()).toLocaleString(langcode)
                                                 .replace(/\s+/g, "_").replace(/\:/g, "_"),
                                             "data-lastbackup": filename,
-                                            "download": "download"
+                                            "download": filename
                                         },
                                         "content": tl("downloadbu")
                                     }

@@ -3,6 +3,8 @@
 
 const langcode = setlangcode(); // set saved or system language
 
+let cancelbttn, okbttn; // translated button labels, set by init_tl
+
 $(document).ready(function() {
     init_tl();
 });
@@ -25,8 +27,8 @@ function lang_dat(lang) {
     const lower = lang.toLowerCase(),
         single = lower.split("-")[0];
     return {
-        "lower": lower,
-        "single": single
+        lower,
+        single
     };
 }
 
@@ -129,7 +131,8 @@ function pdf_tl(id, dat) {
     if (pdf_unsafe_langs.indexOf(langcode) === -1) {
         return transclear(id, dat);
     }
-    return lang_en(id, dat || {}) || id;
+    const en_string = (typeof window.lang_en === "function") ? window.lang_en(id, dat || {}) : null;
+    return en_string || id;
 }
 
 // Langcode for PDF/CSV date formatting

@@ -388,7 +388,7 @@ function process_chunks_sequentially(api_data, chunks, vk, spk, config, index, a
             render_incoming_xmr(all_incoming, api_data, vk);
             return
         }
-        console.log("No incoming transactions found in mempool");
+        console.log("No incoming transactions found in mempool")
         if (glob_let.post_scan) { // close dialog if post scan
             cancel_post_scan();
         }
@@ -557,18 +557,18 @@ function filter_incoming_transactions(rpc_data, view_key, spend_pubkey) {
                             expected_output_key = expected_output_point.toHex();
                         // Compare with actual output key
                         if (expected_output_key !== output_pubkey) {
-                            console.log("⚠ Output " + output_index + ": View tag matched but output key doesn't belong to us (false positive)");
+                            console.warn("⚠ Output " + output_index + ": View tag matched but output key doesn't belong to us (false positive)");
                             return // This output is not ours - it's a view tag collision
                         }
                         // Output is confirmed to be ours - now decode amount
                         const parse_amount = decode_rct_amount(rct, output_index, shared_secret_hex);
                         if (!parse_amount) {
-                            console.log("⚠ Output " + output_index + ": Could not decode amount");
+                            console.warn("⚠ Output " + output_index + ": Could not decode amount");
                             return
                         }
                         // Additional sanity check on amount
                         if (parse_amount <= 0n || parse_amount > 18446744073709551615n) {
-                            console.log("⚠ Output " + output_index + ": Invalid amount " + parse_amount);
+                            console.warn("⚠ Output " + output_index + ": Invalid amount " + parse_amount);
                             return
                         }
                         const amount = parse_amount.toString();
@@ -660,6 +660,60 @@ function handle_xmr_rpc_fails(api_data) {
     console.error("Socket error:", "unable to connect to " + api_data.url);
 }
 
+// Pure decision core for validate_confirmations.
+function decide_confirmation_state(input) {
+    if (input.tx_status === "canceled") {
+        return {
+            "transition": "canceled",
+            "new_status": "canceled"
+        };
+    }
+    // Below threshold and not instant/forced: caller does nothing further.
+    if (!(input.confirmations >= input.current_confirms || input.is_instant || input.direct)) {
+        return {
+            "transition": "none",
+            "new_status": "pending"
+        };
+    }
+    if (input.amount_valid) {
+        if (input.confirmations >= input.set_confirmations || input.is_instant === true) {
+            const status = input.is_insufficient ? "pending" : "paid",
+                pending = input.is_insufficient ? "scanning" : "polling";
+            return {
+                "transition": "paid",
+                "new_status": status,
+                "request_status": status,
+                "request_pending": pending,
+                "is_incoming": input.request_type === "incoming"
+            };
+        }
+        // Amount valid but not enough confirmations yet → broadcast/pending.
+        // Lightning already-pending is a no-write case (handled by caller).
+        const skip_write = input.ln && input.request_status === "pending";
+        return {
+            "transition": "pending",
+            "new_status": "pending",
+            "request_status": "pending",
+            "request_pending": "polling",
+            "skip_write": skip_write
+        };
+    }
+    // Amount short.
+    if (!input.exact_match) {
+        return {
+            "transition": "insufficient",
+            "new_status": "insufficient",
+            "request_status": "insufficient",
+            "request_pending": "scanning"
+        };
+    }
+    // Exact-match mode, amount short: no status change, just the funk sound.
+    return {
+        "transition": "noop",
+        "new_status": "pending"
+    };
+}
+
 // Updates UI and payment status based on transaction confirmation count
 function validate_confirmations(tx_data, direct, ln) {
     const crypto_symbol = tx_data.ccsymbol;
@@ -712,7 +766,7 @@ function validate_confirmations(tx_data, direct, ln) {
                     current_currency = request.uoa,
                     request_type = request.requesttype,
                     is_crypto = current_currency === crypto_symbol,
-                    fiat_value = is_crypto ? null : (received_formatted / parseFloat($("#paymentdialogbox .ccpool").attr("data-xrate"))) * parseFloat($("#paymentdialog .cpool[data-currency='" + current_currency + "']").attr("data-xrate")), // calculate fiat value
+                    fiat_value = is_crypto ? null : (received_formatted / parseFloat(get_crypto_xrate())) * parseFloat(get_xrate(current_currency)), // calculate fiat value from helper.xrates
                     fiat_rounded = is_crypto ? null : fiat_value.toFixed(2),
                     received_amount = is_crypto ? received_crypto : fiat_rounded;
                 // extend global request object
@@ -736,44 +790,55 @@ function validate_confirmations(tx_data, direct, ln) {
                 }
                 status_panel.find("span.receivedfiat").text(" (" + received_amount + " " + current_currency + ")");
                 const exact_match = helper.exact,
-                    amount_valid = exact_match ? received_formatted === crypto_amount : received_formatted >= (crypto_amount * 0.97);
-                if (amount_valid) {
-                    if (confirmations >= set_confirmations || is_instant === true) {
-                        force_close_socket();
-                        play_audio("collect", payment);
-                        const status_msg = request_type === "incoming" ? tl("paymentsent") : tl("paymentreceived"),
-                            is_insufficient = payment_dialog.hasClass("insufficient"), // keep scanning when amount was insufficient
-                            insufficient_status = is_insufficient ? "pending" : "paid",
-                            insufficient_pending = is_insufficient ? "scanning" : "polling";
-                        payment_dialog.addClass("transacting").attr("data-status", "paid");
-                        status_header.text(status_msg);
-                        request.status = insufficient_status,
-                            request.pending = insufficient_pending;
+                    amount_valid = exact_match ? received_formatted === crypto_amount : received_formatted >= (crypto_amount * 0.97),
+                    decision = decide_confirmation_state({
+                        tx_status,
+                        confirmations,
+                        current_confirms,
+                        set_confirmations,
+                        is_instant,
+                        direct,
+                        amount_valid,
+                        exact_match,
+                        "is_insufficient": payment_dialog.hasClass("insufficient"),
+                        ln,
+                        "request_status": request.status,
+                        request_type
+                    });
+                new_status = decision.new_status;
+                if (decision.transition === "paid") {
+                    force_close_socket();
+                    play_audio("collect", payment);
+                    const status_msg = decision.is_incoming ? tl("paymentsent") : tl("paymentreceived");
+                    payment_dialog.addClass("transacting").attr("data-status", "paid");
+                    status_header.text(status_msg);
+                    request.status = decision.request_status,
+                        request.pending = decision.request_pending;
+                    save_payment_request(direct, ln);
+                    $("span#ibstatus").fadeOut(500);
+                    closenotify();
+                    status_panel.find("#view_tx").attr("data-txhash", tx_hash);
+                    return new_status;
+                }
+                if (decision.transition === "pending") {
+                    if (!decision.skip_write) {
+                        payment_dialog.addClass("transacting").attr("data-status", "pending");
+                        const broadcast_msg = ln ? tl("waitingforpayment") : tl("txbroadcasted");
+                        status_header.text(broadcast_msg);
+                        request.status = decision.request_status,
+                            request.pending = decision.request_pending;
                         save_payment_request(direct, ln);
-                        $("span#ibstatus").fadeOut(500);
-                        closenotify();
-                        new_status = insufficient_status;
-                    } else {
-                        if (ln && request.status === "pending") {} else {
-                            payment_dialog.addClass("transacting").attr("data-status", "pending");
-                            const broadcast_msg = ln ? tl("waitingforpayment") : tl("txbroadcasted");
-                            status_header.text(broadcast_msg);
-                            request.status = "pending",
-                                request.pending = "polling";
-                            save_payment_request(direct, ln);
-                        }
                     }
                     status_panel.find("#view_tx").attr("data-txhash", tx_hash);
                     return new_status;
                 }
-                if (!exact_match) {
+                if (decision.transition === "insufficient") {
                     status_header.text(tl("insufficientamount"));
                     payment_dialog.addClass("transacting").attr("data-status", "insufficient");
-                    request.status = "insufficient",
-                        request.pending = "scanning";
+                    request.status = decision.request_status,
+                        request.pending = decision.request_pending;
                     save_payment_request(direct, ln);
                     status_panel.find("#view_tx").attr("data-txhash", tx_hash);
-                    new_status = "insufficient";
                 }
                 play_audio("funk");
             }

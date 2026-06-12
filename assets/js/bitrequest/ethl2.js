@@ -78,7 +78,7 @@ function start_layer2_scan(socket_node, contract, ping_id, retry) {
                 execute_layer2_scan(rdo, socket_node);
             } catch (err) {
                 console.error("error", err);
-                stop_background_monitors(ping_id);
+                stop_monitors(ping_id);
             }
         }, timeout);
         return

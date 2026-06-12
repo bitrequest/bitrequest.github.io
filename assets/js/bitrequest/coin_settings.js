@@ -772,7 +772,7 @@ function save_api_key() {
             return
         }
         key_input.attr("data-checkchange", new_key);
-        checkapikey(form_container.attr("data-api"), new_key, true);
+        validate_api_key(form_container.attr("data-api"), new_key, true);
     })
 }
 

@@ -580,7 +580,7 @@ function enterapp(pin_input) {
         hashed_pin = generate_hash(pin_input),
         timestamp = now_utc(),
         is_global = pin_container.hasClass("global");
-    if (hashed_pin == stored_pin) {
+    if (String(hashed_pin) === String(stored_pin)) {
         if (is_global) {
             br_set_local("locktime", timestamp);
             finish_functions();
@@ -681,7 +681,7 @@ function pinvalidate(pin_button) {
         current_input = confirm_field.val(),
         updated_input = current_input + digit;
     if (updated_input.length > 3) {
-        if (updated_input == $("#pininput").val()) {
+        if (updated_input === $("#pininput").val()) {
             const old_pin = get_setting("pinsettings", "pinhash"),
                 pin_settings = $("#pinsettings"),
                 pin_hash = generate_hash(updated_input),
@@ -709,8 +709,6 @@ function pinvalidate(pin_button) {
             shake(pin_container);
             confirm_field.val("");
         }
-    }
-    if (updated_input.length > 4) {
         return false
     }
     confirm_field.val(updated_input);
@@ -2108,12 +2106,29 @@ function canceldialog(bypass) {
     });
 }
 
+// Escapes a value for safe inclusion inside a single-quoted HTML attribute.
+function escape_attr(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/'/g, "&#39;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
+// Escapes a value for safe inclusion as HTML TEXT content (between tags).
+function escape_html(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
 // Recursively converts data object into HTML with attributes and nested content
 function render_html(element_data) {
     return element_data.map(function(component) {
         return Object.entries(component).map(function([tag_name, props]) {
-            const elem_id = props.id ? " id='" + props.id + "'" : "",
-                elem_class = props.class ? " class='" + props.class + "'" : "",
+            const elem_id = props.id ? " id='" + escape_attr(props.id) + "'" : "",
+                elem_class = props.class ? " class='" + escape_attr(props.class) + "'" : "",
                 elem_attrs = props.attr ? render_attributes(props.attr) : "",
                 elem_content = props.content ?
                 (typeof props.content === "object" ?
@@ -2127,10 +2142,12 @@ function render_html(element_data) {
     }).join("");
 }
 
-// Renders HTML attributes from an object
+// Renders HTML attributes from an object. Attribute values are escaped for the
+// single-quoted context so a value containing ' (or <, >, &) can't break out of
+// the attribute and inject markup. Attribute NAMES are trusted (code literals).
 function render_attributes(attr_data) {
     return Object.entries(attr_data).map(function([attr_name, attr_value]) {
-        return " " + attr_name + "='" + attr_value + "'";
+        return " " + attr_name + "='" + escape_attr(attr_value) + "'";
     }).join("");
 }
 
@@ -2290,8 +2307,6 @@ function reset_paymentdialog() {
         glob_let.l2s = {},
         glob_let.apikey_fails = false,
         glob_let.post_scan = false;
-    // request was just nulled — request.attempts (the per-request retry budgets)
-    // dies with it. No reset needed.
     const socket_timeout = setTimeout(function() {
         close_socket();
     }, 500, function() {
@@ -3008,7 +3023,7 @@ function addaddress(addr_data, is_edit) {
         has_viewkey = (viewkey_val !== ""),
         viewkey_scan = glob_let.hascam ? "<div class='qrscanner' data-currency='" + currency + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         viewkey_input = (currency === "monero") ? has_viewkey ? "" : "<div class='inputwrap'><input type='text' class='vk_input' value='" + viewkey_val + "' placeholder='" + tl("secretviewkey") + "'>" + viewkey_scan + "</div>" : "",
-        form_content = $("<div class='formbox form" + form_mode_class + pubkey_class + "' id='addressformbox'>" + dialog_title + notify_html + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' id='address_xpub_input' class='address' value='" + wallet_address + "' data-currency='" + currency + "' placeholder='" + addr_placeholder + "'" + input_readonly + " autocomplete='off' autocapitalize='off' spellcheck='false'>" + scan_btn + "</div>" + viewkey_input + "<input type='text' class='addresslabel' value='" + addr_label + "' placeholder='" + tl("label") + "' autocomplete='off' autocapitalize='off' spellcheck='false'>\
+        form_content = $("<div class='formbox form" + form_mode_class + pubkey_class + "' id='addressformbox'>" + dialog_title + notify_html + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' id='address_xpub_input' class='address' value='" + wallet_address + "' data-currency='" + currency + "' placeholder='" + addr_placeholder + "'" + input_readonly + " autocomplete='off' autocapitalize='off' spellcheck='false'>" + scan_btn + "</div>" + viewkey_input + "<input type='text' class='addresslabel' value='" + escape_attr(addr_label) + "' placeholder='" + tl("label") + "' autocomplete='off' autocapitalize='off' spellcheck='false'>\
         <div id='ad_info_wrap' style='display:none'>\
             <ul class='td_box'>\
             </ul>\
@@ -4726,7 +4741,7 @@ function build_settings() {
                  <span class='" + setting.icon + "'></span>\
                  <div class='atext'>\
                     <h2>" + tl(setting_id) + "</h2>\
-                    <p>" + truncate_middle(display_val) + "</p>\
+                    <p>" + escape_html(truncate_middle(display_val)) + "</p>\
                  </div>\
                  <div class='iconbox linkcolor'>\
                      <span class='icon-pencil'></span>\
@@ -4957,7 +4972,7 @@ function append_address(currency, addr_data) {
         addr_item = $("<li class='adli" + source_class + used_class + "' data-index='" + list_pos + "' data-address='" + addr_text + "' data-checked='" + addr_data.checked + "'>\
             <div class='addressinfo liwrap iconright2'>\
                 <div class='atext'>\
-                    <h2><span>" + addr_data.label + "</span></h2>\
+                    <h2><span>" + escape_html(addr_data.label) + "</span></h2>\
                     <p class='address'>" + source_icon + "<span class='select'>" + addr_text + "</span><span class='usedicon icon-arrow-up-right2' title='Used'></span></p>\
                 </div>\
                 <div class='iconbox'>\
@@ -5016,8 +5031,8 @@ function append_request(rd) {
         is_hybrid = lightning && lightning.hybrid === true,
         confirm_count = confirmations || 0,
         title_truncated = requesttitle && requesttitle.length > 85 ?
-        "<span title='" + requesttitle + "'>" + requesttitle.substring(0, 64) + "...</span>" :
-        requesttitle,
+        "<span title='" + escape_attr(requesttitle) + "'>" + escape_html(requesttitle.substring(0, 64)) + "...</span>" :
+        (requesttitle ? escape_html(requesttitle) : requesttitle),
         amount_formatted = trimdecimals(amount, Math.min(decimal_places, 8)),
         received_formatted = trimdecimals(receivedamount, 6),
         fiat_formatted = trimdecimals(fiatvalue, 2),
@@ -5080,11 +5095,11 @@ function append_request(rd) {
         received_formatted + "</span> " + payment +
         "<div class='show_as amountshort'>" + short_crypto + "</div></li>" + fiat_box,
         name_box = is_incoming ? rqdata ?
-        "<li><strong>" + tl("from") + ":</strong> " + requestname + "</li>" :
+        "<li><strong>" + tl("from") + ":</strong> " + escape_html(requestname) + "</li>" :
         "<li><strong>From: unknown</strong></li>" : "",
         title_box = requesttitle ?
         "<li><strong>" + tl("title") + ":</strong> '<span class='requesttitlebox'>" +
-        requesttitle + "</span>'</li>" : "",
+        escape_html(requesttitle) + "</span>'</li>" : "",
         monitor_status = !monitored ? " (unmonitored transaction)" : "",
         time_box = is_incoming ?
         "<li><strong>" + tl("created") + ":</strong> " + date_created + "</li>" +
@@ -5095,7 +5110,7 @@ function append_request(rd) {
         "<li><strong>" + tl("created") + ":</strong> " + date_full + "</li>" : "",
         payment_url = "&address=" + address + data_param + meta_param + "&requestid=" + requestid,
         addr_label = $("main #" + payment + " li[data-address='" + address + "']").data("label"),
-        label_display = addr_label ? " <span class='requestlabel'>(" + addr_label + ")</span>" : "",
+        label_display = addr_label ? " <span class='requestlabel'>(" + escape_html(addr_label) + ")</span>" : "",
         confirm_display = !monitored ?
         "<div class='txli_conf' data-conf='0'><span>Unmonitored transaction</span></div>" :
         confirm_count > 0 ?

@@ -152,7 +152,6 @@ function test_bip39() {
     }
 
     const timing = (typeof performance !== "undefined" ? performance.now() : Date.now()) - start_time;
-    console.log("BIP39 compatibility tests completed in " + timing.toFixed(2) + "ms");
     const spark_support = test_spark_derivation();
     glob_const.spark_support = spark_support; // set spark support
 }
@@ -1487,7 +1486,6 @@ function phrase_info_pu(selected_coin) {
             let xpub_element = "",
                 segwit_element = "";
             if (xpub_key) {
-                console.log("xpub_key");
                 xpub_element = $("<div class='xpub_ib clearfix" + display_class + "' data-xpub='" + xpub_key + "'>\
                     <div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>" + tl("show") + "</span></div>\
                         <div class='xp_span drawer'>\

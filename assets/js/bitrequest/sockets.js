@@ -518,7 +518,7 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                     if (url_parts[0] == "ln") {
                                         const amount_rel = $("#open_wallet").attr("data-rel"),
                                             crypto_amount = amount_rel.length ? parseFloat(amount_rel) : 0,
-                                            milli_sats = (crypto_amount * 100000000000).toFixed(0);
+                                            milli_sats = (crypto_amount * glob_const.msats_per_btc).toFixed(0);
                                         if (crypto_amount <= 0) {
                                             play_audio("funk");
                                             notify(tl("enteramount"), 5000);

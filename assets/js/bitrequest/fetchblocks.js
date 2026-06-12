@@ -2456,7 +2456,7 @@ function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) {
 function lnd_tx_data(data) {
     const tx_timestamp = data.txtime || data.timestamp,
         transactiontime = normalize_timestamp(tx_timestamp),
-        btc_amount = parseFloat(data.amount / 100000000000);
+        btc_amount = parseFloat(data.amount / glob_const.msats_per_btc);
     return {
         "ccval": Math.abs(btc_amount),
         transactiontime,

@@ -50,7 +50,7 @@ const br_bipobj = br_get_local("bpdat", true),
     (br_thishostname === br_hostname) ? "selfhosted" : "unknown",
     br_video = $("#qr-video")[0],
     init_qrscanner = br_hostlocation === "local" ? false : new QrScanner(br_video, result => set_scan_result(result), error => {
-        console.log(error);
+        console.error(error);
     }),
     /**
      * Read-only configuration. Set once at boot; never mutated.
@@ -113,6 +113,7 @@ const br_bipobj = br_get_local("bpdat", true),
         // Consolidated here so "how long do we cache X" is one grep, not five inline literals.
         "cacheperiodcrypto": 120000, //120000 = 2 minutes — legacy ms value, used by some callers
         "cacheperiodfiat": 600000, //600000 = 10 minutes — legacy ms value
+        "msats_per_btc": 100000000000, // 1e11 — BTC <-> millisatoshi conversion (Lightning)
         "token_cache": 604800, // 1 week — ERC-20 token list
         "cache_ttl": { // seconds — passed to api_proxy `cachetime` param
             "day": 86400, // 1d  — fiat symbol list, ERC-20 token list
@@ -310,26 +311,10 @@ const br_bipobj = br_get_local("bpdat", true),
         "tor_proxies": tor_proxies // owner: api_proxy    — filtered tor proxy list
     }
 
-/**
- * `request` and `helper` hold the *currently open* payment dialog's state.
- *
- *   - `request`: the persisted request record (address, amount, currency,
- *     status, txhash, lightning data, etc.). Mirrors the localStorage entry
- *     for this request id, but is the live working copy.
- *   - `helper`: ephemeral runtime context for this dialog only — the chosen
- *     api_data node, lnd connection status, layer-2 status flags, etc.
- *     Not persisted.
- *
- * Both are `null` when no dialog is open. Almost every function in
- * payments.js, sockets.js, polling.js, monitors.js, and fetchblocks.js
- * reads from them — they're effectively "current dialog context".
- *
- * Set in payments.js → show_paymentdialog. Cleared in payments.js when the
- * dialog closes.
- */
-
+// request and helper hold the *currently open* payment dialog's state.
 let request = null,
-    helper = null;
+    helper = null,
+    to = null;
 
 // ** Core Storage Functions: **
 
@@ -484,13 +469,6 @@ function fulldateformat(date, lang, markup) {
     }) + " " + date.getDate() + year_suffix + time_markup;
 }
 
-// Creates HTML-formatted full date string with separated time component
-function fulldateformat_markup(date, lang) {
-    return weekdays()[date.getDay()] + " " + date.toLocaleString(lang, {
-        "month": "long"
-    }) + " " + date.getDate() + " | <div class='fdtime'>" + format_time_24h(date) + "</div>";
-}
-
 // ** String & Number Manipulation: **
 
 // Sanitizes string by removing Unicode control characters and invalid code points
@@ -559,17 +537,6 @@ function trimdecimals(amount, decimals) {
     return Number(parseFloat(amount).toFixed(decimals));
 }
 
-// Converts scientific notation numbers to fixed-point decimal strings
-function tofixedspecial(str, n) {
-    if (str.indexOf("e+") < 0) {
-        return str;
-    }
-    const decimal_str = str.replace(".", "").split("e+").reduce(function(p, b) {
-        return p + "0".repeat(b - p.length + 1);
-    }) + "." + "0".repeat(n);
-    return decimal_str.slice(0, -1);
-}
-
 // Generates deterministic 32-bit hash from string using bit manipulation
 function generate_hash(str) {
     if (str) {
@@ -600,8 +567,6 @@ function b64urldecode(str) {
 }
 
 // Encodes any JS string (full Unicode) to URL-safe base64.
-// btoa alone throws on code points > 0xFF (CJK, emoji, ₹ ...), so encode to
-// UTF-8 bytes first. Counterpart of b64decode_url.
 function b64encode_url(str) {
     const utf8_bytes = new TextEncoder().encode(str);
     let binary = "";
@@ -612,12 +577,6 @@ function b64encode_url(str) {
 }
 
 // Decodes base64 from a URL parameter to a string, or false on failure.
-// Tolerates both URL-safe ('-'/'_') and standard ('+'/'/') alphabets, and maps
-// spaces back to '+': legacy share links used raw btoa, and parse_url_params'
-// form-decoding turned every '+' into a space. Base64 never legitimately
-// contains spaces, so this restores those payloads byte-exact.
-// Bytes are interpreted as UTF-8 (new links); if that fails they're kept as
-// Latin-1 (legacy links that btoa'd accented chars directly).
 function b64decode_url(str) {
     if (typeof str !== "string" || !str) return false;
     const normalized = str.replace(/ /g, "+").replace(/-/g, "+").replace(/_/g, "/");
@@ -739,8 +698,6 @@ function dom_to_array(dom, data_attr) {
 
 // Clone object
 function clone(object) {
-    // structuredClone preserves Date, BigInt, Map, Set, typed arrays, and is
-    // ~3x faster than the JSON round-trip. Fall back for very old browsers.
     if (typeof structuredClone === "function") return structuredClone(object);
     return JSON.parse(JSON.stringify(object));
 }
@@ -756,21 +713,10 @@ function objectkey_from_array(array, key, val) {
     return matched_item || false;
 }
 
-// Verifies if key exists in provided array
-function value_in_array(array, key) {
-    if (empty_obj(array)) {
-        return false
-    }
-    return array.some(item => item.key === key);
-}
-
 // Finds the index of an object in an array
 function find_object_index(array, key, url) {
     return array.findIndex(item => {
-        // Handle the case where the property might not exist
         if (!item[key]) return false
-
-        // Remove trailing slashes for comparison
         const item_url = item[key].endsWith("/") ? item[key].slice(0, -1) : item[key],
             check_url = url.endsWith("/") ? url.slice(0, -1) : url;
         return item_url === check_url;
@@ -788,7 +734,7 @@ function add_unique_items(target_array, source_array) {
     const existing_set = new Set(target_array),
         new_items = source_array.filter(item => !existing_set.has(item));
     target_array.push(...new_items);
-    return target_array; // Returns what was added
+    return target_array;
 }
 
 // Remove items in one array from another array
@@ -1021,7 +967,9 @@ function get_next_proxy() {
     if (over_budget_request("proxy")) return false // prevent overflow
     const proxies = all_proxies(),
         current = d_proxy(),
-        current_index = proxies.indexOf(current),
+        current_index = proxies.findIndex(function(item) {
+            return item && item.proxy === current;
+        }),
         safe_index = current_index === -1 ? 0 : current_index,
         next_proxy = proxies[safe_index + 1],
         next_active = next_proxy || proxies[0],
@@ -1032,8 +980,6 @@ function get_next_proxy() {
             "selected": next_url
         }, next_url);
         save_settings();
-        // Switching proxy resets per-request rpc/l2 counters so the new proxy
-        // gets a fresh budget. proxy_attempts (above) prevents proxy thrashing.
         if (typeof request !== "undefined" && request && request.attempts) {
             request.attempts.rpc = 0;
             request.attempts.l2 = 0;
@@ -1047,8 +993,8 @@ function get_next_proxy() {
 // Identifies if request failure originated from proxy server
 function is_proxy_fail(stc) {
     const proxies = all_proxies(),
-        match = proxies.find(function(url) {
-            return stc.includes(url);
+        match = proxies.find(function(item) {
+            return item && item.proxy && stc.includes(item.proxy);
         });
     return (match) ? true : false;
 }
@@ -1079,16 +1025,7 @@ const RETRY_BUDGETS = {
     "proxy": 5 // proxy rotations per request
 };
 
-/**
- * Increment a per-rdo retry counter; return true once the budget is exhausted.
- *
- * @param {Object} rdo   request-data-options. If absent, the guard is a no-op
- *                       (caller should not have called us, but we don't want
- *                       to crash legacy code paths that haven't been updated).
- * @param {string} kind  one of RETRY_BUDGETS keys
- * @param {number} [limit]  override default (used by l2_init source-dependent caps)
- * @returns {boolean}    true if budget exhausted — caller should bail
- */
+// Increment a per-rdo retry counter; return true once the budget is exhausted.
 function over_budget(rdo, kind, limit) {
     if (!rdo) {
         return false;
@@ -1103,16 +1040,7 @@ function over_budget(rdo, kind, limit) {
     return false;
 }
 
-/**
- * Same as over_budget, but for guard sites that fire outside an rdo
- * context — proxy rotation, socket fallback, the Monero setup path. The
- * counter attaches to the current `request` global and dies when `request`
- * clears at dialog close.
- *
- * If no request is open (proxy rotation can fire pre-dialog), the guard is
- * a no-op — those rotations are bounded by `proxy_attempts` / `socket_attempt`
- * fingerprint maps which are reset on their own schedule.
- */
+// Same as over_budget, but for guard sites that fire outside an rdo
 function over_budget_request(kind, limit) {
     if (typeof request === "undefined" || !request) {
         return false;
@@ -1276,7 +1204,6 @@ function get_platform(device) {
 
 // Validates BigInt functionality through feature detection and mathematical operation test
 function hasbigint() {
-    // Check both existence and functionality
     return typeof BigInt === "function" &&
         typeof BigInt.prototype.toString === "function" &&
         (() => {
@@ -1302,7 +1229,6 @@ function get_urlparameters(str) {
 }
 
 // Parses URL query string into object
-// MODIFIED - Parses URL query string into an object securely
 function parse_url_params(str) {
     const param_pairs = str.split("&"),
         param_obj = {};
@@ -1905,7 +1831,8 @@ function strip_key_from_url(url) {
 
 // Normalizes URL format with protocol and trailing slash
 function complete_url(url) {
-    const withProtocol = url.indexOf("://") > -1 ? url : "https://" + url;
+    const trimmed_url = String(url).trim(),
+        withProtocol = trimmed_url.indexOf("://") > -1 ? trimmed_url : "https://" + trimmed_url;
     return withProtocol.slice(-1) === "/" ? withProtocol : withProtocol + "/";
 }
 

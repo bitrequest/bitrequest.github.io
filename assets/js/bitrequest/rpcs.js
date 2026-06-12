@@ -807,8 +807,7 @@ function test_xmr_node(rpc_url) {
     return deferred.promise();
 }
 
-// Tests a Monero LWS server by attempting login with the given account credentials. Caller decides what (if anything)
-// to cache via set_monero_lws_node_access on success. Returns a Deferred resolving to {"is_live": bool}.
+// Tests a Monero LWS server by attempting login with the given account credentials.
 function test_lws_login(rpc_url, address, view_key) {
     const deferred = $.Deferred();
     api_proxy({
@@ -874,9 +873,7 @@ function test_electrum(rpc_url, currency_name) {
     return deferred.promise();
 }
 
-// Verifies that an RPC URL speaks the electrum protocol by checking that blockchain.scripthash.get_history returns
-// transactions in the expected electrum response shape (txs with a "version" field). Used as a deep-verification
-// step after test_electrum confirms basic reachability. Returns a Deferred resolving to {"is_live": bool}.
+// Verifies that an RPC URL speaks the electrum protocol by checking that blockchain.scripthash.get_history
 function test_electrum_history(rpc_url, currency_name) {
     const test_address = glob_const.test_address[currency_name],
         script_pub = address_to_scripthash(test_address, currency_name),
@@ -913,8 +910,7 @@ function test_electrum_history(rpc_url, currency_name) {
     return deferred.promise();
 }
 
-// Tests a Nano RPC by sending the configured test_rpc_call payload. Returns a Deferred resolving to
-// {"is_live": bool, "node_vendor": string|null}. is_live is true if either rpc_version or node_vendor is present.
+// Tests a Nano RPC by sending the configured test_rpc_call payload.
 function test_nano_rpc(rpc_url) {
     const deferred = $.Deferred();
     api_proxy({

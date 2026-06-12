@@ -44,17 +44,10 @@ const ERC20_CONTRACTS_BY_SYMBOL = (function() {
         }
         map[sym] = entry[sym];
     }
-    if (dups.length && typeof console !== "undefined" && console.info) {
-        console.info("ERC20_CONTRACTS: " + dups.length + " duplicate symbol(s) collapsed (first wins): " + dups.join(", "));
-    }
     return map;
 })();
 
 const ERC20_CONTRACTS_LIST = (function() {
-    // Mirrors the original convert_erc20_arr(nw_list) output exactly,
-    // including same-symbol duplicates. Single-symbol lookups still hit the
-    // deduplicated map above (first-wins). Preserved verbatim so any caller
-    // iterating br_all sees the same shape and length as before the refactor.
     const out = [];
     for (let i = 0; i < ERC20_CONTRACTS_RAW.length; i++) {
         const entry = ERC20_CONTRACTS_RAW[i],
@@ -70,17 +63,7 @@ const ERC20_CONTRACTS_LIST = (function() {
     return out;
 })();
 
-/**
- * Look up an ERC-20 contract by symbol.
- *
- *   contracts("br_all")        → array form (used by store_coindata_fallback)
- *   contracts("usdt")          → {main, name, cmcid, dec} or false
- *   contracts("usdt", "main")  → "0xdac17..." (the field at <symbol>.<network>)
- *
- * The `network` parameter is preserved for API back-compat. The source data
- * currently only carries a "main" field per token, so contracts("usdt", "main")
- * returns the contract address string. Any other network name returns false.
- */
+// Look up an ERC-20 contract by symbol.
 function contracts(ccsymbol, network) {
     if (!ccsymbol) {
         return false;
@@ -93,25 +76,7 @@ function contracts(ccsymbol, network) {
         return false;
     }
     if (network) {
-        // Match original q_obj behavior: undefined when the field is missing,
-        // not false. This path is rarely hit (no internal caller currently
-        // passes a network argument) but preserved for API back-compat.
         return entry[network];
     }
     return entry;
-}
-
-// Kept exported for any external caller; internal callers no longer need it
-// since ERC20_CONTRACTS_LIST is already in the desired shape.
-function convert_erc20_arr(input) {
-    return input.map(obj => {
-        const symbol = Object.keys(obj)[0],
-            data = obj[symbol];
-        return {
-            "name": data.name,
-            "symbol": symbol,
-            "cmcid": data.cmcid,
-            "contract": data.main
-        };
-    });
 }
