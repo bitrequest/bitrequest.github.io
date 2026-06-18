@@ -51,7 +51,7 @@ function setup_layer2_monitoring(l2, sn, address, ctracts, retry) {
             socket_info(socket_node, true);
             glob_let.socket_attempt[ping_id] = true;
             //start_layer2_scan(socket_node, contract, ping_id, "init"); // initial scan
-            if (ctracts && node_name === "infura") {
+            if (ctracts && node_name === "infura" && ctracts.main !== "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") { // detect invalid contract (ethereum)
                 web3_erc20_websocket(socket_node, address, contract, ping_id);
                 return
             }
