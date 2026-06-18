@@ -27,6 +27,11 @@ const br_bipobj = br_get_local("bpdat", true),
             "tor": false
         },
         {
+            "proxy": "https://www.bitrequest.org",
+            "display": true,
+            "tor": false
+        },
+        {
             "proxy": br_proxy,
             "display": true,
             "tor": true
