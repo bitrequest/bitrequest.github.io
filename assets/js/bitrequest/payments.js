@@ -1456,8 +1456,8 @@ function get_payment(ccrateeuro, ccapi) {
         title_long = request.requesttitle && request.requesttitle.length > 65,
         exceed_class = title_long ? "title_exceed" : "",
         title_short = title_long ? request.requesttitle.substring(0, 44) + " ... " : request.requesttitle,
-        title_quoted = (request.requesttitle && request.requesttitle.length > 1) ? "'" + title_short + "'" : "",
-        header_html = request.isrequest ? "<div id='sharetitle' title='" + title_str + "' data-shorttitle='" + title_short + "' class='" + exceed_class + "'>" + title_quoted + "</div>" : "",
+        title_quoted = (request.requesttitle && request.requesttitle.length > 1) ? "'" + escape_html(title_short) + "'" : "",
+        header_html = request.isrequest ? "<div id='sharetitle' title='" + escape_attr(title_str) + "' data-shorttitle='" + escape_attr(title_short) + "' class='" + exceed_class + "'>" + title_quoted + "</div>" : "",
         wallet_addr = request.xmr_ia || request.address,
         readonly = (request.isrequest && !request.iszero) ? " readonly='readonly'" : "",
         request_info = "\
