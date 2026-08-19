@@ -1,0 +1,97 @@
+/*
+ *  Twilight Grove
+ *  A mystical, calming theme inspired by a forest at twilight.
+ */
+
+/* Body and base background */
+body {
+    background: linear-gradient(to bottom, #3a2d4f, #1a1a1c);
+    background-attachment: fixed;
+    color: #EAEAEA;
+}
+
+.requestlist>li.rqli,
+.requestlist>li .brmarker,
+.requestlist>li .brstatuspanel {
+    background-color: #1a1a1c;
+}
+
+#startscreen {
+    background-color: rgba(50, 50, 50, 0.5);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Header and navigation background */
+header,
+#fixednav {
+    background-color: rgba(118, 71, 138, 0.65);
+    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Heading styles */
+.heading {
+    padding-bottom: 1.3em;
+    color: #ffffff;
+}
+
+/* Request list item backgrounds */
+.requestlist>li.rqli {
+    background-color: rgba(255, 255, 255, 0.05);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 8px;
+    border-radius: 12px;
+}
+
+.requestlist>li.rqli:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.requestlist>li.requestoutgoing.visible_request,
+.requestlist>li.requestoutgoing.visible_request .brstatuspanel,
+.requestlist>li.requestoutgoing .brmarker {
+    background-color: rgba(72, 76, 70, 0.5);
+}
+
+.requestlist>li.requestlocal.visible_request,
+.requestlist>li.requestlocal.visible_request .brstatuspanel,
+.requestlist>li.requestlocal .brmarker {
+    background-color: rgba(63, 79, 91, 0.5);
+}
+
+/* Link and interactive element colors */
+#dialogbody h2:before,
+#toseed,
+#actions div,
+#dialog .customtrigger,
+#canceldialog,
+#backupcd,
+#backupactions .util_icon,
+.linkcolor,
+.selectarrows,
+.qrscanner,
+.ref {
+    color: #A78BFA;
+}
+
+.button,
+.alias {
+    background-color: rgba(167, 139, 250, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+}
+
+.alias {
+    color: rgba(255, 255, 255, 0);
+}
+
+.currencylist .cmc_icon {
+    filter: grayscale(100%) sepia(100%) hue-rotate(220deg) saturate(5);
+}
