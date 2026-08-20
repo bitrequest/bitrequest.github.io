@@ -204,7 +204,7 @@ function refresh_access_token(refresh_token, callback) {
                         if (error) {
                             const error_desc = auth_result.error_description,
                                 error_msg = error_desc ? " || " + error_desc : "";
-                            if (error_desc.indexOf("expired") >= 0 || error_desc.indexOf("revoked") >= 0) {
+                            if (error === "invalid_grant" || (error_desc && (error_desc.includes("expired") || error_desc.includes("revoked")))) {
                                 br_remove_local("rt");
                                 schedule_oauth_popup();
                                 return
@@ -228,6 +228,7 @@ function refresh_access_token(refresh_token, callback) {
             }
         }).fail(function(error) {
             console.error("error", error);
+            notify(tl("error"));
         });
     }
 }
