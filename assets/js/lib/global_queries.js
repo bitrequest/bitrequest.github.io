@@ -1465,7 +1465,7 @@ function api_proxy(ad, p_proxy) {
                 payload.tor_proxy = random_proxy.proxy;
             }
         }
-        ad.params.data = JSON.stringify(payload);
+        ad.params.data = typeof payload === "string" ? payload : JSON.stringify(payload);
     }
     glob_let.proxy_attempts[active_proxy] = true;
     if (api_url_data) {

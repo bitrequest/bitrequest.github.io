@@ -926,6 +926,11 @@ function stripb64(ab) {
     return JSON.parse(atob(b64));
 }
 
+// Returns backup content as JSON text; decodes legacy base64-wrapped blobs
+function bu_text(dat) {
+    return dat.trim()[0] === "{" ? dat : atob(dat);
+}
+
 // Displays error dialog when system backup file has expired
 function systembu_expired() {
     const content = render_html([{
@@ -959,7 +964,7 @@ function restore_systembu() {
                     "filename": filename,
                     "thisdevice": "this"
                 };
-            restore(atob(cb64), meta);
+            restore(bu_text(cb64), meta);
         }
     });
 }
@@ -1005,7 +1010,7 @@ function compile_backup_data() {
             lock,
             encr
         },
-        blob = btoa(JSON.stringify(json));
+        blob = JSON.stringify(json);
     return blob;
 }
 
@@ -1065,7 +1070,7 @@ function backup(args) {
 // Reliable way to download a blob URL
 function start_blob(node) {
     const blob = node.attr("data-blob") || compile_backup_data(),
-        href = "data:text/json;charset=utf-16le;base64," + blob,
+        href = "data:application/json;charset=utf-8;base64," + btoa(bu_text(blob)),
         download = node.attr("download") || node.attr("title") || "backup",
         temp = $("<a>")
         .attr({
@@ -1200,7 +1205,7 @@ function submit_restore() {
                         "filename": glob_let.backup_filename,
                         "thisdevice": "this"
                     };
-                restore(atob(cb64), meta);
+                restore(bu_text(cb64), meta);
                 return
             }
             topnotify(tl("error"));
@@ -1234,7 +1239,7 @@ function gd_restore(field) {
             }
         }).done(function(e) {
             const cb64 = strip_quotes(e),
-                b64 = atob(cb64),
+                b64 = bu_text(cb64),
                 meta = {
                     "filename": file,
                     "thisfileid": file_id,
