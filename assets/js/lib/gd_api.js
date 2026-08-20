@@ -204,12 +204,12 @@ function refresh_access_token(refresh_token, callback) {
                         if (error) {
                             const error_desc = auth_result.error_description,
                                 error_msg = error_desc ? " || " + error_desc : "";
-                            if (error === "invalid_grant" || (error_desc && (error_desc.includes("expired") || error_desc.includes("revoked")))) {
+                            if (error === "invalid_grant" || error.code == 400 || error_msg.indexOf("expired") >= 0 || error_msg.indexOf("revoked") >= 0) {
                                 br_remove_local("rt");
                                 schedule_oauth_popup();
                                 return
                             }
-                            notify(error + error_msg);
+                            notify((error.message ? error.message + " (" + error.code + ")" : error) + error_msg);
                             return
                         }
                         const access_token = auth_result.access_token;
