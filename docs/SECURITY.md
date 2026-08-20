@@ -64,16 +64,31 @@ directly from local files. This has security implications users should
 understand:
 
 - **Seed storage.** A wallet seed created in the app is stored on the user's
-  device, encrypted. An optional PIN protects it. The PIN is a convenience gate
-  intended to deter casual access to a device or a stray backup file; it is
-  **not** a substitute for full-disk encryption or a hardware wallet and should
-  not be relied on to protect large balances. Bitrequest is intended for
-  point-of-sale use with modest balances. For significant holdings, use a
-  dedicated hardware wallet.
-- **Backups.** The encrypted seed is only included in a backup if the user
-  explicitly confirms it. Anyone who obtains that backup file holds the
-  encrypted seed; its safety then depends on the strength of the PIN and on the
-  user keeping the file private. Store backups accordingly.
+  device, encrypted under a key derived from the user's PIN; a PIN must be set
+  before a seed can be stored. The PIN is a convenience gate intended to deter
+  casual access to a device or a stray copy of its data; it is **not** a
+  substitute for full-disk encryption or a hardware wallet and should not be
+  relied on to protect large balances. Bitrequest is intended for point-of-sale
+  use with modest balances. For significant holdings, use a dedicated hardware
+  wallet.
+- **Backups.** Backup files never contain the wallet seed or private keys. The
+  only backup of a seed is the written seed phrase itself, which the app
+  requires the user to verify. Backup files are always encrypted: with the seed
+  phrase when one exists (restoring on another device then requires entering
+  that phrase), and otherwise with a key derived from the user's PIN, which the
+  app requires before a backup can be created or shared. A PIN-encrypted backup
+  can be brute-forced offline by anyone who obtains the file (a 4-digit PIN has
+  10,000 possibilities), and backups do contain payment history, receiving
+  addresses, extended public keys, and any API keys the user has configured —
+  so backup files should still be kept private.
+- **Shared files.** Backups, team invites, and CSV exports can optionally be
+  shared through a payment proxy. Shared files are stored encrypted on the
+  proxy and are deleted after one week. Shared backups use the same seed- or
+  PIN-based encryption as local backup files. Team invites and CSV exports are
+  encrypted with key material carried in the app and the share link: this
+  protects cached files from casual inspection on the proxy, but anyone who
+  holds a share link can decrypt the file it points to. Treat a share link as
+  the file itself.
 - **Device integrity.** Bitrequest cannot protect secrets on a device that is
   already compromised by malware or physically controlled by an attacker. Keep
   the operating system and browser current.
