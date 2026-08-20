@@ -1886,7 +1886,7 @@ function run_tx_poll(rd, api_data, rdo, opts) {
 
 // Sorts transaction list by date in descending order using custom processing function
 function sort_transactions_by_date(process_func, tx_list) {
-    return $(tx_list).sort(function(tx_a, tx_b) {
+    return tx_list.sort(function(tx_a, tx_b) {
         const time_a = process_func(tx_a, "sort"),
             time_b = process_func(tx_b, "sort");
         return time_b - time_a; // descending order
