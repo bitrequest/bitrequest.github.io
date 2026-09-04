@@ -1,0 +1,5 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target" : { "namespace": "android_app", "package_name": "io.bitrequest.app",
+               "sha256_cert_fingerprints": ["4C:93:4B:73:94:95:E3:65:FF:02:BB:CB:02:FF:8E:8B:93:CF:93:41:2B:E3:8E:F4:2B:00:B1:95:B3:E5:6C:99", "F2:01:15:1D:12:F5:8A:4E:1F:47:2D:55:43:37:99:DF:F7:43:95:0E:14:E1:B5:F8:6C:A7:44:43:09:82:B5:5C"] }
+}]
