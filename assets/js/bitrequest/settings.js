@@ -1991,10 +1991,10 @@ function compile_csv() {
             csv[pdf_tl("created")] = short_date(created_time, pdf_langcode());
             csv[pdf_tl("amount")] = amount + " " + uoa;
             const rval = received ? received + " " + ccsymbol : "",
-                paidrecv = type === "incoming" ? pdf_tl("paid") : pdf_tl("received"),
+                paidrecv = status === "pending" ? pdf_tl("pending") : type === "incoming" ? pdf_tl("paid") : pdf_tl("received"),
                 pttitle = pdf_tl("amount") + " " + pdf_tl("received") + " / " + pdf_tl("paid"),
                 fiatstr = fiatval ? fiatval.toFixed(2) + " " + fiatcur : "";
-            csv[pttitle] = rval + " (" + paidrecv + ")";
+            csv[pttitle] = status === "new" ? pdf_tl("Waiting for payment") : rval + " (" + paidrecv + ")";
             csv[pdf_tl("fiatvalue")] = fiatstr;
             csv[pdf_tl("paidon")] = paid_time;
             if (include.address) {
