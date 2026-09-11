@@ -2828,11 +2828,7 @@ function share_request(shared_url, shared_title) {
         toggle_ti_qr(shared_url);
         return
     }
-    if (glob_const.is_ios_app) {
-        share_fallback(shared_url, shared_title);
-        return
-    }
-    if (glob_const.supportsTouch && navigator.canShare) {
+    if (navigator.share) {
         navigator.share({
             "title": shared_title + " | " + glob_const.apptitle,
             "text": shared_title + ": \n",
