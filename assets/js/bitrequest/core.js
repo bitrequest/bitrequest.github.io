@@ -1015,7 +1015,6 @@ function triggertx_function(trigger_elem) {
 
 // Completes transaction processing and URL generation
 function finishtx_function(currency, wallet_address, saved_url, display_title) {
-    glob_let.prevkey = false;
     const url_params = get_urlparameters();
     if (url_params.xss) {
         return

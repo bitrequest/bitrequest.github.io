@@ -290,7 +290,6 @@ const br_bipobj = br_get_local("bpdat", true),
         "blockswipe": false, // owner: payments.js  — suppress swipe gesture
         "blocktyping": false, // owner: payments.js  — suppress keyboard input handler
         "ctrl": false, // owner: core.js      — ctrl key held (multi-select etc.)
-        "prevkey": false, // owner: core.js      — last keyup tracking
         "angle": 0, // owner: payments.js  — current rotation for poll_animate
         "anim_frame": null, // owner: payments.js  — requestAnimationFrame id
         "scrollposition": 0, // owner: core.js      — saved scroll for page restoration

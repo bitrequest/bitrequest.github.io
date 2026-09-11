@@ -1424,8 +1424,8 @@ function get_payment(ccrateeuro, ccapi) {
         sats = (crypto_amount_raw * 100000000).toFixed(0),
         fiat_amount = ((request.amount / exchange_rate) * fiat_rate).toFixed(2),
         fiat_value = request.iszero ? "" : fiat_amount,
-        crypto_step = "0.00001",
-        fiat_step = "0.1",
+        crypto_step = "0.000001",
+        fiat_step = "0.01",
         step = request.iscrypto ? crypto_step : fiat_step,
         amount_placeholder = request.iszero ? zero_text : request.amount,
         amount_value = request.iszero ? "" : request.amount,
@@ -1454,12 +1454,12 @@ function get_payment(ccrateeuro, ccapi) {
                     <span id='sharecryptowrap'>" + crypto_icon + lightning_icon +
         "<span id='sharemainccinputmirror' class='ccmirror mirrordiv'>\
                             <span>" + crypto_placeholder + "</span>\
-                            <input value='" + crypto_value + "' step='" + crypto_step + "' type='number' placeholder='" + zero_text + "'" + readonly + "/>\
+                            <input value='" + crypto_value + "' step='" + crypto_step + "' type='text' inputmode='decimal' placeholder='" + zero_text + "'" + readonly + "/>\
                         </span>\
                     </span>\
                     <span id='shareinputmirror' class='fmirror mirrordiv'>\
                         <span>" + amount_placeholder + "</span>\
-                        <input value='" + amount_value + "' step='" + step + "' type='number' placeholder='" + zero_text + "'" + readonly + "/>\
+                        <input value='" + amount_value + "' step='" + step + "' type='text' inputmode='decimal' placeholder='" + zero_text + "'" + readonly + "/>\
                     </span>\
                     <span id='sharecurrency'>" + request.uoa + "</span>\
                 </div>\
@@ -1468,7 +1468,7 @@ function get_payment(ccrateeuro, ccapi) {
                         <span class='quote'>(</span>\
                         <span id='sharelcinputmirror' class='lcmirror mirrordiv'>\
                         <span>" + fiat_amount + "</span>\
-                        <input value='" + fiat_value + "' step='" + fiat_step + "' type='number' placeholder='" + zero_text + "'" + readonly + "/>\
+                        <input value='" + fiat_value + "' step='" + fiat_step + "' type='text' inputmode='decimal' placeholder='" + zero_text + "'" + readonly + "/>\
                     </span>\
                     <span id='sharelcname'>" + display_currency + "</span>\
                     <span class='quote'>)</span>\
@@ -1480,7 +1480,7 @@ function get_payment(ccrateeuro, ccapi) {
                             <span>" +
         crypto_placeholder +
         "</span>\
-                            <input value='" + crypto_value + "' step='" + crypto_step + "' type='number' placeholder='" + zero_text + "'" + readonly + "/>\
+                            <input value='" + crypto_value + "' step='" + crypto_step + "' type='text' inputmode='decimal' placeholder='" + zero_text + "'" + readonly + "/>\
                         </span> " +
         request.payment + ")\
                     </span>\
@@ -1550,27 +1550,27 @@ function get_payment(ccrateeuro, ccapi) {
                 <div id='amountbreak' class='inputbreak'>\
                     <span id='mainccinputmirror' class='ccmirror mirrordiv'>\
                         <span>" + crypto_placeholder + "</span>\
-                        <input value='" + crypto_value + "' data-xrate='" + ccrateeuro + "' step='" + crypto_step + "' type='number' placeholder='" + zero_text + "'" + readonly + ">\
+                        <input value='" + crypto_value + "' data-xrate='" + ccrateeuro + "' step='" + crypto_step + "' type='text' inputmode='decimal' placeholder='" + zero_text + "'" + readonly + ">\
                     </span>\
                     <span id='amountinputmirror' class='fmirror mirrordiv'>\
                         <span>" + amount_placeholder + "</span>\
-                        <input value='" + amount_value + "' data-xrate='" + exchange_rate + "' step='" + fiat_step + "' type='number' placeholder='" + zero_text + "'" + readonly + ">\
+                        <input value='" + amount_value + "' data-xrate='" + exchange_rate + "' step='" + fiat_step + "' type='text' inputmode='decimal' placeholder='" + zero_text + "'" + readonly + ">\
                     </span>\
                     <span id='pickcurrency' class='linkcolor'>" + request.uoa + "</span>\
                 </div>\
                 <div id='ibsat' class='inputbreak'>\
                     <span id='satinputmirror' class='mirrordiv'>\
                         <span>" + sats_placeholder + "</span>\
-                        <input class='satinput' value='" + sats_value + "' data-xrate='" + ccrateeuro + "' max='10000000000000' type='number' placeholder='000000000'" + readonly + "/>\
+                        <input class='satinput' value='" + sats_value + "' data-xrate='" + ccrateeuro + "' max='10000000000000' type='text' inputmode='numeric' placeholder='000000000'" + readonly + "/>\
                     </span> satoshis\
                 </div>\
                 <div id='iblc' class='inputbreak'>\
                     (<span id='lcinputmirror' class='lcmirror mirrordiv'>\
                         <span>" + fiat_amount + "</span>\
-                        <input value='" + fiat_value + "' data-xrate='" + fiat_rate + "' step='" + fiat_step + "' type='number' placeholder='" + zero_text + "'" + readonly + "/>\
+                        <input value='" + fiat_value + "' data-xrate='" + fiat_rate + "' step='" + fiat_step + "' type='text' inputmode='decimal' placeholder='" + zero_text + "'" + readonly + "/>\
                     </span> " + request.fiatcurrency + ") \
                 </div>\
-                <div id='txibreak' class='inputbreak'> " + tl("send") + " <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + crypto_placeholder + "</span><input value='" + crypto_value + "' data-xrate='" + ccrateeuro + "' step='" + crypto_step + "' type='number' placeholder='" + zero_text + "'" + readonly + "/></span> " + request.currencysymbol + " " + tl("to") + label_html + ": </div>\
+                <div id='txibreak' class='inputbreak'> " + tl("send") + " <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + crypto_placeholder + "</span><input value='" + crypto_value + "' data-xrate='" + ccrateeuro + "' step='" + crypto_step + "' type='text' inputmode='decimal' placeholder='" + zero_text + "'" + readonly + "/></span> " + request.currencysymbol + " " + tl("to") + label_html + ": </div>\
             </div>\
             <div id='paymentaddress' class='copyinput'>" + wallet_addr + "</div><div id='paymentaddress_lnd' class='copyinput' data-type='lightning invoice'></div>\
         </div>\
@@ -2113,6 +2113,15 @@ function validate_steps() {
         return result;
     }
 
+    function max_decimals(input_element) {
+        return (input_element.step.split(".")[1] || "").length;
+    }
+
+    function limit_decimals(value, max) {
+        const parts = value.split(".");
+        return parts[1] && parts[1].length > max ? parts[0] + "." + parts[1].slice(0, max) : value;
+    }
+
     $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
         if (glob_let.blocktyping === true) {
             play_audio("funk");
@@ -2120,64 +2129,41 @@ function validate_steps() {
             e.preventDefault();
             return
         }
-        const current_input = $(this),
-            current_value = current_input.val(),
-            key_code = e.keyCode,
-            restricted_key_codes = [188, 190, 108, 110, 229];
-        if (restricted_key_codes.includes(key_code)) { // prevent double commas and dots
-            const value_length = current_value.length;
-            if (value_length) {
-                if (glob_let.prevkey || current_value.includes(".") || current_value.includes(",") || !e.target.validity.valid || current_input.hasClass("satinput")) {
-                    e.preventDefault();
-                    return
-                }
-                // For comma keys, insert dot instead
-                if (key_code === 188 || key_code === 110) {
-                    e.preventDefault();
-                    const input_element = this;
-                    input_element.type = "text";
-                    const start = input_element.selectionStart,
-                        end = input_element.selectionEnd;
-                    input_element.value = current_value.slice(0, start) + "." + current_value.slice(end);
-                    input_element.selectionStart = input_element.selectionEnd = start + 1;
-                    // Trigger 'input' event to apply normalization immediately
-                    input_element.dispatchEvent(new Event("input", {
-                        "bubbles": true
-                    }));
-                    // Do not restore type here; handle in 'input' and 'blur'
-                    glob_let.prevkey = true;
-                    return
-                }
-                glob_let.prevkey = true;
-                return
-            }
+        const key = e.key,
+            input_element = this;
+        if (input_element.readOnly || e.ctrlKey || e.metaKey || e.originalEvent.isComposing || key === "Unidentified") { // readonly, shortcuts, IME, virtual keyboards
+            return
+        }
+        if (["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight", "Home", "End"].includes(key)) {
+            return
+        }
+        if (!/^[\d.,]$/.test(key)) {
             e.preventDefault();
             return
         }
-        if (key_code === 8) { // allow backspace
-            glob_let.prevkey = false;
-            return
-        }
-        const is_command_key = (key_code === 91 || key_code === 17 || e.metaKey || e.ctrlKey);
-        if (is_command_key) {
-            if (key_code === 65) { // unblock comma on select all
-                glob_let.prevkey = false;
+        const current_value = input_element.value,
+            start = input_element.selectionStart,
+            end = input_element.selectionEnd,
+            remaining = current_value.slice(0, start) + current_value.slice(end),
+            max = max_decimals(input_element);
+        if (key === "." || key === ",") {
+            e.preventDefault();
+            if (!max || remaining.includes(".")) {
+                return
             }
+            const inserted = remaining.length ? "." : "0.";
+            input_element.value = current_value.slice(0, start) + inserted + current_value.slice(end);
+            input_element.selectionStart = input_element.selectionEnd = start + inserted.length;
+            input_element.dispatchEvent(new Event("input", {
+                "bubbles": true
+            }));
             return
         }
-        if (key_code === 37 || key_code === 39) { // arrowleft, arrowright
-            return
+        const new_value = current_value.slice(0, start) + key + current_value.slice(end),
+            decimals = new_value.split(".")[1] || "";
+        if (decimals.length > max || (input_element.max && Number(new_value) > Number(input_element.max))) {
+            e.preventDefault();
         }
-        if ((key_code >= 48 && key_code <= 57) || (key_code >= 96 && key_code <= 105)) { //only allow numbers
-            if (!e.target.validity.valid) { //test input pattern and steps attributes
-                const selected_text = document.getSelection().toString();
-                if (selected_text.replace(",", ".") !== current_value.replace(",", ".")) {
-                    e.preventDefault();
-                }
-            }
-            return
-        }
-        e.preventDefault();
     });
 
     // Handle paste event to normalize pasted content
@@ -2185,10 +2171,8 @@ function validate_steps() {
         e.preventDefault();
         const input_element = this,
             pasted = (e.originalEvent || e).clipboardData.getData("text"),
-            normalized = basic_normalize(pasted);
-        // Temporarily switch to text for insertion
-        input_element.type = "text";
-        const start = input_element.selectionStart,
+            normalized = basic_normalize(pasted),
+            start = input_element.selectionStart,
             end = input_element.selectionEnd,
             current_value = input_element.value;
         input_element.value = current_value.slice(0, start) + normalized + current_value.slice(end);
@@ -2202,29 +2186,17 @@ function validate_steps() {
 
     // Additional handler to normalize the input value and ensure only one decimal
     $(document).on("input", "#paymentdialogbox .mirrordiv input", function() {
-        const input_element = this;
-        let value = input_element.value,
-            normalized = full_normalize(value);
+        const input_element = this,
+            value = input_element.value,
+            normalized = limit_decimals(full_normalize(value), max_decimals(input_element));
         if (normalized !== value) {
             input_element.value = normalized;
-            value = normalized;
-        }
-        // If type is 'text' and value is empty or now a valid number (no trailing dot), switch back to 'number'
-        if (input_element.type === "text" && (normalized === "" || (!normalized.endsWith(".") && !isNaN(parseFloat(normalized)) && isFinite(normalized)))) {
-            input_element.type = "number";
         }
     });
 
     // On blur, clean up trailing dot and switch back to 'number'
     $(document).on("blur", "#paymentdialogbox .mirrordiv input", function() {
-        const input_element = this;
-        if (input_element.type === "text") {
-            let value = input_element.value,
-                normalized = full_normalize(value, true);
-            input_element.value = normalized;
-            input_element.type = "number";
-        }
-        glob_let.prevkey = false;
+        this.value = full_normalize(this.value, true);
     });
 }
 
