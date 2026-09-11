@@ -614,7 +614,7 @@ main {
 }
 
 #request_history {
-    display: block;
+    display: none;
     position: fixed;
     max-width: 1em;
     max-height: 1em;
