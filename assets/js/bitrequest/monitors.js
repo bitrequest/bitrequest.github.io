@@ -1,6 +1,7 @@
 $(document).ready(function() {
     // ** Core Request Management: **
     update_request_trigger();
+    refresh_request_states();
 });
 
 // ** Fetch incoming transactions **
@@ -1088,7 +1089,9 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                 total_amount = rd.amount,
                 set_confirmations = rd.set_confirmations || 1, // Default to 1
                 historic_usd_value = (total_amount / currency_rate) * usd_rate,
-                margin = historic_usd_value < 2 ? 0.60 : 0.97; // be flexible with small amounts
+                pct_margin = 0.97, // 3% proportional slack (volatility drift), 10¢ absolute slack (wallet rounding)
+                abs_slack_usd = 0.10,
+                min_accept_usd = Math.min(historic_usd_value * pct_margin, historic_usd_value - abs_slack_usd);
             let transaction_counter = 0,
                 confirmations = 0,
                 paymenttimestamp,
@@ -1122,9 +1125,11 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                     txhash = transaction_data.txhash,
                     receivedamount += parseFloat(transaction_value) || 0; // sum of outputs CC
                 let current_usd_sum = received_usd += parseFloat(historic_price * transaction_value) || 0;
-                if (current_usd_sum >= historic_usd_value * margin) { //minus 5% dollar for volatility compensation
+                if (current_usd_sum >= min_accept_usd) {
                     current_transaction.prevAll().remove();
-                    if ((historic_price && confirmations >= conf_correct) || rd.no_conf === true || transaction_data.setconfirmations === false) { // check all confirmations + whitelist for currencies unable to fetch confirmations
+                    // historic_object.fetched === false is a stale fallback price (no data point after the tx timestamp):
+                    // let it accumulate toward the amount for display, but never confirm on it — the next scan re-fetches. See DECISIONS.md.
+                    if ((historic_object.fetched && confirmations >= conf_correct) || rd.no_conf === true || transaction_data.setconfirmations === false) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                         confirmed = true;
                     } else {
                         confirmed = false;

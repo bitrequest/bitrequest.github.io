@@ -343,7 +343,6 @@ function finish_functions() {
     addressinfo();
     show_pk();
     show_vk();
-    refresh_request_states();
 
     // ** Notifications: **
     closenotifytrigger();
