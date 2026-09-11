@@ -1089,9 +1089,9 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                 total_amount = rd.amount,
                 set_confirmations = rd.set_confirmations || 1, // Default to 1
                 historic_usd_value = (total_amount / currency_rate) * usd_rate,
-                pct_margin = 0.97, // 3% proportional slack (volatility drift), 10¢ absolute slack (wallet rounding)
+                pct_margin = 0.97,
                 abs_slack_usd = 0.10,
-                min_accept_usd = Math.min(historic_usd_value * pct_margin, historic_usd_value - abs_slack_usd);
+                min_accept_usd = Math.max(0, Math.min(historic_usd_value * pct_margin, historic_usd_value - abs_slack_usd)); // lowest USD accepted as paid: within 3% or 10¢, whichever is looser, never below 0
             let transaction_counter = 0,
                 confirmations = 0,
                 paymenttimestamp,
@@ -1148,7 +1148,7 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
             };
             if (received_usd) {
                 const requestid = rd.requestid;
-                if (received_usd >= historic_usd_value * margin) { // check total incoming amount // minus 5% dollar for volatility compensation
+                if (historic_usd_value > 0 && received_usd >= min_accept_usd) { // check total incoming amount // minus 5% dollar for volatility compensation
                     if (confirmed === false) { // check confirmations outside the loop
                         status = "pending",
                             pending = transaction_counter === 1 && txhash ? "polling" : pending; // switch to tx polling if there's only one transaction and txhash is known
