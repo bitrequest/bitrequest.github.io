@@ -871,17 +871,15 @@ function update_transaction_count(status_panel, count) {
 
 // Triggers historical fiat data retrieval for transactions based on confirmation status
 function init_fiat_history(rd, rdo, latestconf, latest_input, firstinput) {
-    const cache_value = latest_input + latestconf, // only update on change
+    const latest_input_conf = latest_input + latestconf,
         cache_prefix = "historic_" + rd.requestid,
         cache_timestamp = br_get_session(cache_prefix), // set to small amount to trigger lookup exchange rates
-        historic_cache = parseInt(cache_timestamp) || 1;
-    if (cache_value > historic_cache) { //new input detected; call historic api
-        const time_past = cache_value - historic_cache,
-            latestinput = (time_past > 600000) ? latest_input : historic_cache; // refresh cache only every 10 minutes
+        historic_cache = parseInt(cache_timestamp) || 1,
+        latestinput = latest_input_conf > historic_cache ? latest_input_conf : historic_cache;
+    if (latestinput > historic_cache) { //new input detected; call historic api
         br_remove_session(cache_prefix); // remove historic price cache
         const historic_payload = $.extend(rd, {
                 latestinput,
-                latestconf,
                 firstinput
             }),
             api_list = "historic_fiat_price_apis",
@@ -1085,7 +1083,6 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
             const request_list = rdo.thislist,
                 transaction_items = request_list.find(".transactionlist li"),
                 transaction_reverse = transaction_items.length > 1 ? transaction_items.get().reverse() : transaction_items,
-                latest_confirm = rd.latestconf,
                 total_amount = rd.amount,
                 set_confirmations = rd.set_confirmations || 1, // Default to 1
                 historic_usd_value = (total_amount / currency_rate) * usd_rate,
@@ -1172,7 +1169,7 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                     "lightning": rd.lightning
                 }, false);
                 if (pending !== "no") {
-                    br_set_session("historic_" + requestid, latest_input + latest_confirm); // 'cache' historic data
+                    br_set_session("historic_" + requestid, latest_input); // 'cache' historic data
                 }
                 finalize_request_state(rdo);
                 return
