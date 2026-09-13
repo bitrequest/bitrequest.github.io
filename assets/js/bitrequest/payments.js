@@ -2828,17 +2828,22 @@ function share_request(shared_url, shared_title) {
         toggle_ti_qr(shared_url);
         return
     }
-    if (navigator.share) {
-        navigator.share({
-            "title": shared_title + " | " + glob_const.apptitle,
-            "text": shared_title + ": \n",
-            "url": shared_url
-        }).then(share_callback).catch(function(error) {
-            console.error("Sharing failed:", error);
-        });
+    if (glob_const.supportsTouch && navigator.share) {
+        native_share(shared_url, shared_title)
         return
     }
     share_fallback(shared_url, shared_title);
+}
+
+// Native share dialog
+function native_share(shared_url, shared_title) {
+    navigator.share({
+        "title": shared_title + " | " + glob_const.apptitle,
+        "text": shared_title + ": \n",
+        "url": shared_url
+    }).then(share_callback).catch(function(error) {
+        console.error("Sharing failed:", error);
+    });
 }
 
 // Provides alternative sharing UI when native sharing is unavailable
@@ -2873,10 +2878,18 @@ function init_share_handlers() {
         "#outlookshare": {
             "open": "location",
             "url": i => "ms-outlook://compose?subject=" + encodeURIComponent(i.title) + "&body=" + encodeURIComponent(i.body)
-        }
+        },
+        "#nativeshare": null
     };
     $.each(share_targets, function(selector, target) {
         $(document).on("click", selector, function() {
+            if (selector === "#nativeshare") {
+                const share_info = get_share_info(),
+                    shared_url = share_info.url,
+                    shared_title = share_info.title;
+                native_share(shared_url, shared_title)
+                return
+            }
             share_callback();
             open_share_url(target.open, target.url(get_share_info()));
         });
