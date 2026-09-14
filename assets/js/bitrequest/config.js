@@ -954,7 +954,7 @@ const glob_config = {
                         },
                         {
                             "name": "electrum",
-                            "url": "electroncash.de:50002",
+                            "url": "electroncash.dk:50002",
                             "display": true
                         },
                         {
