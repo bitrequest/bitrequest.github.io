@@ -728,7 +728,6 @@ function stop_nfc_scan() {
 // Polls Lightning Network node for payment request status with automatic retry
 function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode) {
     if (is_openrequest()) { // only when request is visible
-        const default_error = tl("unabletoconnect");
         $.ajax({
             "method": "POST",
             "cache": false,
@@ -743,7 +742,10 @@ function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode)
             poll_animate();
             const error = response.error;
             if (error) {
-                const error_message = error.message || (typeof error === "string" ? error : default_error);
+                const default_error = tl("unabletoconnect"),
+                    error_message = error.message || (typeof error === "string" ? error : default_error);
+                notify(error_message, 500000);
+                return
             }
             const proxy_version = response.version;
             if (proxy_version < glob_const.proxy_version) {
@@ -779,8 +781,7 @@ function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode)
 // Monitors Lightning Network invoice payment status with callback handling
 function lnd_poll_invoice(proxy_host, proxy_key, imp, invoice_data, payment_id, node_id) {
     if (is_openrequest()) { // only when request is visible
-        const default_error = "unable to connect",
-            hash = invoice_data.request_id || invoice_data.hash;
+        const hash = invoice_data.request_id || invoice_data.hash;
         $.ajax({
             "method": "POST",
             "cache": false,
@@ -1118,6 +1119,7 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
         base_url = complete_url(socket_node.url),
         infura_key = get_infura_apikey(base_url),
         ws_endpoint = base_url + infura_key,
+        transfer_topic = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
         socket = glob_let.sockets[socket_id] = new WebSocket(ws_endpoint);
     socket.onopen = function(e) {
         socket_info(socket_node, true);
@@ -1129,7 +1131,7 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
                 "logs",
                 {
                     "address": contract_address,
-                    "topics": []
+                    "topics": [transfer_topic]
                 }
             ]
         });
@@ -1139,10 +1141,8 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
         try {
             const msg_data = JSON.parse(e.data),
                 log_data = q_obj(msg_data, "params.result");
-            if (log_data && log_data.topics) {
+            if (log_data && log_data.topics && log_data.topics.length === 3 && log_data.topics[0] === transfer_topic) {
                 const target_address = log_data.topics[2];
-                // topics[2] is the 32-byte left-padded recipient; exact-match its
-                // trailing 40 hex (the address) instead of substring-scanning.
                 if (!target_address || addr_eq(target_address.slice(-40), wallet_address) !== true) return
                 const contract_data = log_data.data.slice(2),
                     raw_value = hex_to_number_string(contract_data),
@@ -1171,7 +1171,7 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
         }
     };
     socket.onclose = function(e) {
-        if (e.code === 1008) { // closed because of API limit, switch to polling
+        if (e.code === 1008) {
             console.error("Disconnected from " + socket_node.url);
             glob_let.ws_timer = 0;
             handle_socket_fails(socket_node, wallet_address, socket_id, network_type);

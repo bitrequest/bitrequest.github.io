@@ -1502,7 +1502,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
     const network_type = api_data.network;
     if (rdo.pending === "scanning") {
         const coin_config = get_coinsettings(rd.payment);
-        if (network_type) { // switch to default (alchemy) txdata
+        if (network_type) {
             const selected_api = q_obj(coin_config, "layer2.options." + network_type + ".apis.selected");
             if (selected_api) {
                 const network_name = selected_api.name;
@@ -1528,13 +1528,11 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
         handle_scan_failure(null, rd, api_data, rdo, network_type);
         return
     }
-    const current_list = rdo.thislist,
-        tx_list = rdo.transactionlist,
-        status_panel = rdo.statuspanel,
+    const tx_list = rdo.transactionlist,
         rpc_url = build_rpc_endpoint_url(api_data),
         node_url = network_type ? api_data.url : rpc_url || glob_const.main_eth_node,
         tx_hash = rd.txhash;
-    if (!node_url) { // L2 node not resolved yet (cold load) — fail over instead of building a dead request
+    if (!node_url) {
         handle_scan_failure(null, rd, api_data, rdo, network_type);
         return
     }
@@ -1554,13 +1552,10 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                                 confirmation_count = confirmations < 0 ? 0 : confirmations;
                             let parsed_tx = null;
                             if (rd.erc20 === true) {
-                                const tx_input = tx_data.input;
-                                // Exact-match the transfer recipient (last 40 hex of the
-                                // 32-byte recipient word) instead of substring-scanning the calldata.
-                                if (addr_eq(tx_input.slice(34, 74), rd.address) === true) {
-                                    const method_signature = tx_input.slice(2, 10),
-                                        recipient_hex = tx_input.slice(10, 74),
-                                        amount_hex = tx_input.slice(74),
+                                const tx_input = tx_data.input,
+                                    method_signature = tx_input.slice(2, 10);
+                                if (method_signature === "a9059cbb" && tx_input.length === 138 && addr_eq(tx_data.to, contract) === true && addr_eq(tx_input.slice(34, 74), rd.address) === true) {
+                                    const amount_hex = tx_input.slice(74),
                                         token_value = hex_to_number_string(amount_hex),
                                         token_data = {
                                             "timestamp": block_info.timestamp,

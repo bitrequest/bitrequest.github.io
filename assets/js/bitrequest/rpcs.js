@@ -1124,7 +1124,6 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
 
 function test_mempoolspace(input_section, node_config, currency_name) {
     const test_address = glob_const.test_address[currency_name],
-        error_message = tl("unabletoconnect"),
         rpc_url = complete_url(node_config.url),
         proxy_data = {
             "api_url": strip_slash(rpc_url) + "/api/address/" + test_address + "/txs",

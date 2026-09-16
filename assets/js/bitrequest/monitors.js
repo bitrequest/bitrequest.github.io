@@ -682,7 +682,6 @@ function create_transaction_item(tx_details) {
         instant_lock = tx_details.instant_lock,
         is_confirmed = instant_lock || no_confirmation_requirement || (confirmations && confirmations >= set_confirmations),
         confirmation_count = no_confirmation_requirement ? "" : confirmations + " / " + set_confirmations + " " + tl("confirmations"),
-        instant_lock_text = instant_lock ? " (instant_lock)" : "",
         confirmation_title = instant_lock ? "instant_lock" : confirmation_count,
         unconfirmed_text = tl("unconfirmedtx"),
         checked_span = "<span class='icon-checkmark' title='" + confirmation_title + "'></span>",
@@ -810,7 +809,7 @@ function validate_payment_amounts(rd, rdo) {
                         crypto_pending = "scanning";
                 }
             }
-            if (is_recent && !is_crypto) { // get local fiat rates when request is less then 15 minutes old
+            if (is_recent && !is_crypto) { // get local fiat rates when request is less then 5 minutes old
                 const crypto_symbol = rd.currencysymbol,
                     exchange_rates = br_get_session("exchangerates", true),
                     crypto_exchange_rates = br_get_session("xrates_" + crypto_symbol, true);
@@ -1102,7 +1101,6 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                 transaction_counter++;
                 const current_transaction = $(this),
                     transaction_data = current_transaction.data(),
-                    correction_confirmations = transaction_data.instant_lock ? 0 : set_confirmations, // correction if dash instant_lock
                     transaction_timestamp = transaction_data.transactiontime,
                     transaction_value = transaction_data.ccval,
                     values = {
@@ -1145,7 +1143,7 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
             };
             if (received_usd) {
                 const requestid = rd.requestid;
-                if (historic_usd_value > 0 && received_usd >= min_accept_usd) { // check total incoming amount // minus 5% dollar for volatility compensation
+                if (historic_usd_value > 0 && received_usd >= min_accept_usd) { // check total incoming amount // minus 3% dollar for volatility compensation
                     if (confirmed === false) { // check confirmations outside the loop
                         status = "pending",
                             pending = transaction_counter === 1 && txhash ? "polling" : pending; // switch to tx polling if there's only one transaction and txhash is known

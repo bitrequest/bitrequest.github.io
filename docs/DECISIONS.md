@@ -278,8 +278,7 @@ non-gate written more verbosely). The Sep 2026 fix wires it: a
 shows a provisional value), but can no longer *confirm* the payment — the
 confirmation check in `fetch_crypto_rates` requires `historic_object.fetched`.
 A stale-priced request stays `pending` and re-resolves on a later scan
-(on a new confirmation, or via the 10-minute refresh window in
-`init_fiat_history`). Rationale: the fallback fires exactly when the
+(when a new confirmation arrives and `init_fiat_history` re-fetches). Rationale: the fallback fires exactly when the
 historical price is missing, which is exactly when mispricing is most
 likely — so it must never be the basis for "paid." Do not "simplify" by
 deleting the flag; that silently restores fallback-as-match.
@@ -378,7 +377,14 @@ derivation or scanning logic.
   the gate.
 - `validate_payment_amounts` variable names `first_transaction_time` /
   `latest_transaction_time` read from `.last()` / `.first()` respectively —
-  names look inverted against DOM order. Behavior believed correct; names
-  are a trap for a future edit. Not verified.
+  names look inverted against DOM order. **Verified Sep 2026:** DOM list is
+  newest-first, so `.last()` = chronological first. Behavior is correct;
+  names remain misleading but harmless.
 - Potential extraction: unify the two match loops into one pure, unit-tested
   `match_transactions(...)` (see Historical fiat rate matching above).
+- `fetched` gate is per-crossing-transaction only — earlier fallback-priced
+  transactions still accumulate in full. Track `all_fetched` across the loop
+  if the gate should apply to the entire amount, not just the transaction
+  that crossed the threshold.
+- `correction_confirmations` (monitors.js ~1105) is dead — `conf_correct`
+  is the used twin. Safe to remove.

@@ -1171,10 +1171,11 @@ function to_checksum_address(e) {
     }
     if (!/^(0x)?[0-9a-f]{40}$/i.test(e)) {
         throw new Error("Given address " + e + " is not a valid Ethereum address.");
-        return
     }
     e = e.toLowerCase().replace(/^0x/i, "");
-    for (var t = keccak_256(e).replace(/^0x/i, ""), r = "0x", n = 0; n < e.length; n++)
+    const t = keccak_256(e).replace(/^0x/i, "");
+    let r = "0x";
+    for (let n = 0; n < e.length; n++)
         7 < parseInt(t[n], 16) ? r += e[n].toUpperCase() : r += e[n];
     return r;
 }

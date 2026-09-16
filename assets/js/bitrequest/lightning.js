@@ -486,9 +486,7 @@ function toggle_proxy_mode() {
         const network_switch = $(this),
             proxy_drawer = $("#add_proxy_drawer"),
             node_credentials = $("#lnd_credentials"),
-            proxy_url_input = $("#lnd_proxy_url_input"),
-            implementation_input = $("#lnd_select_input"),
-            current_implementation = implementation_input.data("value");
+            proxy_url_input = $("#lnd_proxy_url_input");
         network_switch.toggleClass("true false");
         node_credentials.slideToggle(200);
         if (proxy_drawer.hasClass("haslnurls")) {

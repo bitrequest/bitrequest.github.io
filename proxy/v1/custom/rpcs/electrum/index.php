@@ -14,7 +14,9 @@ include_once "../../../filter.php";
 $pd = file_get_contents("php://input");
 $pd_obj = json_decode($pd, true);
 if (isset($pd_obj["fetch"])) {
-	if (has_tor()) {
+	$node = $pd_obj["node"] ?? "";
+	$host = explode(":", $node)[0];
+	if (has_tor() && str_ends_with($host, ".onion")) {
 		$response = socket_fetch_tor_stream($pd_obj);
 		echo json_encode($response);
 		return;

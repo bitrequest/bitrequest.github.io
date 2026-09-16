@@ -877,7 +877,6 @@ function lightning_setup() {
             proxy_host = proxy_details.url,
             proxy_key = proxy_details.k,
             is_local_proxy = is_local_node(proxy_url),
-            proxy_enabled = selected_service.proxy,
             node_host = selected_service.host,
             is_local_node_host = is_local_node(node_host),
             node_key = selected_service.key,
@@ -990,8 +989,6 @@ function test_lnd() {
     }
     sessionStorage.removeItem(status_cache_key);
     // functions in assets/js/bitrequest/lightning.js
-    const node_host = lnd_config.host,
-        is_onion_host = node_host && node_host.indexOf(".onion") > 0;
     validate_lnurl_connection(lnd_config);
 }
 

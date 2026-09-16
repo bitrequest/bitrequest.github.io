@@ -1,6 +1,6 @@
 <?php	
 // PROXY
-const VERSION = "0.039";
+const VERSION = "0.040";
 const CACHE_DURATIONS = [
 	"2m" => 6220800,  // 2 months in seconds
 	"1w" => 604800,   // 1 week in seconds
@@ -114,7 +114,7 @@ function get_and_cache_result($url, $data, $headers, $cache_folder, $cache_file,
 			];
 		}
 
-		file_put_contents($cache_file, $api_result);
+		file_put_contents($cache_file, $api_result, LOCK_EX);
 		update_cache_monitor($cache_folder, $cf);
 
 		$cache_object = [
@@ -152,7 +152,7 @@ function update_cache_monitor($cache_folder, $cf) {
 
 		if (!file_exists($cache_monitor) || ($time - filemtime($cache_monitor) > 3600)) {
 			cleanup_old_cache($cache_folder, $cf);
-			file_put_contents($cache_monitor, $cache_content);
+			file_put_contents($cache_monitor, $cache_content, LOCK_EX);
 		}
 	} catch (Exception $e) {
 		error_log("Cache monitor update error: " . $e->getMessage());

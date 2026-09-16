@@ -10,8 +10,8 @@ include_once "../../filter.php";
 $pd = file_get_contents("php://input");
 $pd_obj = json_decode($pd, true);
 if (isset($pd_obj)) {
-	if (has_tor()) {
-		// Extract method if available
+	$url = $pd_obj["url"] ?? "";
+	if (has_tor() && str_ends_with(parse_url($url, PHP_URL_HOST) ?? "", ".onion")) {
 		if (isset($pd_obj["params"]) && isset($pd_obj["params"]["method"])) {
 			$pd_obj["method"] = $pd_obj["params"]["method"];
 		}

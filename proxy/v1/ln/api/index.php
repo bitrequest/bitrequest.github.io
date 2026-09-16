@@ -70,7 +70,7 @@ $local_tracking = $setup["local_tracking"] === "yes" ? "yes" : "no";
 $remote_tracking = $setup["remote_tracking"] === "yes" ? "yes" : "no";
 
 // Check if API key is required and validate it
-if ($api_key && !$lnget) {
+if ($api_key && !($lnget && !$fn)) {
 	if ($provided_api_key === "false") {
 		echo json_encode(r_err($key_error, 1));
 		return;
@@ -179,7 +179,7 @@ if ($fn === "ln-request-status" && $post_pid) {
 
 // Check if the implementation is supported
 if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
-	$allowed_functions = ["ln-create-invoice", "ln-list-invoices", "ln-invoice-status", "ln-invoice-decode", "ln-delete-invoice"];
+	$allowed_functions = ["ln-create-invoice", "ln-list-invoices", "ln-invoice-status", "ln-invoice-decode"];
 	if ($lnget || in_array($fn, $allowed_functions)) {
 		
 		// Include Spark SDK if needed
@@ -506,7 +506,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 				$pl["memo"] = $memo;
 			}
 			if ($amount) {
-				$pl["value"] = $amount / 1000;
+				$pl["value"] = intdiv($amount, 1000);
 			}
 			$pl["expiry"] = $expiry;
 			$data = json_encode($pl);
@@ -554,7 +554,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 				$pl["memo"] = $memo;
 			}
 			if ($amount) {
-				$pl["amount"] = $amount / 1000;
+				$pl["amount"] = intdiv($amount, 1000);
 			}
 			$data = json_encode($pl);
 			$headers = [
@@ -610,7 +610,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 		}
 		
 		// Extract any error messages from the response
-		$error = isset($dat["error"]) ? $imp . ": " . $dat["error"]["code"] . ": " . $dat["error"]["message"] : null;
+		$error = isset($dat["error"]) ? $imp . ": " . (is_array($dat["error"]) ? $dat["error"]["code"] . ": " . $dat["error"]["message"] : $dat["error"]) : null;
 	
 		$result = [
 			"invoice" => $dat,

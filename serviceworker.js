@@ -24,11 +24,9 @@
 
 const CODE_CACHE_VERSION = "v0.356",
 	CODE_CACHE = "bitrequest-code-" + CODE_CACHE_VERSION,
-	STATIC_CACHE = "bitrequest-static-v1", // bump only if you replace a static asset in-place
+	STATIC_CACHE = "bitrequest-static-v1",
 	OFFLINE_FALLBACK = "index.html";
 
-// Extensions classed as "static" — long-lived, version-tolerant.
-// Everything else (.js, .css, .html, .json) goes to CODE_CACHE.
 const STATIC_EXTS = /\.(png|jpg|jpeg|gif|webp|svg|ico|woff2?|ttf|eot|mp3|ogg|wav)$/i;
 
 function pick_cache(url_or_path) {
@@ -36,8 +34,6 @@ function pick_cache(url_or_path) {
 	return STATIC_EXTS.test(path) ? STATIC_CACHE : CODE_CACHE;
 }
 
-// Pull asset URLs out of index.html. Skips external (http(s)://, //...) URLs
-// so we don't try to precache Google Fonts, CDNs, etc.
 function discover_assets(html) {
 	const urls = new Set([OFFLINE_FALLBACK]);
 	const patterns = [
@@ -57,18 +53,25 @@ function discover_assets(html) {
 	return [...urls];
 }
 
-// Same-origin file-extensioned URLs are cache candidates.
-// Excludes the SPA shell (e.g. "/?p=settings"), API/proxy calls, cross-origin.
 function should_cache(url) {
 	if (url.origin !== self.location.origin) return false;
 	if (url.pathname.startsWith("/proxy/")) return false;
 	return /\.[a-z0-9]+$/i.test(url.pathname);
 }
 
-// Install: fetch index.html, parse, precache discovered assets into the
-// appropriate cache (code vs. static). Uses individual cache.add() with
-// .catch() instead of cache.addAll() so a single missing/renamed file
-// doesn't break the entire install.
+function precache_asset(asset, code_cache, static_cache) {
+	const target = (asset === OFFLINE_FALLBACK)
+		? code_cache
+		: (pick_cache(asset) === STATIC_CACHE ? static_cache : code_cache);
+	return fetch(asset, { cache: "reload" }).then(function(response) {
+		if (response.ok) {
+			return target.put(asset, response);
+		}
+	}).catch(function(err) {
+		console.warn("SW: precache failed for " + asset, err);
+	});
+}
+
 self.addEventListener("install", function(event) {
 	event.waitUntil(
 		fetch(OFFLINE_FALLBACK, { cache: "reload" })
@@ -83,22 +86,17 @@ self.addEventListener("install", function(event) {
 						static_cache = opened[1];
 					return Promise.all(
 						assets.map(function(asset) {
-							const target = (asset === OFFLINE_FALLBACK)
-								? code_cache
-								: (pick_cache(asset) === STATIC_CACHE ? static_cache : code_cache);
-							return target.add(asset).catch(function(err) {
-								console.warn("SW: precache failed for " + asset, err);
-							});
+							return precache_asset(asset, code_cache, static_cache);
 						})
 					);
 				});
 			})
+			.then(function() {
+				return self.skipWaiting();
+			})
 	);
-	self.skipWaiting();
 });
 
-// Activate: delete old versioned code caches. STATIC_CACHE is left alone
-// so users don't re-download 124KB of SVG + sound on every release.
 self.addEventListener("activate", function(event) {
 	event.waitUntil(
 		caches.keys().then(function(keys) {
@@ -109,20 +107,17 @@ self.addEventListener("activate", function(event) {
 					return caches.delete(key);
 				})
 			);
+		}).then(function() {
+			return self.clients.claim();
 		})
 	);
-	self.clients.claim();
 });
 
-// Fetch: network-first for code, cache-first for images/static.
-// Runtime-caches any cacheable same-origin response into the right bucket.
 self.addEventListener("fetch", function(event) {
 	if (event.request.method !== "GET") return;
 
 	const url = new URL(event.request.url);
 
-	// Cross-origin (external APIs, CDNs): don't intercept at all. Taking
-	// ownership of these means a failed fetch has no Response to fall back on.
 	if (url.origin !== self.location.origin) return;
 
 	// Static (images, fonts, sounds): cache-first
@@ -135,10 +130,12 @@ self.addEventListener("fetch", function(event) {
 				return cache.match(event.request).then(function(cachedResponse) {
 					if (cachedResponse) return cachedResponse;
 					return fetch(event.request).then(function(networkResponse) {
-						if (networkResponse.ok && url.origin === self.location.origin) {
+						if (networkResponse.ok) {
 							cache.put(event.request, networkResponse.clone());
 						}
 						return networkResponse;
+					}).catch(function() {
+						return new Response("", { status: 504, statusText: "Offline" });
 					});
 				});
 			})
@@ -146,7 +143,7 @@ self.addEventListener("fetch", function(event) {
 		return;
 	}
 
-	// Everything else (code, HTML): network-first, cache successes, fall back to cache offline.
+	// Code / HTML / navigation: network-first
 	event.respondWith(
 		fetch(event.request)
 			.then(function(networkResponse) {
@@ -159,7 +156,6 @@ self.addEventListener("fetch", function(event) {
 				return networkResponse;
 			})
 			.catch(function() {
-				// Try both caches before giving up.
 				return caches.match(event.request).then(function(cachedResponse) {
 					if (cachedResponse) return cachedResponse;
 					if (event.request.mode === "navigate" || event.request.destination === "document") {

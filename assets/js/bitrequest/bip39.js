@@ -435,9 +435,6 @@ function construct_add_seedobject(dat) {
         seed_data = data.seed_data,
         phrase_words = data.phrase_words,
         json_decrypt = data.json_decrypt,
-        enc_key = pin_to_encryption_key(pin_hash, current_id),
-        encoded_seed = btoa(JSON.stringify(seed_data)),
-        encrypted_data = aes_enc(JSON.stringify(encoded_seed), enc_key),
         seedobj = build_seedobject(btoa(JSON.stringify(seed_data)), current_id, pin_hash);
     // Add seedphrase to storage
     json_decrypt.bitrequest_bpdat = seedobj;
@@ -1029,11 +1026,6 @@ function encrypt_seed_data(data) {
             }
         }
     }
-}
-
-// Checks for existence of encrypted seed data
-function has_encrypted_data() {
-    return glob_let.hasbip === true && glob_let.bipobj.datenc ? true : false;
 }
 
 // Generates encryption key from PIN using wordlist mapping
