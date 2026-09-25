@@ -19,7 +19,7 @@ const root_html = document.documentElement,
         return "https://bitrequest.github.io";
     })();
 
-document.addEventListener("DOMContentLoaded", function() {
+function checkout_init() {
     document.addEventListener("click", function(e) {
         // Logic for checkout button clicks
         if (e.target.matches(".br_checkout")) {
@@ -33,7 +33,14 @@ document.addEventListener("DOMContentLoaded", function() {
     });
     window.addEventListener("message", crossframe);
     keyup();
-});
+}
+
+// Also works when the script is loaded async or injected after DOMContentLoaded
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", checkout_init);
+} else {
+    checkout_init();
+}
 
 // Handles the checkout process when a checkout button is clicked.
 function checkout(clicked_elem) {
@@ -106,6 +113,9 @@ function crossframe(e) {
 }
 
 // Placeholder function for handling result data.
+// The result is a UX signal (close the dialog, show a thank-you), NOT proof of payment: any script on your
+// page, including the customer's own browser console, can call this callback with made-up data.
+// Before fulfilling an order, verify the payment server-side (txhash, receiving address, amount, confirmations).
 function result_callback(post_data) {
     // Overwrite this function for your callback.
     console.log("Overwrite this function for your callback");
