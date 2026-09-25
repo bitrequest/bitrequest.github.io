@@ -68,6 +68,7 @@ $lnget = $imp && $get_pid && $requested_amount > -1 && $specified_amount;
 $callback_url = $setup["callback_url"] ?? "";
 $local_tracking = $setup["local_tracking"] === "yes" ? "yes" : "no";
 $remote_tracking = $setup["remote_tracking"] === "yes" ? "yes" : "no";
+$fn = $pdat["fn"] ?? false;
 
 // Check if API key is required and validate it
 if ($api_key && !($lnget && !$fn)) {
@@ -96,8 +97,6 @@ if (isset($pdat["pingpw"])) {
 	return;
 }
 
-$fn = $pdat["fn"] ?? false;
-
 // Handle "put" operation
 if ($fn === "put") {
 	$pl = $pdat["pl"] ?? false;
@@ -118,11 +117,20 @@ if ($fn === "put") {
 		if ($creds) {
 			$contents = json_decode(base64_decode($creds), true);
 			$cred_file = is_array($contents) ? safe_filename($contents["file"] ?? false) : false;
-			if ($cred_file) {
-				api(null, $creds, null, 604800, "1w", null, $cred_file);
-				$cred_resp = true;
+			$cred_key = is_array($contents) ? ($contents["key"] ?? null) : null;
+			// Bind the file to the key: the nid must be sha256(key)[0:10], same as the client's sha_sub
+			if ($cred_file && is_string($cred_key) && $cred_key !== "" && hash_equals(substr(hash("sha256", $cred_key), 0, 10), $cred_file)) {
+				$cred_path = "cache/1w/" . $cred_file;
+				$existing = file_exists($cred_path) ? json_decode(base64_decode(file_get_contents($cred_path)), true) : null;
+				$is_live = is_array($existing) && is_cache_valid($cred_path, 604800);
+				// Write when the slot is free/expired, or rewrite (refreshes mtime + host) for the same key
+				if (!$is_live || hash_equals((string) ($existing["key"] ?? ""), $cred_key)) {
+					api(null, $creds, null, 0, "1w", null, $cred_file);
+					$cred_resp = true;
+				}
 			}
 		}
+		
 		// Process status information
 		if ($status) {
 			$statfile = "cache/tx/" . $status;
@@ -505,8 +513,8 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 			if ($memo) {
 				$pl["memo"] = $memo;
 			}
-			if ($amount) {
-				$pl["value"] = intdiv($amount, 1000);
+			if ((int)$amount > 0) {
+				$pl["value_msat"] = (int)$amount;
 			}
 			$pl["expiry"] = $expiry;
 			$data = json_encode($pl);
@@ -882,7 +890,6 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 		if ($imp === "spark") {
 			return get_spark_status($dat, $base_result);
 		}
-	
 		return false;
 	}
 	

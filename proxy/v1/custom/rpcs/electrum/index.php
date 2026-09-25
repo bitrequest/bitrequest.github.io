@@ -16,7 +16,7 @@ $pd_obj = json_decode($pd, true);
 if (isset($pd_obj["fetch"])) {
 	$node = $pd_obj["node"] ?? "";
 	$host = explode(":", $node)[0];
-	if (has_tor() && str_ends_with($host, ".onion")) {
+	if (has_tor() && is_onion_host($host)) {
 		$response = socket_fetch_tor_stream($pd_obj);
 		echo json_encode($response);
 		return;
@@ -28,12 +28,20 @@ if (isset($pd_obj["fetch"])) {
 // Main socket fetch function that handles both Tor and non-Tor connections
 function socket_fetch($pl) {
 	$node = $pl["node"];
-	if (strpos($node, ".onion") !== false) {
+	// Host-based check: a ".onion" elsewhere in the node string must not route a
+	// clearnet host:port through Tor (raw TCP to any port).
+	if (is_string($node) && is_onion_host(explode(":", $node)[0])) {
 		if (has_tor()) { // check for TOR support
 			return socket_fetch_tor_stream($pl);
 		}
-		$tor_proxy = $pl["tor_proxy"] ?? TOR_PROXY;
-		if ((strpos($tor_proxy, $_SERVER["HTTP_HOST"]) !== false)) {
+		// Top-level POST field from current clients; $pl["tor_proxy"] from older ones
+		$tor_proxy = $pl["tor_proxy"] ?? $_POST["tor_proxy"] ?? TOR_PROXY;
+		// tor_proxy is client-controlled: https only, bare origin, public IPs, DNS pinned
+		$safe_proxy = safe_tor_proxy($tor_proxy);
+		if (!$safe_proxy) {
+			return err_obj("403", "Tor proxy not allowed");
+		}
+		if ((strpos($safe_proxy["base"], $_SERVER["HTTP_HOST"]) !== false)) {
 			return err_obj("411", "Failed to connect via Tor");
 		}
 		// Call default proxy if TOR is not installed
@@ -43,8 +51,11 @@ function socket_fetch($pl) {
 		}
 		$payload = ["fetch" => "true"];
 		$merged = array_merge($payload, $pl);
-		$tor_url = $tor_proxy . "/proxy/v1/custom/rpcs/electrum/index.php";
+		$tor_url = $safe_proxy["base"] . "/proxy/v1/custom/rpcs/electrum/index.php";
 		curl_setopt($ch, CURLOPT_URL, $tor_url);
+		curl_setopt($ch, CURLOPT_RESOLVE, [$safe_proxy["pin"]]);
+		curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($merged));
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
@@ -86,6 +97,9 @@ function socket_fetch_tor_stream($pl) {
 	$parts = explode(":", $pl["node"]);
 	$host = $parts[0];
 	$port = isset($parts[1]) ? intval($parts[1]) : 50001; // Default to 50001 if port not specified
+	if (!is_onion_host($host) || $port < 1 || $port > 65535) {
+		return ["error" => "Only .onion nodes are routed via Tor", "error_code" => 403];
+	}
 	
 	// Try raw socket connection through Tor's SOCKS proxy
 	$context = @stream_context_create([

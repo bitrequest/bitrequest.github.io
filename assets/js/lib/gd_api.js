@@ -168,20 +168,18 @@ function get_oauth_credentials(auth_code) {
                             if (set_up()) { // only show when logged in
                                 trigger_restore();
                             }
-                            const redirect_timer = setTimeout(function() {
+                            setTimeout(function() {
                                 history.pushState({
                                     "pagename": "settings"
                                 }, "", glob_const.redirect_uri);
-                            }, 5000, function() {
-                                clearTimeout(redirect_timer);
-                            });
+                            }, 5000);
                         }
                     }
                 }
             }
         }).fail(function(error) {
             console.error("error", error);
-        }).always(function(response) {});
+        });
     }
 }
 
@@ -334,11 +332,9 @@ function show_oauth_dialog(abort_option) {
 // Schedules OAuth popup display with configurable delay and abort option
 function schedule_oauth_popup(abort_option) {
     canceldialog();
-    const popup_timer = setTimeout(function() {
+    setTimeout(function() {
         show_oauth_dialog(abort_option);
-    }, 1200, function() {
-        clearTimeout(popup_timer);
-    });
+    }, 1200);
 }
 
 // Binds click handler to Google Drive login button

@@ -121,14 +121,6 @@ const br_bipobj = br_get_local("bpdat", true),
         "cacheperiodfiat": 600000, //600000 = 10 minutes — legacy ms value
         "msats_per_btc": 100000000000, // 1e11 — BTC <-> millisatoshi conversion (Lightning)
         "token_cache": 604800, // 1 week — ERC-20 token list
-        "cache_ttl": { // seconds — passed to api_proxy `cachetime` param
-            "day": 86400, // 1d  — fiat symbol list, ERC-20 token list
-            "week": 604800, // 1w  — long-lived token metadata
-            "fiat": 600, // 10m — exchange rates
-            "crypto": 120, // 2m  — crypto exchange rates
-            "fast": 25, // 25s — tx polling lookups
-            "fastest": 20 // 20s — block height
-        },
 
         // --- Ethereum / L2 RPC + WebSocket endpoints ---
         "eth_l2s": {
@@ -244,7 +236,6 @@ const br_bipobj = br_get_local("bpdat", true),
         // --- Sockets ---
         "sockets": {}, // owner: sockets.js  — { [id]: WebSocket } registry
         "socket_attempt": {}, // owner: sockets.js  — fingerprints of socket-connect attempts
-        "ws_timer": 0, // owner: sockets.js  — websocket reconnect setTimeout id
         "in_background": false, // owner: sockets.js  — app is backgrounded (suspends sockets)
         "background_timeout": 0, // owner: sockets.js  — reconnect-on-foreground timer id
 
@@ -903,14 +894,12 @@ function getcc_icon(cmcid, cpid, erc20) {
 // Schedules delayed click event trigger on specified element
 function click_pop(element_id) {
     if (!/^[A-Za-z0-9_-]+$/.test(element_id)) return // plain id only, no selector syntax
-    const click_timer = setTimeout(function() {
+    setTimeout(function() {
         const target = $("#" + element_id);
         if (target) {
             $(target).trigger("click");
         }
-    }, 1200, function() {
-        clearTimeout(click_timer);
-    });
+    }, 1200);
 }
 
 // Formats JSON data with HTML syntax highlighting for invoice display
@@ -1107,7 +1096,7 @@ function renderlnconnect(str) {
         protocol = base_url.includes("https://") ? "https://" : base_url.includes("http://") ? "http://" : "://",
         params = param_str ? parse_url_params(param_str) : false,
         clean_url = base_url.split(protocol).pop(),
-        rest_url = params.lnconnect ? atob(params.lnconnect) : (protocol === "://") ? "https://" + clean_url : protocol + clean_url;
+        rest_url = params.lnconnect ? (safe_atob(params.lnconnect) || null) : (protocol === "://") ? "https://" + clean_url : protocol + clean_url;
     params.resturl = rest_url;
     return params;
 }
@@ -1117,6 +1106,24 @@ function generate_random_number(min, max) {
     const range_buffer = new Uint32Array(1);
     crypto.getRandomValues(range_buffer);
     return min + (range_buffer[0] % (max - min + 1));
+}
+
+// atob that returns false instead of throwing on malformed input
+function safe_atob(str) {
+    try {
+        return atob(str);
+    } catch (e) {
+        return false
+    }
+}
+
+// Parses base64-encoded JSON; returns null instead of throwing on malformed input
+function b64_json(str) {
+    try {
+        return JSON.parse(atob(str));
+    } catch (e) {
+        return null
+    }
 }
 
 // Returns random element from array using Math.random() distribution
@@ -1129,17 +1136,13 @@ function random_array_item(arr) {
 
 // Initializes API keys from encoded storage or triggers fresh key generation
 function gk() {
-    const stored_key = glob_let.io.k;
-    if (stored_key) {
-        const parsed_key = JSON.parse(atob(stored_key));
-        if (parsed_key.if_id === "" || parsed_key.ga_id === "" || parsed_key.bc_id === "" || parsed_key.al_id === "") {
-            fk();
-            return
-        }
+    const stored_key = glob_let.io.k,
+        parsed_key = stored_key ? b64_json(stored_key) : null;
+    if (parsed_key && parsed_key.if_id !== "" && parsed_key.ga_id !== "" && parsed_key.bc_id !== "" && parsed_key.al_id !== "") {
         init_keys(stored_key, true);
         return
     }
-    fk();
+    fk(); // missing, incomplete or corrupt: refetch
 }
 
 // Retrieves encryption keys via API proxy with automatic fallback
@@ -1160,7 +1163,8 @@ function fk() {
 
 // Persists decrypted API keys to local storage with optional initialization
 function init_keys(key_obj, set) { // set required keys
-    const key_data = JSON.parse(atob(key_obj));
+    const key_data = b64_json(key_obj);
+    if (!key_data) return
     to = key_data;
     glob_let.io.k = key_obj;
     if (set === false) {
@@ -1474,14 +1478,15 @@ function api_proxy(ad, p_proxy) {
         active_proxy = p_proxy || d_proxy(),
         is_onion = proxy_url ? proxy_url.includes(".onion") : false,
         payload = q_obj(ad, "params.data");
-    // add tor proxy and stringify payload
-    if (payload) {
-        if (is_onion) {
-            const random_proxy = random_array_item(glob_let.tor_proxies);
-            if (random_proxy) {
-                payload.tor_proxy = random_proxy.proxy;
-            }
+    // add tor proxy as a top-level field so it never ends up in the payload sent to the onion host
+    if (is_onion) {
+        const random_proxy = random_array_item(glob_let.tor_proxies);
+        if (random_proxy) {
+            ad.tor_proxy = random_proxy.proxy;
         }
+    }
+    // stringify payload
+    if (payload) {
         ad.params.data = typeof payload === "string" ? payload : JSON.stringify(payload);
     }
     glob_let.proxy_attempts[active_proxy] = true;
@@ -1750,7 +1755,6 @@ function get_coin_config(currency) {
     const coin_config = get_coin_definition(currency);
     if (coin_config) {
         const coin_data = coin_config.data,
-            settings = coin_config.settings,
             config_object = {
                 "currency": coin_data.currency,
                 "ccsymbol": coin_data.ccsymbol,

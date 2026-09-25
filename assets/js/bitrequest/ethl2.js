@@ -168,7 +168,7 @@ function polygon_apis(dat) {
 function bnb_apis(dat) {
     const api_name = q_obj(dat, "api_data.name");
     if (api_name === "binplorer") {
-        process_ethereum_transactions(dat.rd, dat.api_data, dat.rdo);
+        process_ethereum_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
     } else if (api_name === "etherscan") {
         scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 56);
     } else if (api_name === "infura") {
@@ -294,7 +294,7 @@ function scan_layer2_networks(rd, rdo, api_dat, network, ctracts) {
             index++;
             if (index === l2_length) {
                 // Detect when scanning is finished
-                const timeout = setTimeout(function() {
+                setTimeout(function() {
                     if (fetch_match) { // Process tx if found
                         rd.eth_layer2 = glob_let.l2_fetched.l2;
                         validate_payment_amounts(rd, rdo);
@@ -302,9 +302,7 @@ function scan_layer2_networks(rd, rdo, api_dat, network, ctracts) {
                     } else { // Move to next request
                         finalize_request_state(rdo);
                     }
-                }, add_delay, function() {
-                    clearTimeout(timeout);
-                });
+                }, add_delay);
             }
         }, delay * add_delay);
         delay++;
@@ -806,12 +804,10 @@ function initialize_network_status(sn, stat) {
         return
     }
     if (stat === "paid") {
-        const timeout = setTimeout(function() {
+        setTimeout(function() {
             glob_let.l2s = {};
             update_network_status(sn, stat);
-        }, 1000, function() {
-            clearTimeout(timeout);
-        });
+        }, 1000);
         return
     }
     update_network_status(sn, stat);
@@ -845,7 +841,6 @@ function update_network_status(sn, stat) {
             nw_name = l2,
             chainid = all_l2s[l2],
             l2_contract = all_contracts ? all_contracts[l2] : false,
-            l2c_str = l2_contract || "nocontract",
             select_class = (nw_chain === chainid) ? " nw_select" : "";
         nw_li += "<li class='nwl2" + stt + anim + select_class + dim_class + "' title='" + title + "' data-chainid='" + chainid + "' data-contract='" + l2_contract + "'>" + nw_name + "</li>";
         if (st === "offline") {

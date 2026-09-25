@@ -257,7 +257,6 @@ function key_management() {
     $(document).on("click", ".cc_settinglist li[data-id='Key derivations'] .atext", function() {
         const menu_item = $(this),
             settings_item = menu_item.closest("li"),
-            item_data = settings_item.data(),
             item_wrap = settings_item.find(".liwrap"),
             currency = item_wrap.attr("data-currency"),
             active_xpub_key = active_xpub(currency);
@@ -618,12 +617,6 @@ function generate_derived_addresses(currency, xpub_key) {
             master_key = key_config.key,
             chain_code = key_config.cc,
             version_bytes = key_config.version,
-            root_config = {
-                "key": master_key,
-                "cc": chain_code,
-                "xpub": true,
-                "versionbytes": version_bytes
-            },
             derived_keys = keypair_array(false, new Array(5), start_index, derivation_path, bip32_config, master_key, chain_code, currency, version_bytes, br_format_keys),
             address_list = derived_keys.map((key_data, index) => {
                 const path_index = start_index + index;

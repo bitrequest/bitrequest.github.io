@@ -76,9 +76,7 @@ function set_dialog_timeout() {
     clear_dialog_timeout();
     glob_let.request_timer = setTimeout(function() {
         cpd_pollcheck();
-    }, 180000, function() {
-        clear_dialog_timeout();
-    });
+    }, 180000);
     glob_const.paymentdialogbox.removeClass("timer");
     setTimeout(function() {
         glob_const.paymentdialogbox.addClass("timer");
@@ -470,7 +468,7 @@ function load_request(pass) {
     show_api_error("fixer", {
         "errorcode": "300",
         "errormessage": "Missing API key"
-    }, true);
+    });
 }
 
 // Fetches and caches ERC20 token decimal information
@@ -583,7 +581,7 @@ function continue_request(contracts) {
         closeloader();
         return
     }
-    const api_details = check_api(payment_currency, is_erc20),
+    const api_details = check_api(payment_currency),
         is_request = br_get_local("editurl") !== glob_const.w_loc.search, // check if url is a request
         coin_data = request.coindata,
         coin_settings = active_coinsettings(payment_currency),
@@ -1429,7 +1427,6 @@ function get_payment(ccrateeuro, ccapi) {
         sats_placeholder = request.iszero ? "000000000" : sats,
         sats_value = request.iszero ? "" : sats,
         display_currency = currency_name === "Euro" ? "" : request.iscrypto ? fiat_name : currency_name,
-        crypto_text = "(" + crypto_value + " " + request.payment + ")",
         share_active = has_name && has_title ? " sbactive" : "",
         crypto_icon = getcc_icon(request.cmcid, request.cpid, request.erc20),
         lightning_icon = request.payment === "bitcoin" ? "<img src='assets/img/logos/btc-lnd.png' class='cmc_icon icon_lnd'>" : "",
@@ -2637,7 +2634,6 @@ function share(current_button) {
             current_address = url_params.address,
             data_param = url_params.d,
             currency_id = request.cmcid,
-            currency_symbol = request.currencysymbol,
             has_data = data_param && data_param.length > 5,
             data_object = has_data ? parse_b64_json(data_param) : null, // decode data param if exists
             request_name = data_object ? data_object.n : request.saved_name,

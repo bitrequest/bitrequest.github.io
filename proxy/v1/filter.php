@@ -56,6 +56,12 @@
 			return false;
 		}
 
+		// Numeric IPv4 shorthands (2130706433, 0x7f.1, 127.1) aren't valid IPs to
+		// filter_var but curl dials them as IPv4 — never treat them as hostnames.
+		if (!filter_var($host_bare, FILTER_VALIDATE_IP) && preg_match("/^(0x[0-9a-f]*|\\d+)(\\.(0x[0-9a-f]*|\\d+)){0,3}\\.?$/i", $host_bare)) {
+			return false;
+		}
+
 		// Literal IP in the URL — validate directly, no DNS needed.
 		if (filter_var($host_bare, FILTER_VALIDATE_IP)) {
 			return is_public_ip($host_bare)
@@ -103,24 +109,100 @@
 	}
 
 	// True if $ip is a routable, non-private, non-reserved IPv4 or IPv6 address.
-	// Handles IPv4-mapped IPv6 (::ffff:x.x.x.x) explicitly because the embedded
-	// IPv4 portion can otherwise bypass FILTER_FLAG_NO_PRIV_RANGE for IPv4.
+	// The address is normalized to binary first, so alternate spellings of the same
+	// address (e.g. ::ffff:7f00:1 vs ::ffff:127.0.0.1) can't slip past the checks.
+	// IPv6 forms that embed an IPv4 address (mapped, compatible, SIIT, NAT64, 6to4)
+	// are judged by the embedded IPv4.
 	function is_public_ip($ip) {
-		if (stripos($ip, "::ffff:") === 0) {
-			$v4 = substr($ip, 7);
-			if (filter_var($v4, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-				return filter_var(
-					$v4,
-					FILTER_VALIDATE_IP,
-					FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-				) !== false;
+		$bin = @inet_pton($ip);
+		if ($bin === false) {
+			return false;
+		}
+		if (strlen($bin) === 16) {
+			$v4 = embedded_ipv4($bin);
+			if ($v4 !== null) {
+				return is_public_ip($v4);
 			}
 		}
-		return filter_var(
-			$ip,
-			FILTER_VALIDATE_IP,
-			FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-		) !== false;
+		foreach (blocked_ranges() as $cidr) {
+			if (ip_in_cidr($bin, $cidr)) {
+				return false;
+			}
+		}
+		$flags = defined("FILTER_FLAG_GLOBAL_RANGE")
+			? FILTER_FLAG_GLOBAL_RANGE
+			: FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE;
+		return filter_var(inet_ntop($bin), FILTER_VALIDATE_IP, $flags) !== false;
+	}
+
+	// Returns the IPv4 address embedded in a 16-byte IPv6 address, or null if none.
+	function embedded_ipv4($bin) {
+		$zero8 = str_repeat("\0", 8);
+		$prefix12 = substr($bin, 0, 12);
+		if ($prefix12 === $zero8 . "\0\0\xff\xff" // ::ffff:0:0/96 IPv4-mapped
+			|| $prefix12 === $zero8 . "\0\0\0\0" // ::/96 IPv4-compatible (also ::, ::1)
+			|| $prefix12 === $zero8 . "\xff\xff\0\0" // ::ffff:0:0:0/96 SIIT
+			|| $prefix12 === "\x00\x64\xff\x9b" . $zero8) { // 64:ff9b::/96 NAT64
+			return inet_ntop(substr($bin, 12, 4));
+		}
+		if (substr($bin, 0, 2) === "\x20\x02") { // 2002::/16 6to4
+			return inet_ntop(substr($bin, 2, 4));
+		}
+		return null;
+	}
+
+	// Ranges that are never valid proxy destinations, checked independently of the
+	// PHP version's filter flags (FILTER_FLAG_GLOBAL_RANGE only exists in PHP >= 8.2
+	// and still accepts multicast).
+	function blocked_ranges() {
+		return [
+			// IPv4
+			"0.0.0.0/8", // "this" network
+			"10.0.0.0/8", // private
+			"100.64.0.0/10", // CGNAT / Tailscale
+			"127.0.0.0/8", // loopback
+			"169.254.0.0/16", // link-local, cloud metadata
+			"172.16.0.0/12", // private
+			"192.0.0.0/24", // IETF protocol assignments
+			"192.0.2.0/24", // documentation
+			"192.88.99.0/24", // 6to4 relay anycast
+			"192.168.0.0/16", // private
+			"198.18.0.0/15", // benchmarking
+			"198.51.100.0/24", // documentation
+			"203.0.113.0/24", // documentation
+			"224.0.0.0/4", // multicast
+			"240.0.0.0/4", // reserved + broadcast
+			// IPv6
+			"64:ff9b:1::/48", // local-use NAT64
+			"100::/64", // discard-only
+			"2001::/23", // IETF protocol assignments, incl. Teredo
+			"2001:db8::/32", // documentation
+			"3fff::/20", // documentation
+			"fc00::/7", // unique local
+			"fe80::/10", // link-local
+			"fec0::/10", // site-local (deprecated)
+			"ff00::/8", // multicast
+		];
+	}
+
+	// True if binary address $bin (from inet_pton) falls inside $cidr.
+	function ip_in_cidr($bin, $cidr) {
+		[$net, $len] = explode("/", $cidr);
+		$net_bin = inet_pton($net);
+		if ($net_bin === false || strlen($net_bin) !== strlen($bin)) {
+			return false;
+		}
+		$len = (int)$len;
+		$bytes = intdiv($len, 8);
+		if (substr($bin, 0, $bytes) !== substr($net_bin, 0, $bytes)) {
+			return false;
+		}
+		$bits = $len % 8;
+		if ($bits === 0) {
+			return true;
+		}
+		$mask = (0xff << (8 - $bits)) & 0xff;
+		return (ord($bin[$bytes]) & $mask) === (ord($net_bin[$bytes]) & $mask);
 	}
 
 	// Per-API allowlist of destination host suffixes. A server-held key is only
@@ -157,6 +239,57 @@
 			}
 		}
 		return false;
+	}
+
+	// True if $host is a .onion hostname (case-insensitive, trailing dot allowed).
+	function is_onion_host($host) {
+		if (!is_string($host) || $host === "") {
+			return false;
+		}
+		return (bool) preg_match("/^([a-z0-9-]+\\.)+onion$/", rtrim(strtolower($host), "."));
+	}
+
+	// True if the HOST of $url is a .onion address. Substring checks on the whole URL
+	// are not enough: https://example.com/?x=.onion must not be routed through Tor.
+	function is_onion_url($url) {
+		if (!is_string($url)) {
+			return false;
+		}
+		$scheme = strtolower(parse_url($url, PHP_URL_SCHEME) ?? "");
+		if (!in_array($scheme, ["http", "https"], true)) {
+			return false;
+		}
+		return is_onion_host(parse_url($url, PHP_URL_HOST) ?? "");
+	}
+
+	// Validates a client-supplied Tor proxy base URL ("https://host[:port]").
+	// Returns the base URL plus a CURLOPT_RESOLVE pin, or false. Only https, no
+	// userinfo, no path/query/fragment (a trailing "?" or "#" would otherwise swallow
+	// the endpoint path we append), and the host must resolve to public IPs only.
+	function safe_tor_proxy($candidate) {
+		if (!is_string($candidate) || $candidate === "") {
+			return false;
+		}
+		$parsed = parse_url($candidate);
+		if (!$parsed || strtolower($parsed["scheme"] ?? "") !== "https" || empty($parsed["host"])) {
+			return false;
+		}
+		if (isset($parsed["user"]) || isset($parsed["pass"]) || isset($parsed["query"]) || isset($parsed["fragment"])) {
+			return false;
+		}
+		if (isset($parsed["path"]) && $parsed["path"] !== "" && $parsed["path"] !== "/") {
+			return false;
+		}
+		$base = "https://" . $parsed["host"] . (isset($parsed["port"]) ? ":" . (int) $parsed["port"] : "");
+		$resolved = resolve_safe_url($base);
+		if (!$resolved) {
+			return false;
+		}
+		$pin_ip = (strpos($resolved["ip"], ":") !== false) ? "[" . $resolved["ip"] . "]" : $resolved["ip"];
+		return [
+			"base" => $base,
+			"pin" => $resolved["host"] . ":" . $resolved["port"] . ":" . $pin_ip,
+		];
 	}
 
 	// Sanitizes user input for safe use in file paths

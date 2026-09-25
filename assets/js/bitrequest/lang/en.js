@@ -322,6 +322,8 @@ const lang_en_obj = {
         "sendinvite": "Send invite",
         "updatealert": "Update? All you current public keys will be updated.",
         "installalert": "Install? All you current public keys will be replaced.",
+        "teammismatch": "Warning: this invite comes from a different account than the team currently installed on this device. The account name shown is chosen by the sender and can't be verified.",
+        "teammismatchalert": "This invite is from a different account than your current team. Replace all your public keys with this account's keys?",
 
         // COIN SETTINGS
         "confirmations": "Confirmations",

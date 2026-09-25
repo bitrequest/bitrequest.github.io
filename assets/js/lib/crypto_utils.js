@@ -95,7 +95,7 @@ function buffer(enc) {
 }
 
 // Decodes UTF-8 encoded data using TextDecoder
-function unbuffer(enc, encoding) {
+function unbuffer(enc) {
     return utf8_decoder.decode(enc);
 }
 
@@ -284,7 +284,7 @@ function b58enc_uint_array(u) {
 // Decodes Base58 string to UTF-8 or hexadecimal output
 function b58dec(dec, decode) {
     const buffer = b58dec_uint_array(dec);
-    return (decode === "hex") ? buf2hex(buffer) : unbuffer(buffer, "utf-8");
+    return (decode === "hex") ? buf2hex(buffer) : unbuffer(buffer);
 }
 
 // Converts Base58 string to Uint8Array using custom alphabet
@@ -1303,7 +1303,6 @@ function pub_to_cashaddr(legacy) {
 function bch_legacy(cadr) {
     try {
         const address = (cadr.indexOf(":") === -1) ? "bitcoincash:" + cadr : cadr,
-            version = 0,
             dec = cashaddr.decode(address),
             bytes = dec.hash,
             bytesarr = Array.from(bytes),

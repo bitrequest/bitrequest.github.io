@@ -1,11 +1,9 @@
 // Orchestrates Lightning Network payment processing with status checking, invoice handling, and transaction state management via proxy API
 function process_lightning_payment(rd, api_data, rdo) {
-    const api_name = api_data.name,
-        current_list = rdo.thislist,
+    const current_list = rdo.thislist,
         requestid = rd.requestid,
         tx_list = rdo.transactionlist,
         status_panel = rdo.statuspanel,
-        counter = 0,
         lightning = rd.lightning,
         lightning_only = lightning && lightning.hybrid === false,
         meta_list = current_list.find(".metalist"),
@@ -248,9 +246,10 @@ function process_lightning_payment(rd, api_data, rdo) {
 }
 
 // ** ethplorer / binplorer API **
-function process_ethereum_transactions(rd, api_data, rdo) {
+function process_ethereum_transactions(rd, api_data, rdo, contract) {
     const api_name = api_data.name,
-        network = api_data.network || false;
+        network = api_data.network || false,
+        contract_addr = contract || rd.token_contract;
     if (rdo.pending === "scanning") {
         run_address_scan(rd, api_data, rdo, {
             "request": {
@@ -263,12 +262,12 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                 }
             },
             "extract": (api_result) => api_result.operations,
-            "parse": (tx, rd, rdo) => ethplorer_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, network),
+            "parse": (tx, rd, rdo) => ethplorer_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, network, contract_addr),
             "match": (parsed_tx, tx, rd, rdo) => {
                 const adjusted_timestamp = (rd.requesttype === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp;
                 return addr_eq(tx.to, rd.address) === true &&
                     parsed_tx.transactiontime > adjusted_timestamp &&
-                    str_eq(rd.currencysymbol, q_obj(tx, "tokenInfo.symbol")) === true &&
+                    addr_eq(q_obj(tx, "tokenInfo.address"), contract_addr) === true &&
                     parsed_tx.ccval;
             },
             "display_on_match": true,
@@ -289,7 +288,7 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                         "method": "GET"
                     }
                 },
-                "parse": (api_result, rd, rdo) => ethplorer_poll_data(api_result, rdo.setconfirmations, rd.currencysymbol, network),
+                "parse": (api_result, rd, rdo) => ethplorer_poll_data(api_result, rdo.setconfirmations, rd.currencysymbol, network, contract_addr),
                 "display_on_match": true,
                 network
             });
@@ -497,7 +496,7 @@ function blockchair_tx_poll(rd, api_data, rdo) {
             if (!block_height) return null
             const tx_data = q_obj(api_result, "data." + rd.txhash);
             if (!tx_data) return null
-            return rd.erc20 ? blockchair_erc20_poll_data(tx_data, rdo.setconfirmations, currency_symbol, block_height) :
+            return rd.erc20 ? blockchair_erc20_poll_data(tx_data, rdo.setconfirmations, currency_symbol, block_height, wallet_address, rd.token_contract) :
                 (rd.payment === "ethereum") ? blockchair_eth_scan_data(tx_data.calls[0], rdo.setconfirmations, currency_symbol, block_height) :
                 blockchair_scan_data(tx_data, rdo.setconfirmations, currency_symbol, wallet_address, block_height);
         }
@@ -530,7 +529,7 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
         extract_tx_array = (api_result) => is_array(api_result.result) ? api_result.result : null,
         scan_match = (parsed_tx, tx, rd, rdo) => {
             const adjusted_timestamp = (rd.requesttype === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp;
-            return addr_eq(tx.to, rd.address) && parsed_tx.transactiontime > adjusted_timestamp && parsed_tx.ccval;
+            return addr_eq(tx.to, rd.address) && tx.isError !== "1" && parsed_tx.transactiontime > adjusted_timestamp && parsed_tx.ccval;
         };
     if (rdo.pending === "scanning") {
         if (rd.payment === "ethereum") {
@@ -959,7 +958,7 @@ function process_blockcypher_transactions(rd, api_data, rdo) {
                     unconfirmed_txs = api_result.unconfirmed_txrefs;
                 return (unconfirmed_txs && confirmed_txs) ? unconfirmed_txs.concat(confirmed_txs) : confirmed_txs || unconfirmed_txs;
             },
-            "parse": (tx, rd, rdo) => blockcypher_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, rd.payment),
+            "parse": (tx, rd, rdo) => blockcypher_scan_data(tx, rdo.setconfirmations, rd.currencysymbol),
             "tx_filter": (tx) => !tx.spent, // filter outgoing transactions
             "match": (parsed_tx, _tx, _rd, rdo) => parsed_tx.ccval && parsed_tx.transactiontime > rdo.request_timestamp
         });
@@ -1548,8 +1547,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                         if (block_info) {
                             const tx_block_num = Number(block_number),
                                 current_block_num = latest_block ? Number(latest_block) : false,
-                                confirmations = current_block_num ? current_block_num - tx_block_num : -1,
-                                confirmation_count = confirmations < 0 ? 0 : confirmations;
+                                confirmations = get_block_confirmations(tx_block_num, current_block_num);
                             let parsed_tx = null;
                             if (rd.erc20 === true) {
                                 const tx_input = tx_data.input,
@@ -1560,7 +1558,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                                         token_data = {
                                             "timestamp": block_info.timestamp,
                                             "hash": tx_hash,
-                                            "confirmations": confirmation_count,
+                                            confirmations,
                                             "value": token_value,
                                             "decimals": rd.decimals
                                         };
@@ -1573,7 +1571,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                                 const eth_data = {
                                     "timestamp": Number(block_info.timestamp),
                                     "hash": tx_hash,
-                                    "confirmations": confirmation_count,
+                                    confirmations,
                                     "value": Number(tx_data.value)
                                 };
                                 parsed_tx = infura_eth_poll_data(eth_data, rdo.setconfirmations, rd.currencysymbol, network_type);
@@ -2197,9 +2195,10 @@ function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latest_blo
 }
 
 // Processes Blockchair ERC20 polling data with multi-layer token transaction validation
-function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latest_block) {
+function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latest_block, address, contract) {
     const tx_data = data.transaction,
-        token_data = data.layer_2.erc_20[0];
+        transfers = q_obj(data, "layer_2.erc_20") || [],
+        token_data = transfers.find(t => addr_eq(t.recipient, address) === true && addr_eq(t.token_address, contract) === true);
     if (!tx_data || !token_data) {
         return default_tx_data();
     }
@@ -2271,7 +2270,10 @@ function alchemy_scan_data_eth(data, setconfirmations, ccsymbol, eth_layer2, lb)
 }
 
 // Handles Ethplorer transaction data with token info and Layer2 support
-function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
+function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2, contract) {
+    if (addr_eq(q_obj(data, "tokenInfo.address"), contract) !== true) return {
+        "ccval": null
+    };
     const transactiontime = normalize_timestamp(data.timestamp),
         ccval = data.value ? parseFloat((data.value / (10 ** data.tokenInfo.decimals)).toFixed(8)) : null;
     return {
@@ -2287,9 +2289,12 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
 // Poll twin of ethplorer_scan_data for ethplorer/binplorer getTxInfo responses
 // (same provider, same structure). Token amount + decimals come from operations[0];
 // hash, confirmations and timestamp from the top level.
-function ethplorer_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
-    const op = q_obj(data, "operations.0") || {},
-        raw_value = op.value,
+function ethplorer_poll_data(data, setconfirmations, ccsymbol, eth_layer2, contract) {
+    const op = q_obj(data, "operations.0") || {};
+    if (addr_eq(q_obj(op, "tokenInfo.address"), contract) !== true) return {
+        "ccval": null
+    };
+    const raw_value = op.value,
         token_decimals = q_obj(op, "tokenInfo.decimals"),
         ccval = (token_decimals && raw_value != null) ? parseFloat((raw_value / 10 ** token_decimals).toFixed(8)) : null,
         confirmations = data.confirmations < 0 ? 0 : (data.confirmations || 0),

@@ -400,8 +400,7 @@ function mark_network_failure(current_list, status_panel) {
 function handle_api_failure(rd, rdo, error_obj, api_data, l2) {
     const src = rdo.source,
         error_details = extract_error_details(error_obj),
-        timeout = rdo.timeout,
-        cache_time = rdo.cachetime;
+        timeout = rdo.timeout;
 
     function next_proxy(type) { // try next proxy
         if (type === "api_fail" && (error_details.apikey || glob_let.apikey_fails)) return false // only try next proxy if api key is expired or missing
@@ -421,7 +420,7 @@ function handle_api_failure(rd, rdo, error_obj, api_data, l2) {
                 }
             }
             if (l2) {
-                route_layer2_api_request(rd, rdo, api_data, l2);
+                route_layer2_api_request(rd, rdo, api_data);
                 return true
             }
             route_api_request(rd, api_data, rdo);
@@ -454,7 +453,7 @@ function handle_api_failure(rd, rdo, error_obj, api_data, l2) {
         if (next_l2_api) {
             // Scan eth layer 2
             if (src === "requests") {
-                route_layer2_api_request(rd, rdo, next_l2_api, l2);
+                route_layer2_api_request(rd, rdo, next_l2_api);
                 return
             }
             if (src === "l2_polling") {
@@ -492,7 +491,7 @@ function show_api_error(api_source, error_obj) {
     }
     if (api_source) {
         const key_fail = error_data.apikey === true,
-            error_message = error_data.errormessage,
+            error_message = escape_html(error_data.errormessage),
             error_code = error_data.errorcode ? "Error: " + error_data.errorcode : "",
             api_button = key_fail ? "<div id='add_api' data-api='" + api_source + "' class='button'>" + tl("addapikey", {
                 "apisrc": api_source
@@ -735,8 +734,7 @@ function format_transaction_details(data) {
 
 // Validates received cryptocurrency or fiat amounts against requested amounts and updates transaction status
 function validate_payment_amounts(rd, rdo) {
-    const request_id = rd.requestid,
-        current_list = rdo.thislist,
+    const current_list = rdo.thislist,
         transaction_items = current_list.find(".transactionlist li"),
         transaction_count = transaction_items.length;
     if (transaction_count) {
@@ -927,8 +925,7 @@ function fetch_fiat_rates(rd, rdo, api_list, fiat_api) {
     const fiat_currency = rd.fiatcurrency;
     if (fiat_currency) {
         const currency_symbol = fiat_currency.toUpperCase(),
-            payload = get_historic_fiatprice_api_payload(fiat_api, currency_symbol, rd.latestinput),
-            current_list = rdo.thislist;
+            payload = get_historic_fiatprice_api_payload(fiat_api, currency_symbol, rd.latestinput);
         api_proxy({
             "api": fiat_api,
             "search": payload,
@@ -1204,7 +1201,6 @@ function get_payload_historic_coincodex(cid, start_time, end_time) {
 // Builds Coindesk API request URL for historical price data
 function get_payload_historic_coindesk(coin_id, start_time, end_time) {
     const coin_upper = coin_id === "xno" ? "NANO" : coin_id.toUpperCase(), // coindesk still uses old NANO ticker
-        timestamp_start = start_time - 36000,
         interval = get_historical_interval(start_time, end_time),
         scale = (interval.indexOf("m") > -1) ? "minutes" : "hours",
         integerval = Number(interval.slice(0, -1)),

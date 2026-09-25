@@ -1,6 +1,6 @@
 <?php	
 // PROXY
-const VERSION = "0.040";
+const VERSION = "0.041";
 const CACHE_DURATIONS = [
 	"2m" => 6220800,  // 2 months in seconds
 	"1w" => 604800,   // 1 week in seconds
@@ -225,8 +225,9 @@ function curl_get($url, $data, $headers) {
 			}
 			return error_object("404", "Nano file not found: " . $file_path);
 		}
-		// Handle .onion URL requests via Tor
-		if (strpos($url, ".onion") !== false) {
+		// Handle .onion URL requests via Tor (host-based: a ".onion" anywhere else
+		// in the URL must not turn this proxy into a Tor exit for clearnet hosts)
+		if (is_onion_url($url)) {
 			$tor_path = __DIR__ . "/ln/tor/index.php";
 			if (file_exists($tor_path)) {
 				require_once($tor_path);
@@ -299,7 +300,7 @@ function curl_get($url, $data, $headers) {
 
 			// Redirect: re-validate the target on the next iteration.
 			// CURLINFO_REDIRECT_URL resolves relative Location headers to absolute.
-			if ($http_code >= 300 && $http_code < 400) {
+			if (in_array($http_code, [301, 302, 303, 307, 308], true)) {
 				$location = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
 				curl_close($ch);
 				if (!$location || $hop >= $max_redirects) {
@@ -311,6 +312,10 @@ function curl_get($url, $data, $headers) {
 				if ($redirect_host !== $origin_host) {
 					$headers = strip_credential_headers($headers);
 				}
+				// 301/302/303 turn a POST into a GET without body (browser/curl behaviour); 307/308 keep both
+				if ($http_code !== 307 && $http_code !== 308) {
+					$data = null;
+				}
 				$current_url = $location;
 				continue;
 			}
@@ -318,7 +323,8 @@ function curl_get($url, $data, $headers) {
 			curl_close($ch);
 
 			if ($http_code >= 400) {
-				return error_object($http_code, "HTTP error");
+				$detail = trim(substr(strip_tags((string) $result), 0, 300));
+				return error_object($http_code, $detail !== "" ? "HTTP error: " . $detail : "HTTP error");
 			}
 
 			return $result ?: error_object("411", "no result");

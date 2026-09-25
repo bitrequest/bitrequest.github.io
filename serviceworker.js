@@ -60,22 +60,30 @@ function should_cache(url) {
 }
 
 function precache_asset(asset, code_cache, static_cache) {
-	const target = (asset === OFFLINE_FALLBACK)
-		? code_cache
-		: (pick_cache(asset) === STATIC_CACHE ? static_cache : code_cache);
+	const is_code = asset === OFFLINE_FALLBACK || pick_cache(asset) !== STATIC_CACHE,
+		target = is_code ? code_cache : static_cache;
 	return fetch(asset, { cache: "reload" }).then(function(response) {
-		if (response.ok) {
-			return target.put(asset, response);
+		if (!response.ok) {
+			throw new Error("HTTP " + response.status);
 		}
+		return target.put(asset, response);
 	}).catch(function(err) {
 		console.warn("SW: precache failed for " + asset, err);
+		if (is_code) {
+			throw err; // incomplete code cache: abort install, the current version stays active
+		}
 	});
 }
 
 self.addEventListener("install", function(event) {
 	event.waitUntil(
 		fetch(OFFLINE_FALLBACK, { cache: "reload" })
-			.then(function(response) { return response.text(); })
+			.then(function(response) {
+				if (!response.ok) {
+					throw new Error("SW: " + OFFLINE_FALLBACK + " fetch failed (HTTP " + response.status + ")");
+				}
+				return response.text();
+			})
 			.then(function(html) {
 				const assets = discover_assets(html);
 				return Promise.all([

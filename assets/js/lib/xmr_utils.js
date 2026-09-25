@@ -693,6 +693,52 @@ function extract_xmr_payment_id(extra_bytes, tx_pub_key, view_key) {
     return false;
 }
 
+// Walks tx_extra by tag: every main tx pubkey (0x01) and the per-output additional pubkeys (0x04)
+function parse_xmr_extra(extra) {
+    const result = {
+        "pub_keys": [],
+        "additional_pub_keys": []
+    };
+    let i = 0;
+    const read_varint = () => {
+        let value = 0,
+            shift = 0;
+        while (i < extra.length) {
+            const byte = extra[i++];
+            value += (byte & 0x7f) * 2 ** shift;
+            shift += 7;
+            if ((byte & 0x80) === 0) return value;
+        }
+        return -1;
+    };
+    while (i < extra.length) {
+        const tag = extra[i++];
+        if (tag === 0x00) break; // padding runs to the end
+        if (tag === 0x01) {
+            if (i + 32 > extra.length) break;
+            result.pub_keys.push(bytes_to_hex(extra.slice(i, i + 32)));
+            i += 32;
+        } else if (tag === 0x02) { // nonce: 1-byte length
+            if (i >= extra.length) break;
+            i += 1 + extra[i];
+        } else if (tag === 0x03 || tag === 0xde) { // varint-length blobs
+            const len = read_varint();
+            if (len < 0) break;
+            i += len;
+        } else if (tag === 0x04) {
+            const count = read_varint();
+            if (count < 0 || i + count * 32 > extra.length) break;
+            for (let k = 0; k < count; k++) {
+                result.additional_pub_keys.push(bytes_to_hex(extra.slice(i, i + 32)));
+                i += 32;
+            }
+        } else {
+            break; // unknown tag: keep what was parsed, like wallet2
+        }
+    }
+    return result;
+}
+
 // Decrypts the amount for a specific output in a RingCT transaction
 function decode_rct_amount(rct, output_idx, shared_secret_hex) {
     const encrypted_amount_hex = rct?.ecdhInfo?.[output_idx]?.amount;

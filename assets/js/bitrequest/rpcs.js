@@ -48,7 +48,7 @@ function edit_rpcnode() {
             }),
             node_type = (currency_name === "ethereum" || glob_let.is_erc20t === true) ? "eth" : currency_name,
             placeholder_key = glob_let.ap_id + node_type + generate_random_number(1, 3),
-            url_placeholder = get_rpc_placeholder(currency_name)[placeholder_key],
+            url_placeholder = get_rpc_placeholder()[placeholder_key],
             btc_chain = is_btchain(currency_name) === true,
             qr_id = is_xmr ? "xmrrpc" : "add_node",
             default_placeholder = "some.node:port",
@@ -221,51 +221,47 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                                     v
                                 },
                                 test_tx = glob_const.test_tx[currency],
-                                delay_time = 500 * count,
-                                fetch_timeout = setTimeout(function() {
-                                    api_proxy({
-                                        "api": currency,
-                                        "custom": "electrum",
-                                        "api_url": rpc_url2,
-                                        "proxy": true,
-                                        "params": {
-                                            "method": "POST",
-                                            "data": {
-                                                "id": sha_sub(rpc_url2, 6),
-                                                "method": "blockchain.transaction.get",
-                                                "ref": test_tx,
-                                                "node": rpc_url2
-                                            }
+                                delay_time = 500 * count;
+                            setTimeout(function() {
+                                api_proxy({
+                                    "api": currency,
+                                    "custom": "electrum",
+                                    "api_url": rpc_url2,
+                                    "proxy": true,
+                                    "params": {
+                                        "method": "POST",
+                                        "data": {
+                                            "id": sha_sub(rpc_url2, 6),
+                                            "method": "blockchain.transaction.get",
+                                            "ref": test_tx,
+                                            "node": rpc_url2
                                         }
-                                    }).done(function(e) {
-                                        const api_result = br_result(e),
-                                            result2 = q_obj(api_result, "result.tx_hash");
-                                        if (result2) {
-                                            const is_selected = rpc_url2 === node_url;
-                                            create_rpc_node_element(api_options, true, node_id, node_config, is_selected);
-                                            node_list_obj.push({
-                                                node_id,
-                                                rpc_url2,
-                                                custom,
-                                                v
-                                            });
-                                        }
-                                    }).always(function() {
-                                        inner_count++;
-                                        if (done) return
-                                        if (inner_count >= count) { // done
-                                            done = true;
-                                            const margin_timeout = setTimeout(function() {
-                                                br_set_session("electrum_" + currency, node_list_obj, true);
-                                                rpc_list.addClass("show_select");
-                                            }, 500, function() {
-                                                clearTimeout(margin_timeout);
-                                            });
-                                        }
-                                    });
-                                }, delay_time, function() {
-                                    clearTimeout(fetch_timeout);
+                                    }
+                                }).done(function(e) {
+                                    const api_result = br_result(e),
+                                        result2 = q_obj(api_result, "result.tx_hash");
+                                    if (result2) {
+                                        const is_selected = rpc_url2 === node_url;
+                                        create_rpc_node_element(api_options, true, node_id, node_config, is_selected);
+                                        node_list_obj.push({
+                                            node_id,
+                                            rpc_url2,
+                                            custom,
+                                            v
+                                        });
+                                    }
+                                }).always(function() {
+                                    inner_count++;
+                                    if (done) return
+                                    if (inner_count >= count) { // done
+                                        done = true;
+                                        setTimeout(function() {
+                                            br_set_session("electrum_" + currency, node_list_obj, true);
+                                            rpc_list.addClass("show_select");
+                                        }, 500);
+                                    }
                                 });
+                            }, delay_time);
                         }
                     }
                 });
@@ -331,47 +327,43 @@ function fetch_xmr_nodes(node_url, predefined_nodes, custom_nodes) {
                                     "url": node,
                                     "display": true,
                                     custom
-                                },
-                                fetch_timeout = setTimeout(function() {
-                                    api_proxy({
-                                        "api_url": strip_slash(node) + "/get_transaction_pool_hashes",
-                                        "proxy": node.includes(".onion"),
-                                        "params": {
-                                            "method": "POST",
-                                            "headers": {
-                                                "Content-Type": "application/json"
-                                            }
+                                };
+                            setTimeout(function() {
+                                api_proxy({
+                                    "api_url": strip_slash(node) + "/get_transaction_pool_hashes",
+                                    "proxy": node.includes(".onion"),
+                                    "params": {
+                                        "method": "POST",
+                                        "headers": {
+                                            "Content-Type": "application/json"
                                         }
-                                    }).done(function(e) {
-                                        const response = br_result(e).result;
-                                        if (response) {
-                                            const txs_hashes = response.tx_hashes;
-                                            if (txs_hashes && txs_hashes.length > 0) {
-                                                const is_selected = node === node_url;
-                                                create_rpc_node_element(api_options, true, node_id, node_config, is_selected);
-                                                node_list_obj.push({
-                                                    node_id,
-                                                    node,
-                                                    custom
-                                                });
-                                            }
-                                        }
-                                    }).always(function() {
-                                        inner_count++;
-                                        if (done) return
-                                        if (inner_count >= count) { // done
-                                            done = true;
-                                            const margin_timeout = setTimeout(function() {
-                                                br_set_session("monero_rpc", node_list_obj, true);
-                                                rpc_list.addClass("show_select");
-                                            }, 500, function() {
-                                                clearTimeout(margin_timeout);
+                                    }
+                                }).done(function(e) {
+                                    const response = br_result(e).result;
+                                    if (response) {
+                                        const txs_hashes = response.tx_hashes;
+                                        if (txs_hashes && txs_hashes.length > 0) {
+                                            const is_selected = node === node_url;
+                                            create_rpc_node_element(api_options, true, node_id, node_config, is_selected);
+                                            node_list_obj.push({
+                                                node_id,
+                                                node,
+                                                custom
                                             });
                                         }
-                                    });
-                                }, delay_time, function() {
-                                    clearTimeout(fetch_timeout);
+                                    }
+                                }).always(function() {
+                                    inner_count++;
+                                    if (done) return
+                                    if (inner_count >= count) { // done
+                                        done = true;
+                                        setTimeout(function() {
+                                            br_set_session("monero_rpc", node_list_obj, true);
+                                            rpc_list.addClass("show_select");
+                                        }, 500);
+                                    }
                                 });
+                            }, delay_time);
                         }
                     });
                 }
@@ -391,7 +383,7 @@ function get_random_node(predefined_nodes, node_name) {
 }
 
 // Provides template URL examples for different cryptocurrency node configurations and API types
-function get_rpc_placeholder(currency) {
+function get_rpc_placeholder() {
     return {
         "apisnano1": "http://127.0.0.1:50001",
         "apisnano2": "http://some.node:50001",
@@ -422,7 +414,6 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
             return
         }
         if (is_btchain(currency_name)) {
-            const test_tx = glob_const.test_tx[currency_name];
             if (rpc_name === "electrum") {
                 test_electrum(rpc_url, currency_name).done(function(result) {
                     create_rpc_node_element(api_list, result.is_live, node_id, node_config, is_selected);
@@ -1195,10 +1186,8 @@ function save_rpc_settings(currency_name, node_config, is_new_node) {
 
 // Save monero-lws settings 
 function save_lws_settings(currency_name, node_config, is_new_node) {
-    const node_name = node_config.name,
-        settings_item = cs_node(currency_name, "apis"),
-        custom_nodes = settings_item.data("lws_options"),
-        node_url = node_config.url;
+    const settings_item = cs_node(currency_name, "apis"),
+        custom_nodes = settings_item.data("lws_options");
     settings_item.data("lws_selected", node_config);
     if (is_new_node === true) {
         if (empty_obj(custom_nodes)) {
@@ -1226,7 +1215,6 @@ function delete_rpc_node() {
                 node_config = node_element.data(),
                 node_url = node_config.url,
                 is_default = node_config.default !== false,
-                nodes_container = dialog_box.find(".options"),
                 matching_nodes = delete_btn.closest(".selectbox").find(".options span[data-value='" + node_url + "']"),
                 has_duplicates = matching_nodes.length > 1;
             if (is_default === true && !has_duplicates) {

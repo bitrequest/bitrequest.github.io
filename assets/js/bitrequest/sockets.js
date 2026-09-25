@@ -347,7 +347,7 @@ function try_next_socket(current_node, is_layer2) {
     if (over_budget_request("socket")) return false // prevent overflow
     const current_url = current_node.url,
         socket_config = is_layer2 ? q_obj(get_coinsettings(request.payment), "layer2.options." + current_node.network + ".websockets") : helper.socket_list,
-        available_nodes = socket_config.options ? $.merge(socket_config.apis, socket_config.options) : socket_config.apis;
+        available_nodes = socket_config.options ? socket_config.apis.concat(socket_config.options) : socket_config.apis;
     if (!available_nodes.length) return false
     let current_index;
     $.each(available_nodes, function(i, node) {
@@ -363,9 +363,7 @@ function try_next_socket(current_node, is_layer2) {
         if (glob_let.socket_attempt[sha_sub(socket_id + network_prefix, 15)] === true) {
             return false
         }
-        if (fallback_node) {
-            return fallback_node;
-        }
+        return fallback_node;
     }
 }
 
@@ -468,10 +466,16 @@ function lightning_socket(lnd, foreground) {
     };
     socket.onclose = function(e) {
         console.log("Disconnected");
+        const unexpected = glob_let.sockets[payment_id] === socket; // deliberate closes delete this first
+        delete glob_let.sockets[payment_id];
+        if (unexpected && is_openrequest()) {
+            poll_lightning_status(proxy_url, proxy_key, payment_id, node_id, invoice_mode);
+            return
+        }
         close_socket(payment_id);
     };
     socket.onerror = function(e) {
-        poll_lightning_status(proxy_url, proxy_key, payment_id, node_id, invoice_mode);
+        console.error("Lightning socket error"); // onclose always follows and handles the fallback
     };
     process_nfc_payment(proxy_url, proxy_key, payment_id, node_id, invoice_mode);
 }
@@ -514,7 +518,7 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                         if (card_data) {
                             const lnurl_withdraw = utf8_decoder.decode(card_data);
                             if (lnurl_withdraw) {
-                                if (lnurl_withdraw.indexOf("p=") && lnurl_withdraw.indexOf("c=")) {
+                                if (lnurl_withdraw.includes("p=") && lnurl_withdraw.includes("c=")) {
                                     const url_parts = lnurl_withdraw.split("urlw://");
                                     if (url_parts[0] == "ln") {
                                         const amount_rel = $("#open_wallet").attr("data-rel"),
@@ -640,7 +644,7 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                                                     force_close_socket(payment_id).then(() => {
                                                                         stop_nfc_scan();
                                                                         update_boltcard(true);
-                                                                        lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id, true);
+                                                                        lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id);
                                                                         set_ping(invoice_result.hash, function() {
                                                                             lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id);
                                                                         }, 3000);
@@ -1091,7 +1095,7 @@ function web3_eth_websocket(socket_node, wallet_address) {
                                         initialize_network_status(socket_node, "paid");
                                     }
                                 });
-                                return
+                                return false
                             }
                         });
                     }
@@ -1148,7 +1152,7 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
                     raw_value = hex_to_number_string(contract_data),
                     token_decimals = request.decimals,
                     token_amount = parseFloat((raw_value / Math.pow(10, token_decimals)).toFixed(8));
-                if (token_amount === Infinity) return
+                if (!Number.isFinite(token_amount) || token_amount <= 0) return
                 const setconfirmations = request.set_confirmations || 0,
                     tx_details = {
                         "ccval": token_amount,
@@ -1173,7 +1177,6 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
     socket.onclose = function(e) {
         if (e.code === 1008) {
             console.error("Disconnected from " + socket_node.url);
-            glob_let.ws_timer = 0;
             handle_socket_fails(socket_node, wallet_address, socket_id, network_type);
             return
         }
@@ -1209,7 +1212,7 @@ function nano_socket(socket_node, wallet_address) {
             if (tx_data.account === wallet_address) return null // block outgoing transactions
             if (!tx_data.hash) return null
             const reciever = tx_data?.block?.link_as_account;
-            if (reciever && !str_includes(reciever, wallet_address)) return null // block non matching transactions
+            if (reciever && !addr_eq(reciever, normalized_address)) return null // block non matching transactions
             const tx_details = nano_scan_data(tx_data),
                 tx_time = tx_details.transactiontime,
                 time_delta = Math.abs(tx_time - now_utc());

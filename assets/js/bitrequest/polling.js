@@ -68,9 +68,7 @@ function monitor_main_chain(tx_data, api_dat, retry) {
         };
     glob_let.tpto = setTimeout(function() {
         route_api_request(rd, api_data, rdo);
-    }, timeout, function() {
-        clear_polling_timeout();
-    });
+    }, timeout);
 }
 
 // Monitors Layer 2 blockchain transactions using network-specific API endpoints
@@ -101,9 +99,7 @@ function monitor_l2_contracts(params, contracts_list) {
         contract = contracts_list[eth_layer2];
     glob_let.tpto = setTimeout(function() {
         start_layer2_polling(api_data, contract);
-    }, timeout, function() {
-        clear_polling_timeout();
-    });
+    }, timeout);
 }
 
 // Terminates the active transaction polling timeout
@@ -194,9 +190,7 @@ function connect_xmr_node(api_data, address, vk, retry) {
     if (timeout) {
         glob_let.tpto = setTimeout(function() {
             poll_xmr(api_data, address, vk);
-        }, timeout, function() {
-            clear_polling_timeout();
-        });
+        }, timeout);
         return
     }
     poll_xmr(api_data, address, vk, retry);
@@ -379,7 +373,7 @@ function process_chunks_sequentially(api_data, chunks, vk, spk, config, index, a
         console.log("Total incoming transactions found: " + total_length);
         if (total_length > 0) {
             // Process all found transactions or just the first one
-            render_incoming_xmr(all_incoming, api_data, vk);
+            render_incoming_xmr(all_incoming, api_data);
             return
         }
         console.log("No incoming transactions found in mempool")
@@ -419,7 +413,7 @@ function process_chunks_sequentially(api_data, chunks, vk, spk, config, index, a
                     if (ail > 0) {
                         console.log("Total incoming transactions found: " + ail);
                         // Process the found transaction(s)
-                        render_incoming_xmr(all_incoming, api_data, vk);
+                        render_incoming_xmr(all_incoming, api_data);
                         return
                     }
                 } else {
@@ -468,13 +462,13 @@ function handle_chunk_error(api_data, chunks, vk, spk, config, index, all_incomi
 }
 
 // Renders and handles verified incoming Monero transactions.
-function render_incoming_xmr(all_incoming, api_data, vk) {
+function render_incoming_xmr(all_incoming, api_data) {
     const conf = q_obj(request, "set_confirmations") || 0,
         incoming_count = all_incoming.length,
         request_ts = request.rq_init - 10000; // 10 second compensation
     let match = false,
         tx_data = false;
-    all_incoming.forEach((tx, i) => {
+    $.each(all_incoming, function(i, tx) {
         console.log("Processing incoming transaction " + ((i + 1) / incoming_count));
         const txdat = xmr_tx_data(tx, conf);
         if (txdat.ccval && txdat.transactiontime > request_ts) {
@@ -516,45 +510,45 @@ function filter_incoming_transactions(rpc_data, view_key, spend_pubkey) {
                 const tx_json = parse_xmr_tx_hex(tx_hex),
                     rct = tx_json.rct_signatures;
                 if (rct) {
-                    if (!tx_json.extra || tx_json.extra.length < 33 || tx_json.extra[0] !== 1) {
+                    // Read tx pubkeys by tag: field order in extra is not fixed by consensus
+                    const extra_fields = parse_xmr_extra(tx_json.extra || []),
+                        tx_pub_key = extra_fields.pub_keys[0];
+                    if (!tx_pub_key) {
                         return
                     }
-                    const tx_pub_key = bytes_to_hex(tx_json.extra.slice(1, 33)),
-                        r_point = EdPoint.fromHex(tx_pub_key),
-                        a_scalar = ed_bytes_to_number_le(hex_to_bytes(view_key)),
-                        shared_secret_point = r_point.multiply(a_scalar).multiply(8n),
-                        shared_secret_hex = point_to_monero_hex(shared_secret_point),
-                        b_point = EdPoint.fromHex(spend_pubkey); // Spend public key point
+                    const a_scalar = ed_bytes_to_number_le(hex_to_bytes(view_key)),
+                        b_point = EdPoint.fromHex(spend_pubkey), // Spend public key point
+                        prefix_bytes_tag = str_to_bin("view_tag"),
+                        derive_secret = (pub_key_hex) => {
+                            try {
+                                return point_to_monero_hex(EdPoint.fromHex(pub_key_hex).multiply(a_scalar).multiply(8n));
+                            } catch (e) {
+                                return null; // not a valid curve point
+                            }
+                        },
+                        // Shared secrets from the main tx pubkey(s): one scalar mult per key, usually one
+                        main_secrets = extra_fields.pub_keys.map(derive_secret).filter(Boolean);
                     let outputs = [];
                     tx_json.vout.forEach((output, output_index) => {
-                        const view_tag = output.target?.tagged_key?.view_tag;
-                        if (!view_tag) return
-                        // STEP 1: Check view tag (fast pre-check)
-                        const prefix_bytes_tag = str_to_bin("view_tag"),
-                            hash_input_for_tag = bytes_to_hex(concat_bytes(prefix_bytes_tag, hex_to_bytes(shared_secret_hex), encode_varint(output_index))),
-                            computed_tag = fasthash(hash_input_for_tag).slice(0, 2);
-                        if (computed_tag !== view_tag) return // View tag doesn't match
-                        // STEP 2: View tag matched - now verify the output public key
-                        const output_pubkey = output.target?.tagged_key?.key;
-                        if (!output_pubkey) return
-                        // Derive expected output key: P = hs(aR,i)G + B
-                        // Create derivation data: shared_secret + output_index
-                        const derivation_data = bytes_to_hex(concat_bytes(
-                                hex_to_bytes(shared_secret_hex),
-                                encode_varint(output_index)
-                            )),
-                            hash_result = fasthash(derivation_data),
-                            hs_bytes = sc_reduce32(hash_result),
-                            hs = ed_bytes_to_number_le(hs_bytes),
-                            hs_g = EdPoint.BASE.multiply(hs),
-                            expected_output_point = hs_g.add(b_point),
-                            expected_output_key = expected_output_point.toHex();
-                        // Compare with actual output key
-                        if (expected_output_key !== output_pubkey) {
-                            console.warn("⚠ Output " + output_index + ": View tag matched but output key doesn't belong to us (false positive)");
-                            return // This output is not ours - it's a view tag collision
-                        }
-                        // Output is confirmed to be ours - now decode amount
+                        const view_tag = output.target?.tagged_key?.view_tag,
+                            output_pubkey = output.target?.tagged_key?.key;
+                        if (!view_tag || !output_pubkey) return
+                        // Txs that pay a subaddress use a per-output key (tag 0x04) for every output
+                        const additional_key = extra_fields.additional_pub_keys[output_index],
+                            additional_secret = additional_key ? derive_secret(additional_key) : null,
+                            candidates = additional_secret ? main_secrets.concat(additional_secret) : main_secrets,
+                            shared_secret_hex = candidates.find(secret => {
+                                const secret_bytes = hex_to_bytes(secret),
+                                    index_bytes = encode_varint(output_index);
+                                // STEP 1: Check view tag (fast pre-check)
+                                const computed_tag = fasthash(bytes_to_hex(concat_bytes(prefix_bytes_tag, secret_bytes, index_bytes))).slice(0, 2);
+                                if (computed_tag !== view_tag) return false
+                                // STEP 2: Verify the output public key: P = hs(aR,i)G + B
+                                const hs = ed_bytes_to_number_le(sc_reduce32(fasthash(bytes_to_hex(concat_bytes(secret_bytes, index_bytes)))));
+                                return EdPoint.BASE.multiply(hs).add(b_point).toHex() === output_pubkey;
+                            });
+                        if (!shared_secret_hex) return // This output is not ours
+                        // Output is confirmed to be ours - decode amount with the secret that matched
                         const parse_amount = decode_rct_amount(rct, output_index, shared_secret_hex);
                         if (!parse_amount) {
                             console.warn("⚠ Output " + output_index + ": Could not decode amount");
@@ -578,7 +572,7 @@ function filter_incoming_transactions(rpc_data, view_key, spend_pubkey) {
                                 ...tx_data,
                                 outputs
                             };
-                        // Extract payment ID if present
+                        // Extract payment ID if present (encrypted with the main tx pubkey)
                         const payment_id_data = extract_xmr_payment_id(tx_json.extra, tx_pub_key, view_key);
                         if (payment_id_data) {
                             tx_result.payment_id = payment_id_data.payment_id;

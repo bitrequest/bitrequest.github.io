@@ -11,7 +11,7 @@ $pd = file_get_contents("php://input");
 $pd_obj = json_decode($pd, true);
 if (isset($pd_obj)) {
 	$url = $pd_obj["url"] ?? "";
-	if (has_tor() && str_ends_with(parse_url($url, PHP_URL_HOST) ?? "", ".onion")) {
+	if (has_tor() && is_onion_url($url)) {
 		if (isset($pd_obj["params"]) && isset($pd_obj["params"]["method"])) {
 			$pd_obj["method"] = $pd_obj["params"]["method"];
 		}
@@ -24,6 +24,9 @@ if (isset($pd_obj)) {
 
 //Fetches data from a URL using Tor network or falls back to default proxy
 function fetch_tor($url, $data, $headers) {
+	if (!is_onion_url($url)) {
+		return err_obj("403", "Only .onion hosts are routed via Tor");
+	}
 	$method = (isset($data)) ? $data["method"] ?? "POST" : "GET";
 	$plo = ["url" => $url, "data" => $data, "headers" => $headers, "method" => $method];    
 	if (has_tor()) {
@@ -52,8 +55,15 @@ function fetch_tor($url, $data, $headers) {
 		} 
 		return err_obj("411", "Failed to connect via Tor after " . $max_retries . " attempts");
 	}
-	$tor_proxy = $data["tor_proxy"] ?? TOR_PROXY;
-	if ((strpos($tor_proxy, $_SERVER["HTTP_HOST"]) !== false)) {
+	// Client choice arrives as a top-level POST field (api_proxy sets ad.tor_proxy);
+	// $data["tor_proxy"] is kept for form-array payloads from older clients.
+	$tor_proxy = (is_array($data) ? ($data["tor_proxy"] ?? null) : null) ?? $_POST["tor_proxy"] ?? TOR_PROXY;
+	// tor_proxy is client-controlled: https only, bare origin, public IPs, DNS pinned
+	$safe_proxy = safe_tor_proxy($tor_proxy);
+	if (!$safe_proxy) {
+		return err_obj("403", "Tor proxy not allowed");
+	}
+	if ((strpos($safe_proxy["base"], $_SERVER["HTTP_HOST"]) !== false)) {
 		return err_obj("411", "Failed to connect via Tor");
 	}
 	
@@ -62,8 +72,11 @@ function fetch_tor($url, $data, $headers) {
 	if ($ch === false) {
 		return err_obj("411", "Failed to initialize CURL");
 	}  
-	$tor_url = $tor_proxy . "/proxy/v1/ln/tor/index.php";
+	$tor_url = $safe_proxy["base"] . "/proxy/v1/ln/tor/index.php";
 	curl_setopt($ch, CURLOPT_URL, $tor_url);
+	curl_setopt($ch, CURLOPT_RESOLVE, [$safe_proxy["pin"]]);
+	curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($plo));
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
@@ -100,6 +113,9 @@ function is_error_response($response) {
 function curl_get_tor($pl) {
 	try {
 		$url = $pl["url"] ?? null;
+		if (!is_onion_url($url)) {
+			return err_obj("403", "Only .onion hosts are routed via Tor");
+		}
 		$data = $pl["data"] ?? null;
 		$headers = $pl["headers"] ?? [];
 		$method = $pl["method"] ?? "POST";
@@ -107,8 +123,10 @@ function curl_get_tor($pl) {
 		// Always set these basic cURL options first
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-		curl_setopt($ch, CURLOPT_MAXREDIRS, 3); // cap redirect chain (onion services follow redirects here)
+		// Redirects are followed manually below so every hop must stay on .onion;
+		// curl's own follow would let an onion service bounce us to a clearnet host.
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+		curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 20);
 		
@@ -169,7 +187,6 @@ function curl_get_tor($pl) {
 		curl_setopt($ch, CURLOPT_SSLVERSION, 0); // CURL_SSLVERSION_DEFAULT
 		
 		// Additional SSL options that may help
-		curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
 		curl_setopt($ch, CURLOPT_TCP_KEEPALIVE, 1);
 		
 		// Handle HTTP/2 if available
@@ -181,7 +198,23 @@ function curl_get_tor($pl) {
 		
 		// Execute request
 		$start_time = microtime(true);
-		$result = curl_exec($ch);
+		$max_redirects = 3;
+		for ($hop = 0; ; $hop++) {
+			$result = curl_exec($ch);
+			if (curl_errno($ch)) {
+				break;
+			}
+			$hop_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+			if ($hop_code < 300 || $hop_code >= 400) {
+				break;
+			}
+			$location = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+			if (!$location || $hop >= $max_redirects || !is_onion_url($location)) {
+				curl_close($ch);
+				return err_obj("411", "Redirect not allowed");
+			}
+			curl_setopt($ch, CURLOPT_URL, $location);
+		}
 		$end_time = microtime(true);
 		$duration = round($end_time - $start_time, 2);
 		

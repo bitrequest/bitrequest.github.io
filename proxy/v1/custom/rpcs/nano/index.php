@@ -40,17 +40,6 @@
         return $result;
     }
     
-    // Retrieves payload data from GET parameters, base64 decoded
-    function get_payload() {
-        return isset($_GET["pl"]) ? json_decode(base64_decode($_GET["pl"])) : null;
-    }
-    
-    // Outputs JSON response with appropriate headers
-    function send_jsonresponse($data) {
-        header("Content-Type: application/json");
-        echo json_encode($data, JSON_PRETTY_PRINT);
-    }
-    
     // Fetches transaction history for a Nano account and merges with related block info
     function get_account_history($node, $account, $headers) {
         $history_payload = [

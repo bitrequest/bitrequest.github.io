@@ -150,8 +150,7 @@ function test_bip39() {
         mark_coins_xpub_incompatible(["ethereum"]);
         bip39_const.can_xpub.ethereum = false;
     }
-    const timing = (typeof performance !== "undefined" ? performance.now() : Date.now()) - start_time,
-        spark_support = test_spark_derivation();
+    const spark_support = test_spark_derivation();
     glob_const.spark_support = spark_support; // set spark support
 }
 
@@ -1698,8 +1697,7 @@ function phrase_moreinfo() {
 // Controls xpub information visibility and QR code generation
 function phrase_showxp() {
     $(document).on("click", ".show_xpub", function() {
-        const xpub_button = $(this),
-            xpub_container = $("#xpub_box"),
+        const xpub_container = $("#xpub_box"),
             xpub_items = xpub_container.find(".xpub_ib"),
             toggle_text = xpub_container.find(".xpref"),
             xpub_drawer = $(".xp_span");

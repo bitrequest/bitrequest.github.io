@@ -61,19 +61,23 @@ if ($pid && file_exists($path)) {
         // Output LNURL object as JSON with unescaped slashes
         echo json_encode($lnurl_obj, JSON_UNESCAPED_SLASHES);
         
-        // Update payment status in the tracking file
-        $status = json_encode([
-            "pid" => $pid,
-            "status" => "confirm",
-            "rqtype" => $type_txt
-        ]);
-        if (file_put_contents($path, $status) !== false) {
-            // Notify payment server about the confirmed payment
-            $postheaders = [
-                "post: " . $status,
-                "tls_wildcard" => true
-            ];
-            curl_get(TOR_PROXY . ":8030/", $status, $postheaders);
+        // Update payment status in the tracking file, unless a payRequest re-fetch would wipe a generated/pending/paid invoice
+        $current = json_decode((string) file_get_contents($path), true);
+        $current_status = is_array($current) ? ($current["status"] ?? null) : null;
+        if (in_array($current_status, [null, "waiting", "confirm"], true)) {
+            $status = json_encode([
+                "pid" => $pid,
+                "status" => "confirm",
+                "rqtype" => $type_txt
+            ]);
+            if (file_put_contents($path, $status) !== false) {
+                // Notify payment server about the confirmed payment
+                $postheaders = [
+                    "post: " . $status,
+                    "tls_wildcard" => true
+                ];
+                curl_get(TOR_PROXY . ":8030/", $status, $postheaders);
+            }
         }
     } catch (Exception $e) {
         echo json_encode([

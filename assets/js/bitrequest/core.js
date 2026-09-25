@@ -1051,7 +1051,6 @@ function payrequest() {
         }
         const request_item = request_btn.closest("li.rqli"),
             request_data = request_item.data(),
-            layer2_network = request_data.eth_layer2, // detected l2
             payment_type = request_data.payment,
             unit = request_data.uoa,
             status = request_data.status,
@@ -1209,7 +1208,6 @@ function toggle_address() {
         const address_item = $(this).closest("li"),
             is_active = address_item.data("checked"),
             address_list = address_item.closest("ul.pobox"),
-            active_count = address_list.find("li[data-checked='true']").length,
             currency = address_list.attr("data-currency");
         if (is_active === true || is_active === "true") {
             address_item.attr("data-checked", "false").data("checked", false);
@@ -1667,7 +1665,7 @@ function copy_to_clipboard(content, content_type) {
             });
         return
     }
-    glob_let.copycontent.val(content).select();
+    glob_const.copycontent.val(content).select();
     try {
         if (document.execCommand("copy")) {
             notify(content_type + " " + tl("copied"), 2500, "no");
@@ -1677,7 +1675,7 @@ function copy_to_clipboard(content, content_type) {
     } catch (err) {
         notify(tl("xcopy") + " " + content_type, 2500, "no");
     }
-    glob_let.copycontent.val("").removeData("type").blur();
+    glob_const.copycontent.val("").removeData("type").blur();
 }
 
 // Acquires screen wake lock to prevent display sleep
@@ -1955,19 +1953,17 @@ function init_bitcoin_select_dialog() {
 function init_bitcoin_select() {
     $(document).on("click", "#click_list.cl_btc li", function() {
         canceldialog();
-        const this_id = $(this).attr("id"),
-            timeout = setTimeout(function() {
-                if (this_id === "init_btc") {
-                    choose_currency("bitcoin");
-                    return
-                }
-                if (this_id === "init_lnd") {
-                    render_lightning_interface();
-                    return
-                }
-            }, 600, function() {
-                clearTimeout(timeout);
-            });
+        const this_id = $(this).attr("id");
+        setTimeout(function() {
+            if (this_id === "init_btc") {
+                choose_currency("bitcoin");
+                return
+            }
+            if (this_id === "init_lnd") {
+                render_lightning_interface();
+                return
+            }
+        }, 600);
     });
 }
 
@@ -2003,20 +1999,18 @@ function init_eth_select_dialog() {
 function init_eth_select() {
     $(document).on("click", "#click_list.cl_eth li", function() {
         canceldialog();
-        const this_id = $(this).attr("id"),
-            timeout = setTimeout(function() {
-                if (this_id === "init_eth") {
-                    choose_currency("ethereum");
-                    return
-                }
-                if (this_id === "init_erc20") {
-                    add_erc20();
-                    return
-                }
+        const this_id = $(this).attr("id");
+        setTimeout(function() {
+            if (this_id === "init_eth") {
                 choose_currency("ethereum");
-            }, 600, function() {
-                clearTimeout(timeout);
-            });
+                return
+            }
+            if (this_id === "init_erc20") {
+                add_erc20();
+                return
+            }
+            choose_currency("ethereum");
+        }, 600);
     });
 }
 
@@ -2104,13 +2098,11 @@ function canceldialog(bypass) {
     glob_const.body.removeClass("blurmain themepu");
     popup.removeClass("active");
     $(document).off("click", "#execute");
-    const timeout = setTimeout(function() {
+    setTimeout(function() {
         popup.removeClass("showpu");
         $("#dialogbody").html("");
         $("#actions").removeClass("custom");
-    }, 600, function() {
-        clearTimeout(timeout);
-    });
+    }, 600);
 }
 
 // Escapes a value for safe inclusion inside a single-quoted HTML attribute.
@@ -2292,14 +2284,13 @@ function hide_paymentdialog() {
 
 // Resets payment dialog state and cleans up resources
 function reset_paymentdialog() {
-    const dialog_timeout = setTimeout(function() {
+    setTimeout(function() {
         glob_const.paymentpopup.removeClass("showpu outgoing");
         glob_const.html.removeClass("paymode firstload");
         $(".showmain #mainwrap").css("-webkit-transform", "translate(0, 0)"); // restore fake scroll position
         $(".showmain").closest(document).scrollTop(glob_let.scrollposition); // restore real scroll position
         remove_flip(); // reset request facing front
         glob_const.paymentdialogbox.html(""); // remove html
-        clearTimeout(dialog_timeout);
     }, 600);
     closeloader();
     clear_dialog_timeout();
@@ -2315,11 +2306,9 @@ function reset_paymentdialog() {
         glob_let.l2s = {},
         glob_let.apikey_fails = false,
         glob_let.post_scan = false;
-    const socket_timeout = setTimeout(function() {
+    setTimeout(function() {
         close_socket();
-    }, 500, function() {
-        clearTimeout(socket_timeout);
-    });
+    }, 500);
 }
 
 // Initializes share dialog cancellation handler
@@ -2336,11 +2325,9 @@ function cancel_sharedialog() {
     const share_popup = $("#sharepopup");
     share_popup.removeClass("active");
     glob_const.body.removeClass("sharemode");
-    const dialog_timeout = setTimeout(function() {
+    setTimeout(function() {
         share_popup.removeClass("showpu");
-    }, 500, function() {
-        clearTimeout(dialog_timeout);
-    });
+    }, 500);
 }
 
 // ** Options & UI Panel Management: **
@@ -2434,12 +2421,10 @@ function clearoptions() {
     options_popup.addClass("fadebg");
     options_popup.removeClass("active");
     glob_const.body.removeClass("blurmain_options");
-    const fade_timeout = setTimeout(function() {
+    setTimeout(function() {
         options_popup.removeClass("showpu pin fadebg ontop");
         $("#optionsbox").html("");
-    }, 600, function() {
-        clearTimeout(fade_timeout);
-    });
+    }, 600);
 }
 
 // Displays lock screen with countdown
@@ -2783,11 +2768,9 @@ function notify(message, display_time = 4000, button_style = "no") {
     const notify_elem = $("#notify");
     $("#notifysign").html(message + "<span class='icon-cross'></div>").attr("class", "button" + button_style);
     notify_elem.addClass("popupn");
-    const timeout = setTimeout(function() {
+    setTimeout(function() {
         closenotify();
-    }, display_time, function() {
-        clearTimeout(timeout);
-    });
+    }, display_time);
 }
 
 // Closes notification when clicking X icon
@@ -2806,11 +2789,9 @@ function closenotify() {
 function topnotify(message) {
     const top_notify = $("#topnotify");
     top_notify.text(message).addClass("slidedown");
-    const timeout = setTimeout(function() {
+    setTimeout(function() {
         top_notify.removeClass("slidedown");
-    }, 7000, function() {
-        clearTimeout(timeout);
-    });
+    }, 7000);
 }
 
 // Displays styled notification in dialog boxes
@@ -2825,11 +2806,9 @@ function popnotify(result, message) { // notifications in dialogs
         notify_box.addClass("success").removeClass("error warning");
     }
     notify_box.slideDown(200).html(message);
-    const timeout = setTimeout(function() {
+    setTimeout(function() {
         notify_box.slideUp(200);
-    }, 6000, function() {
-        clearTimeout(timeout);
-    });
+    }, 6000);
 }
 
 // ** Form & Input Handling: **
@@ -2877,8 +2856,8 @@ function radio_select() {
         } else {
             radio_btn.removeClass("icon-radio-checked2").addClass("icon-radio-unchecked");
         }
-        const selected_text = radio_elem.children("span").text(),
-            form_input = $(".formbox input:first").val(selected_text);
+        const selected_text = radio_elem.children("span").text();
+        $(".formbox input:first").val(selected_text);
     })
 }
 
@@ -3214,8 +3193,7 @@ function autocomplete_erc20token() {
     $(document).on("input", "#ac_input", function() {
         const search_input = $(this),
             token_form = search_input.closest("form"),
-            search_term = search_input.val().toLowerCase(),
-            token_options = token_form.find(".options");
+            search_term = search_input.val().toLowerCase();
         token_form.removeClass("validated");
         $("#ac_options > span").each(function() {
             const token_option = $(this),
@@ -3799,7 +3777,6 @@ function receipt() {
 function download_receipt() {
     $(document).on("click", "#dl_receipt", function(event) {
         const download_btn = $(this),
-            file_url = download_btn.attr("href"),
             button_title = download_btn.attr("title"),
             user_confirm = confirm(button_title + "?");
         if (user_confirm === false) {
@@ -3822,8 +3799,7 @@ function share_receipt() {
         if (user_confirm === true) {
             loader(true);
             set_loader_text(tl("generatereceipt"));
-            const account_name = $("#accountsettings").data("selected"),
-                shared_title = "bitrequest_receipt_" + request_id + ".pdf",
+            const shared_title = "bitrequest_receipt_" + request_id + ".pdf",
                 url_hash = sha_sub(request_id + shared_title, 10);
             shorten_url(shared_title, pdf_url, fetch_aws("img_receipt_icon.png"), true, url_hash);
             closeloader();
@@ -3859,7 +3835,6 @@ function get_pdf_url(request_data) {
         received_amount = trimdecimals(receivedamount, 6),
         fiat_amount = trimdecimals(fiatvalue, 2),
         is_incoming = requesttype === "incoming",
-        is_outgoing = requesttype === "outgoing",
         is_local = requesttype === "local",
         is_checkout = requesttype === "checkout",
         request_type = is_incoming ? (is_checkout ? "online purchase" : "incoming") : (is_local ? "point of sale" : "outgoing"),
@@ -4697,8 +4672,7 @@ function rendercurrencies() {
     const init = !set_up();
     initiate(init);
     $.each(glob_const.stored_currencies, function(index, data) {
-        const curr_code = data.currency,
-            coin_id = data.cmcid;
+        const curr_code = data.currency;
         buildpage(data, false, init);
         render_currencysettings(curr_code);
         const wallet_addrs = br_get_local("cc_" + curr_code, true);
@@ -4923,7 +4897,6 @@ function append_coinsetting(currency, settings) {
             const url = selected.url,
                 name = selected.name,
                 custom = selected.custom,
-                api = selected.api || null,
                 display_val = name || url || selected,
                 val_str = String(display_val),
                 filtered_val = val_str === "true" || val_str === "false" ? "" : val_str,
@@ -5010,7 +4983,6 @@ function append_request(rd) {
         address,
         payment_id,
         xmr_ia,
-        currencysymbol,
         cmcid,
         cpid,
         requesttype,
@@ -5383,11 +5355,9 @@ function change_alert() {
         }, 2500);
         if ([25, 50, 150, 200, 250].includes(change_count)) {
             canceldialog();
-            const backup_timer = setTimeout(function() {
+            setTimeout(function() {
                 backup_database();
-            }, 3000, function() {
-                clearTimeout(backup_timer);
-            });
+            }, 3000);
         }
     }
 }

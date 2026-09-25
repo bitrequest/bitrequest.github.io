@@ -245,8 +245,7 @@ function filter_currency_input() {
     $(document).on("input", "#currencyformbox input:first", function() {
         const input = $(this),
             form = input.closest(".popform"),
-            value = input.val().toUpperCase(),
-            options = form.find(".options");
+            value = input.val().toUpperCase();
         form.removeClass("validated");
         $("#currencyformbox .options > span").each(function() {
             const option = $(this),
@@ -283,7 +282,6 @@ function save_currency_settings() {
                 switch_changed = dc_switch.hasClass("dc_changed"),
                 values = input_val.split(" | "),
                 curr_symbol = values[0],
-                currency = values[1],
                 symbol_lc = curr_symbol.toLowerCase();
             if (symbol_lc === local_curr && !switch_changed) {
                 canceldialog();
@@ -759,7 +757,6 @@ function share_backup_file() {
     $(document).on("click", "#share_bu", function() {
         const result = confirm(tl("sharebu"));
         if (result) {
-            const account = $("#accountsettings").data("selected");
             if (check_pin_enabled(true) === true) {
                 // Share backup normally
                 setTimeout(() => share_bu(), 100);
@@ -819,8 +816,12 @@ function share_bu() {
 
 // Retrieves and displays cached system backup with expiration countdown
 function check_systembu(sbu) {
-    const ro_dat = stripb64(sbu),
-        ro_id = ro_dat.ro,
+    const ro_dat = stripb64(sbu);
+    if (!ro_dat) {
+        systembu_expired();
+        return
+    }
+    const ro_id = ro_dat.ro,
         ro_proxy = ro_dat.proxy;
     api_proxy({
         "custom": "get_system_bu",
@@ -930,7 +931,7 @@ function check_systembu(sbu) {
 function stripb64(ab) {
     const pct = ab.indexOf("%"),
         b64 = pct > -1 ? ab.slice(0, pct) : ab;
-    return JSON.parse(atob(b64));
+    return b64_json(b64);
 }
 
 // Returns backup content as JSON text; decodes legacy base64-wrapped blobs
@@ -1958,7 +1959,6 @@ function compile_csv() {
             txhash = val.txhash || "",
             lnhash = txhash && txhash.slice(0, 9) === "lightning",
             lightning = val.lightning,
-            hybrid = lightning && lightning.hybrid === true,
             lnstr = lnhash ? "lightning⚡️" : "",
             rqname = val.requestname || "",
             desc = val.requesttitle || "",
@@ -2142,8 +2142,12 @@ function decode_shared_csv(base64) {
 
 // Validates and processes shared CSV export with expiration handling
 function check_csvexport(csv) {
-    const rdata = stripb64(csv),
-        roid = rdata.ro,
+    const rdata = stripb64(csv);
+    if (!rdata) {
+        systembu_expired();
+        return
+    }
+    const roid = rdata.ro,
         rproxy = rdata.proxy;
     api_proxy({
         "custom": "get_system_bu",
@@ -2238,7 +2242,6 @@ function check_csvexport(csv) {
 function submit_csvdownload() {
     $(document).on("click", "#trigger_csvdownload", function(e) {
         const btn = $(this),
-            href = btn.attr("href"),
             title = btn.attr("title"),
             result = confirm(tl("downloadfile", {
                 "file": title
@@ -2263,7 +2266,6 @@ function urlshortener() {
             data = settings.data(),
             source = data.selected,
             val = source == "inactive" ? "bitly" : source,
-            fb_key = data.fbapikey || "",
             bitly_token = data.bitly_at || "",
             active = data.us_active,
             is_active = active === "active",
@@ -3562,7 +3564,6 @@ function team_invite_trigger() {
 // Creates team invite dialog with sharing options
 function team_invite() {
     const jsonencode = compile_teaminvite(),
-        filename = "bitrequest_team_invite.json",
         ddat = [{
             "div": {
                 "class": "popform",
@@ -3647,7 +3648,7 @@ function adjust_object(object, seedobj) {
             keyval = "bitrequest_cc_" + currency,
             addresses = object[keyval];
         let xpub, xpubid;
-        if (seedid && bip32dat.active) {
+        if (seedid && bip32dat.active && bip32dat.xpub) {
             const root_path = bip32dat.root_path,
                 xpubdat = br_xpub_obj(currency, root_path, cc, key);
             xpub = xpubdat.xpub;
@@ -3797,8 +3798,12 @@ function toggle_ti_qr(url) {
 
 // Validates and displays team invite installation dialog 
 function check_teaminvite(ro) {
-    const ro_dat = stripb64(ro),
-        ro_id = ro_dat.ro,
+    const ro_dat = stripb64(ro);
+    if (!ro_dat) {
+        systembu_expired();
+        return
+    }
+    const ro_id = ro_dat.ro,
         ro_proxy = ro_dat.proxy;
     api_proxy({
         "custom": "get_system_bu",
@@ -3810,6 +3815,11 @@ function check_teaminvite(ro) {
         if (ping) {
             const br_result = ping.br_result;
             if (br_result) {
+                const invite_dat = br_result.error ? null : b64_json(strip_quotes(br_result.base64));
+                if (!invite_dat) {
+                    systembu_expired();
+                    return
+                }
                 if (br_result.error) {
                     systembu_expired();
                     return
@@ -3821,9 +3831,9 @@ function check_teaminvite(ro) {
                     filetime_format = new Date(filetimesec).toLocaleString(langcode),
                     base64 = br_result.base64,
                     cb64 = strip_quotes(base64),
-                    br_dat = JSON.parse(atob(cb64)),
+                    br_dat = invite_dat,
                     br_plain = br_dat.lock ? decrypt_rd_payload(br_dat) : br_dat,
-                    account = atob(br_result.account),
+                    account = safe_atob(br_result.account) || "",
                     safe_account = escape_html(account),
                     bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
                     cache_time = cache.cache_time,
@@ -3834,6 +3844,7 @@ function check_teaminvite(ro) {
                     bpdat_seedid = q_obj(br_plain, "bitrequest_cashier.seedid"),
                     update = Boolean(bpdat_seedid) && (bpdat_seedid == glob_let.cashier_seedid),
                     master_account = Boolean(bpdat_seedid) && (bpdat_seedid === glob_let.bipid),
+                    seed_mismatch = Boolean(glob_let.cashier_seedid) && !update && !master_account,
                     teamid = br_get_local("teamid", true),
                     teamid_arr = get_default_object(teamid),
                     is_installed = teamid_arr.includes(ro),
@@ -3848,8 +3859,9 @@ function check_teaminvite(ro) {
                     }) + "<br/><br/>" + tl("clickinstall", {
                         "account": safe_account
                     }) + "</p>",
+                    mismatch_text = seed_mismatch && !is_installed ? "<div class='error' style='margin-top:1em;padding:0.3em 1em'>" + tl("teammismatch") + "</div>" : "",
                     button_text = update ? tl("update") : tl("install"),
-                    install_button = is_installed ? "" : "<div id='install_teaminvite' data-base64='" + escape_attr(cb64) + "' data-filename='" + escape_attr(filename) + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "' data-installid='" + escape_attr(ro) + "'>" + button_text + "</div>",
+                    install_button = is_installed ? "" : "<div id='install_teaminvite' data-base64='" + escape_attr(cb64) + "' data-filename='" + escape_attr(filename) + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "' data-mismatch='" + seed_mismatch + "' data-installid='" + escape_attr(ro) + "'>" + button_text + "</div>",
                     ddat = [{
                         "div": {
                             "id": "dialogcontent",
@@ -3865,7 +3877,7 @@ function check_teaminvite(ro) {
                                 {
                                     "div": {
                                         "id": "changelog",
-                                        "content": dialogtext + "<div id='custom_actions'>" + install_button + "</div>"
+                                        "content": mismatch_text + dialogtext + "<div id='custom_actions'>" + install_button + "</div>"
                                     }
                                 }
                             ]
@@ -3897,9 +3909,10 @@ function install_teaminvite_trigger() {
             return
         }
         const update = btn.attr("data-update") === "true",
+            mismatch = btn.attr("data-mismatch") === "true",
             installid = btn.attr("data-installid"),
-            result_text = update ? tl("updatealert") : tl("installalert"),
-            result = set_up() ? confirm(result_text) : true;
+            result_text = mismatch ? tl("teammismatchalert") : update ? tl("updatealert") : tl("installalert"),
+            result = (set_up() || mismatch) ? confirm(result_text) : true;
         if (result) {
             const bu_dat = btn.attr("data-base64"),
                 cb64 = strip_quotes(bu_dat),
