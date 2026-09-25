@@ -67,7 +67,7 @@ const br_bipobj = br_get_local("bpdat", true),
     glob_const = {
         // --- App metadata ---
         "apptitle": "Bitrequest",
-        "proxy_version": "0.040",
+        "proxy_version": "0.041",
         "androidpackagename": br_androidpackagename,
         "approot": br_approot,
         "app_origins": ["https://bitrequest.github.io", "https://bitrequest.web.app"], // origins a decoded share/short link may redirect to
