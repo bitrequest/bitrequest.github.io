@@ -953,10 +953,14 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
 }
 
 function check_nwc_permissions(methods) {
-    const receive_methods = ["make_invoice", "lookup_invoice", "list_transactions", "get_info", "get_balance"],
-        method_list = Array.isArray(methods) ? methods : typeof methods === "string" ? methods.split(/\s+/).filter(Boolean) : null;
-    if (!method_list || !method_list.length) return true
-    return method_list.some(m => !receive_methods.includes(m));
+    const spend_methods = [
+            "pay_invoice",
+            "pay_keysend",
+            "multi_pay_invoice",
+            "multi_pay_keysend"
+        ],
+        vulnerable = methods.filter(m => spend_methods.includes(m));
+    return vulnerable.length > 0;
 }
 
 // Adds new Lightning implementation with proxy and credential configuration
