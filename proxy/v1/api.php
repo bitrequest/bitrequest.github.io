@@ -306,15 +306,15 @@ function curl_get($url, $data, $headers) {
 				if (!$location || $hop >= $max_redirects) {
 					return error_object("411", "too many redirects");
 				}
-				// Leaving the original host: drop credential headers so they
-				// aren't handed to the redirect target.
+				// Leaving the original host: drop credential headers, and the body on 301/302/303,
+				// so neither is handed to another host. Same-host redirects (trailing slash,
+				// http -> https) keep the POST body, as callbacks rely on that.
 				$redirect_host = strtolower(parse_url($location, PHP_URL_HOST) ?? "");
 				if ($redirect_host !== $origin_host) {
 					$headers = strip_credential_headers($headers);
-				}
-				// 301/302/303 turn a POST into a GET without body (browser/curl behaviour); 307/308 keep both
-				if ($http_code !== 307 && $http_code !== 308) {
-					$data = null;
+					if ($http_code !== 307 && $http_code !== 308) {
+						$data = null;
+					}
 				}
 				$current_url = $location;
 				continue;
@@ -323,8 +323,7 @@ function curl_get($url, $data, $headers) {
 			curl_close($ch);
 
 			if ($http_code >= 400) {
-				$detail = trim(substr(strip_tags((string) $result), 0, 300));
-				return error_object($http_code, $detail !== "" ? "HTTP error: " . $detail : "HTTP error");
+				return error_object($http_code, "HTTP error");
 			}
 
 			return $result ?: error_object("411", "no result");
