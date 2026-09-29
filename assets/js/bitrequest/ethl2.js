@@ -848,6 +848,10 @@ function ensure_l2_decimals(contracts, callback) {
 
 // Callback functions after fetching L2 contracts
 function fetch_contracts_callback(callback, contracts) {
+    if (callback.currency === "ethereum") {
+        route_contracts_callback(callback, contracts);
+        return;
+    }
     ensure_l2_decimals(contracts, function(usable) {
         route_contracts_callback(callback, usable);
     });
