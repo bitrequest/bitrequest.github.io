@@ -1,0 +1,89 @@
+/*
+ *  Solar Flare
+ *  A warm, energetic theme inspired by a sunset or solar flare.
+ */
+
+/* Body and base background */
+body {
+    background: linear-gradient(to bottom, #5f3a1d, #1a1a1c);
+    background-attachment: fixed;
+    color: #EAEAEA;
+}
+
+.requestlist>li.rqli,
+.requestlist>li .brmarker,
+.requestlist>li .brstatuspanel {
+    background-color: #1a1a1c;
+}
+
+#startscreen {
+    background-color: rgba(50, 50, 50, 0.5);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Header and navigation background */
+header,
+#fixednav {
+    background-color: rgba(41, 30, 22, 0.65);
+    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Heading styles */
+.heading {
+    padding-bottom: 1.3em;
+    color: #ffffff;
+}
+
+/* Request list item backgrounds */
+.requestlist>li.rqli {
+    background-color: rgba(255, 255, 255, 0.05);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 8px;
+    border-radius: 12px;
+}
+
+.requestlist>li.rqli:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.requestlist>li.requestoutgoing.visible_request,
+.requestlist>li.requestoutgoing.visible_request .brstatuspanel,
+.requestlist>li.requestoutgoing .brmarker {
+    background-color: rgba(72, 76, 70, 0.5);
+}
+
+.requestlist>li.requestlocal.visible_request,
+.requestlist>li.requestlocal.visible_request .brstatuspanel,
+.requestlist>li.requestlocal .brmarker {
+    background-color: rgba(63, 79, 91, 0.5);
+}
+
+/* Link and interactive element colors */
+#dialogbody h2:before,
+#toseed,
+#actions div,
+#dialog .customtrigger,
+#canceldialog,
+#backupcd,
+#backupactions .util_icon,
+.linkcolor,
+.selectarrows,
+.qrscanner,
+.ref {
+    color: #009788;
+}
+
+.button,
+.alias {
+    background-color: #009788;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+}
