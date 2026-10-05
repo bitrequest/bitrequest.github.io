@@ -124,6 +124,14 @@ invites for these coins currently accept address reuse rather than a
 derived pool, deferred until a user actually asks for a pool (traffic is
 low enough that this hasn't mattered yet).
 
+### Backup and team invite imports skip device-local keys
+
+`restore_storage` and `install_teaminvite` share one denylist
+(`no_import_keys` in `settings.js`). Keys that belong to the device (the
+encrypted seed, PIN and lock state, and similar) are never written from an
+imported file, even though the file is decrypted successfully. Export already
+skips them; import enforces the same boundary.
+
 ---
 
 ## Architecture constraints
@@ -193,6 +201,12 @@ reduction), encrypted payment ID decryption. No remote service sees the
 viewkey or the scan results. This is the model considered to have worked
 well and is the template for future privacy-coin integrations.
 
+**Blocks count as scanned only when every transaction hash in them has been
+processed.** `xmr_indexed.pending` holds a height's hashes while chunks are
+still being processed; `sync_xmr_blocks()` moves the height to `blocks` once
+all its hashes are in the processed set. Marking a block indexed as soon as
+its hashes were fetched missed payments when a later chunk failed.
+
 ### FCMP++/Carrot: reactive fix, not preemptive rebuild
 
 When Monero's FCMP++ hard fork lands, the client-side scan path breaks
@@ -230,6 +244,20 @@ has no deadline pressure.
 Dash-shielded and Zcash-shielded share the same Orchard cryptographic
 core (Halo 2, Pallas/Vesta curves), so implementing one is expected to
 substantially de-risk the other.
+
+### ERC-20 decimals are looked up per chain, never hardcoded
+
+The same token has different decimals on different chains (USDT is 6 on
+Ethereum, Arbitrum, Base and Polygon, but 18 on BSC; LINK is 18 everywhere).
+The payment URI and QR need the correct decimals before any socket opens, so
+the app fetches `decimals()` (`eth_call`, selector `0x313ce567`) per network
+and contract before offering the chain, and caches the result in
+sessionStorage (`l2_decimals`, `decimals_<currency>`). The proxy cache already
+absorbs repeat lookups, so localStorage adds nothing. A chain whose lookup
+fails is dropped from the options rather than guessed (fail closed), because
+a wrong decimal produces a wrong amount in the QR. Native ETH skips the
+lookup: its decimals are always 18 and the CoinMarketCap contract entry on
+Arbitrum and Base is a placeholder address, not a token.
 
 ---
 
@@ -386,5 +414,14 @@ derivation or scanning logic.
   transactions still accumulate in full. Track `all_fetched` across the loop
   if the gate should apply to the entire amount, not just the transaction
   that crossed the threshold.
+- Lightning proxy key travels inside shared links. Accepted: it acts as an
+  extra access key for local point-of-sale and self-hosted proxies, and can be
+  changed after sharing.
+- Escaping and `JSON.parse` hardening for the Google Drive backup list,
+  API-key inputs and LN/RPC node-name fields: deliberately skipped (self-input
+  only, never seen to break).
+- Electrum port check and `verify_peer`: deferred.
+- `postMessage(…, "*")` and a few remaining raw selectors (`core.js`,
+  `payments.js`, `#` + id sites): not yet tightened.
 - `correction_confirmations` (monitors.js ~1105) is dead — `conf_correct`
   is the used twin. Safe to remove.

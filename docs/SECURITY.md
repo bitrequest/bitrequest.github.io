@@ -80,7 +80,10 @@ understand:
   can be brute-forced offline by anyone who obtains the file (a 4-digit PIN has
   10,000 possibilities), and backups do contain payment history, receiving
   addresses, extended public keys, and any API keys the user has configured —
-  so backup files should still be kept private.
+  so backup files should still be kept private. Importing a backup or team
+  invite never overwrites device-local state: the PIN-encrypted seed, PIN and
+  lock settings, and similar keys are skipped on import, so a crafted file
+  cannot replace them.
 - **Shared files.** Backups, team invites, and CSV exports can optionally be
   shared through a payment proxy. Shared files are stored encrypted on the
   proxy and are deleted after one week. Shared backups use the same seed- or

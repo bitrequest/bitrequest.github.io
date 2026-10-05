@@ -25,11 +25,11 @@ Bitrequest uses a layered architecture where each coin touches multiple files. T
 
 **File:** `assets/js/bitrequest/config.js`
 
-This is the master file. Every coin lives as an object inside the `glob_config.bitrequest_coin_data` array (starts around line 217). Each entry has five top-level keys: `currency`, `active`, `data`, `wallets`, and `settings`.
+This is the master file. Every coin lives as an object inside the `glob_config.bitrequest_coin_data` array. Each entry has five top-level keys: `currency`, `active`, `data`, `wallets`, and `settings`.
 
 ### 1a. Add the coin data object
 
-Insert a new object into the `bitrequest_coin_data` array. Use an existing coin like Kaspa (line ~1439) as a template:
+Insert a new object into the `bitrequest_coin_data` array. Use an existing coin like Kaspa as a template:
 
 ```javascript
 {
@@ -45,7 +45,7 @@ Insert a new object into the `bitrequest_coin_data` array. Use an existing coin 
             // For custom schemes, build the URI string manually
             return "yourcoin:" + address + "?amount=" + amount;
         },
-        "address_regex": "^(yc1)[a-z0-9]{30,60}$"  // Regex to validate addresses
+        "address_regex": "^(yc1)[a-z0-9]{30,60}$"  // Regex to validate addresses (see note below)
     },
     "wallets": {
         "wallet_download_page": "https://yourcoin.org",
@@ -136,9 +136,11 @@ Insert a new object into the `bitrequest_coin_data` array. Use an existing coin 
 }
 ```
 
+**Anchored `address_regex` must match the real address length.** Test it against real addresses of every address type the coin has. Kaspa uses 61 characters after `kaspa:` for Schnorr/P2SH addresses and 63 for ECDSA, so its regex is `^(kaspa):([a-z0-9]{61}|[a-z0-9]{63})$`. Anchoring with a guessed length silently rejects valid addresses.
+
 ### 1b. Register API endpoints
 
-In the same file, find the `apikeys` array (around line 2140+) and add your coin's API:
+In the same file, find the `apikeys` array and add your coin's API:
 
 ```javascript
 {
@@ -152,7 +154,7 @@ In the same file, find the `apikeys` array (around line 2140+) and add your coin
 
 ### 1c. Register block explorers
 
-In the `blockexplorers` array (around line 2280+), add entries:
+In the `blockexplorers` array, add entries:
 
 ```javascript
 {
@@ -168,7 +170,7 @@ In the `blockexplorers` array (around line 2280+), add entries:
 
 **File:** `assets/js/lib/global_queries.js`
 
-If your coin's WebSocket URLs or node URLs need to be referenced as constants, add them to the `glob_const` object (around line 110):
+If your coin's WebSocket URLs or node URLs need to be referenced as constants, add them to the `glob_const` object:
 
 ```javascript
 "main_yc_wss": "wss://api.yourcoin.org",
@@ -200,7 +202,7 @@ This is the core file for blockchain data retrieval. You need to add two categor
 
 ### 3a. API scan initializer and transaction scanner
 
-These functions call your coin's API, fetch transactions for an address, and parse the results. Pattern after Kaspa's implementation (around line 1649):
+These functions call your coin's API, fetch transactions for an address, and parse the results. Pattern after Kaspa's implementation:
 
 ```javascript
 // Initialize scan — optionally fetch block height first
@@ -259,7 +261,7 @@ The standard return shape:
 
 ### 4a. Register your scanner in the dispatch table
 
-`route_crypto_api` is a two-table lookup, not a branch list. Add your coin to the `CRYPTO_API_DISPATCH_BY_PAYMENT` table (keyed by `rd.payment`, around line 230):
+`route_crypto_api` is a two-table lookup, not a branch list. Add your coin to the `CRYPTO_API_DISPATCH_BY_PAYMENT` table (keyed by `rd.payment`):
 
 ```javascript
 const CRYPTO_API_DISPATCH_BY_PAYMENT = {
@@ -268,11 +270,13 @@ const CRYPTO_API_DISPATCH_BY_PAYMENT = {
 };
 ```
 
-If your coin is instead reached by a third-party *provider* name (`api_data.name`) rather than by payment type, add it to `CRYPTO_API_DISPATCH_BY_PROVIDER` (around line 218). The two keyspaces must stay disjoint — see the comment header above `route_crypto_api`.
+If your coin is instead reached by a third-party *provider* name (`api_data.name`) rather than by payment type, add it to `CRYPTO_API_DISPATCH_BY_PROVIDER`. The two keyspaces must stay disjoint — see the comment header above `route_crypto_api`.
 
 ### 4b. Direct-RPC coins (if your coin uses node RPC)
 
-If your coin connects to nodes via RPC rather than third-party APIs, add it to the `BLOCKCHAIN_RPC_DISPATCH` table (keyed by `rd.payment`, around line 237) — that's what `route_blockchain_rpc()` looks up. BTC-family coins are handled separately via the `is_btchain()` check in that function.
+If your coin connects to nodes via RPC rather than third-party APIs, add it to the `BLOCKCHAIN_RPC_DISPATCH` table (keyed by `rd.payment`) — that's what `route_blockchain_rpc()` looks up. BTC-family coins are handled separately via the `is_btchain()` check in that function.
+
+RPC calls that go through the proxy need two more entries, or `api_proxy()` makes no request and fails silently: an entry in `glob_config.apis` whose `name` matches the `api` name used in the call, and a mapping in `c_apiname()` (`global_queries.js`) to the proxy key name (for example `"binance smart chain"` maps to `"infura"`). The proxy only attaches its server key if `api_host_allowed()` accepts the target host.
 
 ---
 
@@ -280,7 +284,7 @@ If your coin connects to nodes via RPC rather than third-party APIs, add it to t
 
 **File:** `assets/js/bitrequest/sockets.js`
 
-In the main WebSocket dispatcher function (around line 180), add your coin's real-time connection strategy:
+In the main WebSocket dispatcher function add your coin's real-time connection strategy:
 
 ```javascript
 if (payment_type === "yourcoin") {
@@ -323,13 +327,13 @@ const bip39_const = {
 }
 ```
 
-Add your coin to the `failed_coins` array in `test_bip39()` (line ~149) so it gets disabled if core crypto fails:
+Add your coin to the `failed_coins` array in `test_bip39()` so it gets disabled if core crypto fails:
 
 ```javascript
 const failed_coins = ["bitcoin", "litecoin", ..., "yourcoin"];
 ```
 
-Add a coin-specific test to the `coin_checks` array (line ~170):
+Add a coin-specific test to the `coin_checks` array:
 
 ```javascript
 {
@@ -342,7 +346,7 @@ Add a coin-specific test to the `coin_checks` array (line ~170):
 
 **File:** `assets/js/lib/bip39_utils.js`
 
-In the key formatting function (around line 430), add a branch for your coin:
+In the key formatting function add a branch for your coin:
 
 ```javascript
 } else if (coin === "yourcoin") {
@@ -386,7 +390,7 @@ Export the new functions in the `CryptoUtils` module at the bottom of the file.
 
 **File:** `assets/js/bitrequest/core.js`
 
-If your coin's address format includes a prefix with a colon (like `kaspa:qp...`), you may need to handle it in the address parsing logic. See line ~1638 where Kaspa has a special case:
+If your coin's address format includes a prefix with a colon (like `kaspa:qp...`), you may need to handle it in the address parsing logic. See the Kaspa special case:
 
 ```javascript
 mid_result = (result.indexOf(prefix) >= 0 && payment !== "kaspa") 
@@ -401,7 +405,7 @@ If your coin uses a similar `prefix:address` format, add analogous logic here.
 
 **File:** `assets/js/lib/global_queries.js`
 
-If your coin belongs to the Bitcoin family (UTXO-based, similar transaction model), add it to `is_btchain()` (line ~712):
+If your coin belongs to the Bitcoin family (UTXO-based, similar transaction model), add it to `is_btchain()`:
 
 ```javascript
 function is_btchain(currency) {

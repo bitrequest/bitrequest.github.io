@@ -86,7 +86,7 @@ wrappers around the same PWA.
 | `polling.js` | Fallback when sockets aren't available. Also the Monero LWS polling loop. |
 | `monitors.js` | The "requests list" status loop. Re-scans open requests periodically to keep their status fresh. |
 | `lightning.js` | Lightning Network setup, invoice creation, LNURL handling, LND/CLN/LNbits/Spark/NWC node management. |
-| `ethl2.js` | Ethereum Layer 2 routing (Base, Arbitrum, Polygon, BSC) and ERC-20 contract resolution. |
+| `ethl2.js` | Ethereum Layer 2 routing (Base, Arbitrum, Polygon, BSC), ERC-20 contract resolution, and the per-chain ERC-20 decimals lookup (`ensure_l2_decimals`, cached in sessionStorage as `l2_decimals`). |
 
 ### `proxy/` — PHP backend
 
@@ -146,7 +146,7 @@ line 186). If you're tracking down "where is this set?", start with the
 owner file.
 
 Big categories: polling timer IDs (`tpto`, `pinging`), socket registry
-(`sockets`, `socket_attempt`), Monero scan state (`xmr_indexed`), BIP39
+(`sockets`, `socket_attempt`), Monero scan state (`xmr_indexed`: `mempool` = processed tx hashes, `blocks` = fully indexed heights, `pending` = heights waiting for all their hashes), BIP39
 setup (`bipid`, `bipobj`, `phrasearray`), UI flags (`blockswipe`, `ctrl`,
 `scrollposition`), boot state (`init`, `io`, `local`).
 
@@ -194,7 +194,7 @@ confirmed."
 
 4. **User enters amount + (optionally) fiat conversion.** `payments.js →
    get_cc_exchangerates → get_fiat_exchangerate` fetches rates via
-   `api_proxy()`. Rates cached in sessionStorage.
+   `api_proxy()`. Rates cached in sessionStorage. ERC-20 decimals are cached there too: `decimals_<currency>` for L1 and `l2_decimals` per network and contract, because the same token can have different decimals per chain (USDT is 6 on Ethereum, Arbitrum, Base and Polygon, 18 on BSC).
 
 5. **Dialog shows address + QR + amount.** `payments.js → save_payment_request`
    writes the request to localStorage, then routes to monitoring.
@@ -203,7 +203,10 @@ confirmed."
    - **Websocket** (`sockets.js → init_socket`): dispatches via
      `SOCKET_HANDLERS[payment_type]` to a `pick_<chain>_socket` function,
      which opens a WebSocket via Blockcypher / Mempool.space / Alchemy / etc.
-     Fires `process_*_transactions` callback on incoming tx.
+     Fires `process_*_transactions` callback on incoming tx. A failed socket
+     falls back to polling through `onclose` only (`handle_socket_close`);
+     `onerror` just logs, because the browser fires both events and running
+     the fallback twice kills it. Zero-value transactions are ignored.
    - **Polling** (`polling.js → start_address_monitor`): `setInterval` calling
      `route_api_request` every 7s. Used when sockets aren't available or for
      Monero (LWS polling).
@@ -267,7 +270,7 @@ sequenceDiagram
 ## The API proxy contract
 
 Every external API call goes through `api_proxy()` in `global_queries.js`
-(line ~1469). It does one of three things:
+It does one of three things:
 
 1. **Direct call** (`ad.proxy === false` or coin has a public no-key API):
    `$.ajax` straight to the third party.
