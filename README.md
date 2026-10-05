@@ -1,6 +1,3 @@
-[<img src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store.svg" height="50">](https://apps.apple.com/app/id1484815377)
-[<img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" height="50">](https://play.google.com/store/apps/details?id=io.bitrequest.app)
-
 ## Bitrequest
 
 Create and share cryptocurrency payment requests. Non-custodial, privacy-focused app for accepting crypto payments — in-store or online.
@@ -52,9 +49,10 @@ Integrate crypto checkout into your online store.
 
 ### Settings
 - Real-time exchange rates (170+ fiat currencies)
+- 8 languages: English, Dutch, French, Spanish, German, Chinese, Hindi, Japanese
 - PIN protection with Admin/Cashier modes
-- Team invites for shared access
-- Backup to file or Google Drive
+- Team invites: set up cashier devices with your public keys only, never your seed or PIN
+- Encrypted backup to file or Google Drive
 - Connect your own nodes for full control
 
 ---
@@ -62,10 +60,11 @@ Integrate crypto checkout into your online store.
 ## Privacy & Security
 
 - **Payment observer** — Bitrequest is never in the money flow; it observes the blockchain to verify payments, it doesn't process them
-- **Non-custodial** — Your keys stay on your device
+- **Non-custodial** — Your keys stay on your device. Your seed phrase is encrypted there and never included in backups
 - **Open source** — Fully auditable code
 - **No account required**
 * [Privacy / Disclaimer](https://github.com/bitrequest/bitrequest.github.io/wiki/Privacy)
+* [Security policy](docs/SECURITY.md)
 
 ---
 
@@ -80,6 +79,8 @@ Integrate crypto checkout into your online store.
 ## Related
 
 - [Wiki & Documentation](https://github.com/bitrequest/bitrequest.github.io/wiki)
+- [Architecture](docs/architecture.md) and [design decisions](docs/DECISIONS.md)
+- [Adding a coin](docs/add_coin_guide.md) and [translating the app](docs/translate_prompt.md)
 - [bip39-utils-js](https://github.com/bitrequest/bip39-utils-js) — HD wallet library
 - [crypto-utils-js](https://github.com/bitrequest/crypto-utils-js) — Crypto utilities
 - [xmr-utils-js](https://github.com/bitrequest/xmr-utils-js) — Monero utilities

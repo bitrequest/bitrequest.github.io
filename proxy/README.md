@@ -26,9 +26,13 @@ Replace the 'v1' folder, making sure to leave the config.php file intact.
 * Spark requires only an identity key — no node or host needed.
 * NWC requires only a connection URI — no node or host needed.
 
+## Shared files
+
+Team invites, shared backups and CSV exports are stored encrypted on the proxy and deleted after one week (cache folder "1w"). Anyone holding the share link can decrypt the file it points to.
+
 ## Folder permissions
 
-(For Nginx) you might have to chmod the following api folders to 755 (or 775 if the web server group needs write access) in order to cache files: "ln/api" and "inv/api".
+(For Nginx) you might have to chmod the following api folders to 755 (or 775 if the web server group needs write access) in order to cache files: "v1" (or pre-create "v1/cache"), "ln/api" and "inv/api".
 
 ## Lightning Setup:
 
@@ -114,7 +118,7 @@ Response:
     "status": "waiting" | "pending" | "paid" | "canceled",
     "rqtype": "local" | "checkout" | "outgoing" | "incoming",
     "proxy": "app.bitrequest.io",
-    "version": "0.001"
+    "version": "0.041"
 }
 ```
 
@@ -146,7 +150,7 @@ Response:
     "txtime": "1647712620000",
     "conf": "1",
     "proxy": "app.bitrequest.io",
-    "version": "0.001",
+    "version": "0.041",
     "request_id": "019c7179-2125-...", // Spark only
     "transfer_id": "019c7179-7892-..." // Spark only (sparkscan.io tx link)
 }
