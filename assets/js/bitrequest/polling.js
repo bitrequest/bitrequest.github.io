@@ -780,7 +780,7 @@ function validate_confirmations(tx_data, direct, ln) {
                 }
                 status_panel.find("span.receivedfiat").text(" (" + received_amount + " " + current_currency + ")");
                 const exact_match = helper.exact,
-                    amount_valid = exact_match ? received_formatted === parseFloat(crypto_amount.toFixed(6)) : received_formatted >= (crypto_amount * 0.97),
+                    amount_valid = exact_match ? Math.abs(received_crypto - crypto_amount) < Math.max(5e-9, crypto_amount * 1e-12) : received_formatted >= (crypto_amount * 0.97),
                     decision = decide_confirmation_state({
                         tx_status,
                         confirmations,

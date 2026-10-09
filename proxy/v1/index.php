@@ -25,10 +25,10 @@ function get_postvalue($key, $default = false) {
 // Handles API key request, formats and encodes key data into a base64 string
 function handle_gk_request($keys) {
     $key_data = [
-        "if_id" => $keys["infura"] ?? "",
+        "if_id" => ($keys["infura_public"] ?? "") ?: ($keys["infura"] ?? ""),
         "ga_id" => $keys["googleauth"] ?? "",
-        "bc_id" => $keys["blockcypher"] ?? "",
-        "al_id" => $keys["alchemy"] ?? ""
+        "bc_id" => ($keys["blockcypher_public"] ?? "") ?: ($keys["blockcypher"] ?? ""),
+        "al_id" => ($keys["alchemy_public"] ?? "") ?: ($keys["alchemy"] ?? "")
     ];
     return ["k" => base64_encode(json_encode($key_data))];
 }

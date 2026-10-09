@@ -1601,7 +1601,7 @@ function open_url() {
         setTimeout(function() {
             closeloader();
             if (target_type === "_blank") {
-                window.open(dest_url);
+                window.open(dest_url, "_blank", "noopener");
             } else {
                 glob_const.w_loc.href = dest_url;
             }

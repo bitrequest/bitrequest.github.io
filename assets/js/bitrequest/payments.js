@@ -1388,7 +1388,7 @@ function get_payment(ccrateeuro, ccapi) {
         zero_text = glob_const.zeroplaceholder,
         crypto_placeholder = request.iszero ? zero_text : crypto_amount,
         crypto_value = request.iszero ? "" : crypto_amount,
-        sats = (crypto_amount_raw * 100000000).toFixed(0),
+        sats = (crypto_amount * 100000000).toFixed(0),
         fiat_amount = ((request.amount / exchange_rate) * fiat_rate).toFixed(2),
         fiat_value = request.iszero ? "" : fiat_amount,
         crypto_step = "0.000001",
@@ -2905,7 +2905,7 @@ function open_share_url(type, url) {
     setTimeout(function() {
         closeloader();
         if (type === "open") {
-            window.open(url);
+            window.open(url, "_blank", "noopener");
             return;
         }
         if (type === "location") {

@@ -662,26 +662,26 @@ function process_alchemy_transactions(rd, api_data, rdo, ctract, block_height) {
             "maxCount": "0x32",
             "order": "desc"
         };
-        if (contractAddresses?.length) params.contractAddresses = contractAddresses;
-        eth_scan = {
-            api,
-            api_url,
-            proxy,
-            "cachetime": rdo.cachetime,
-            "cachefolder": "1h",
-            "params": {
-                "method": "POST",
-                "data": {
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "alchemy_getAssetTransfers",
-                    "params": [params]
-                },
-                "headers": {
-                    "Content-Type": "application/json"
-                }
+    if (contractAddresses?.length) params.contractAddresses = contractAddresses;
+    const eth_scan = {
+        api,
+        api_url,
+        proxy,
+        "cachetime": rdo.cachetime,
+        "cachefolder": "1h",
+        "params": {
+            "method": "POST",
+            "data": {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "alchemy_getAssetTransfers",
+                "params": [params]
+            },
+            "headers": {
+                "Content-Type": "application/json"
             }
-        };
+        }
+    };
     run_address_scan(rd, api_data, rdo, {
         "request": eth_scan,
         "extract": (api_result) => q_obj(api_result, "result.transfers"),

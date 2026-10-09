@@ -14,7 +14,10 @@ $keys = array(
 	"exchangeratesapi" => "",
 	"googleauth" => "",
 	"google_secret" => "",
-	"alchemy" => ""
+	"alchemy" => "",
+	"infura_public" => "",
+	"blockcypher_public" => "",
+	"alchemy_public" => ""
 );
 
 /* Sign up:

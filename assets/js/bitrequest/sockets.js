@@ -386,7 +386,7 @@ function build_socket(socket_node, wallet_address, opts) {
         try {
             const tx_details = opts.on_message(JSON.parse(e.data));
             if (tx_details && tx_details.ccval > 0) {
-                close_socket().then(() => {
+                force_close_socket().then(() => {
                     start_transaction_monitor(tx_details);
                 });
             }
@@ -1089,7 +1089,7 @@ function web3_eth_websocket(socket_node, wallet_address) {
                             if (addr_eq(tx.to, wallet_address) === true) {
                                 const tx_details = infura_block_data(tx, setconfirmations, request.currencysymbol, block_data.timestamp);
                                 if (!(tx_details.ccval > 0)) return;
-                                close_socket().then(() => {
+                                force_close_socket().then(() => {
                                     start_transaction_monitor(tx_details);
                                     if (network_type) {
                                         initialize_network_status(socket_node, "paid");
@@ -1162,7 +1162,7 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
                         "ccsymbol": request.currencysymbol,
                         "eth_layer2": network_type
                     };
-                close_socket().then(() => {
+                force_close_socket().then(() => {
                     start_transaction_monitor(tx_details);
                     if (network_type) {
                         initialize_network_status(socket_node, "paid");
