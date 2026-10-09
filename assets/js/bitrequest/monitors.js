@@ -1192,9 +1192,9 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
 // Builds CoinCodex API request URL for historical price data
 function get_payload_historic_coincodex(cid, start_time, end_time) {
     const coin_id = cid === "xno" ? "nano" : cid, // coincodex still uses old NANO ticker
-        start_date = cx_date(start_time),
-        end_date = cx_date(end_time),
-        time_query = start_time == end_time ? start_date + "/" + start_date : start_date + "/" + end_date;
+        start_date = cx_date(start_time - 86400),
+        end_date = cx_date(end_time + 86400),
+        time_query = start_date + "/" + end_date;
     return "get_coin_history/" + coin_id + "/" + time_query + "/" + 1000;
 }
 
