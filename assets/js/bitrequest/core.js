@@ -584,10 +584,10 @@ function enterapp(pin_input) {
     const pin_container = $("#pinfloat"),
         pin_config = $("#pinsettings").data(),
         stored_pin = pin_config.pinhash,
-        attempt_count = pin_config.attempts,
         hashed_pin = generate_hash(pin_input),
         timestamp = now_utc(),
         is_global = pin_container.hasClass("global");
+    let attempt_count = pin_config.attempts;
     if (String(hashed_pin) === String(stored_pin)) {
         if (is_global) {
             br_set_local("locktime", timestamp);
@@ -655,7 +655,7 @@ function enterapp(pin_input) {
                 pin_config.timeout = lock_until;
                 lockscreen(lock_until);
             } else if (attempt_count > 9) {
-                attempt_count = 1;
+                attempt_count = 0;
             }
         }
         pin_config.attempts = attempt_count + 1;
