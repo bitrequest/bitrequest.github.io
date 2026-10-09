@@ -310,7 +310,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 						file_put_contents($path, json_encode($s_content));
 					}
 				}
-				echo json_encode($invoice);
+				echo json_encode(strip_preimage($invoice));
 
 				// Spark: run preimage ceremony after response
 				if ($imp === "spark" && isset($invoice["preimage"])) {
@@ -762,6 +762,14 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 		return false;
 	}
 	
+	function strip_preimage($value) {
+		if (!is_array($value)) {
+			return $value;
+		}
+		unset($value["r_preimage"], $value["payment_preimage"], $value["preimage"]);
+		return array_map("strip_preimage", $value);
+	}
+	
 	// Process and standardize invoice list results with connection status information
 	function process_invoice_result($result, $connected, $type, $pingtest) {
 		$m_dat = [
@@ -773,7 +781,8 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 		if ($pingtest && $connected) {
 			return ["mdat" => $m_dat];
 		}
-	
+		
+		$result = strip_preimage($result);
 		// Add metadata to full result
 		$result["mdat"] = $m_dat;
 		return $result;
@@ -857,7 +866,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 			if ($status) {
 				return invoice_status($imp, $inv_result, $pid, $type, $expiry);
 			}
-			return $inv_result;
+			return strip_preimage($inv_result);
 		}
 		return r_err("unable to fetch invoice", null);
 	}
