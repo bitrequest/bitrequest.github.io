@@ -479,8 +479,6 @@ const lang_ja_obj = {
         "locktime": "ロック時間",
         "resetpin": "PINをリセット",
         "enternewpin": "新しいPINを入力",
-        "minute": "分",
-        "minutes": "分",
         "never": "しない",
         "pincodeactivated": "PINコードを有効化しました",
         "pincodedisabled": "PINコードを無効化しました",

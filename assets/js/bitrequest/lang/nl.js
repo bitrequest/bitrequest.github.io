@@ -478,8 +478,6 @@ const lang_nl_obj = {
         "locktime": "Vergrendel tijd",
         "resetpin": "Herstel pin",
         "enternewpin": "Voer een nieuwe pincode in",
-        "minute": "minuut",
-        "minutes": "minuten",
         "never": "nooit",
         "pincodeactivated": "Pincode geactiveerd",
         "pincodedisabled": "Pincode gedeactiveerd",

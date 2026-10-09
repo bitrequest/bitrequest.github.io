@@ -479,8 +479,6 @@ const lang_es_obj = {
         "locktime": "Tiempo de bloqueo",
         "resetpin": "Restablecer PIN",
         "enternewpin": "Introduce nuevo PIN",
-        "minute": "minuto",
-        "minutes": "minutos",
         "never": "nunca",
         "pincodeactivated": "Código PIN activado",
         "pincodedisabled": "Código PIN desactivado",

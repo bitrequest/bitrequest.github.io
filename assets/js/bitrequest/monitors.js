@@ -1121,7 +1121,7 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                     current_transaction.prevAll().remove();
                     // historic_object.fetched === false is a stale fallback price (no data point after the tx timestamp):
                     // let it accumulate toward the amount for display, but never confirm on it — the next scan re-fetches. See DECISIONS.md.
-                    if ((historic_object.fetched && confirmations >= conf_correct) || rd.no_conf === true || transaction_data.setconfirmations === false) { // check all confirmations + whitelist for currencies unable to fetch confirmations
+                    if (historic_object.fetched && (confirmations >= conf_correct || rd.no_conf === true || transaction_data.setconfirmations === false)) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                         confirmed = true;
                     } else {
                         confirmed = false;

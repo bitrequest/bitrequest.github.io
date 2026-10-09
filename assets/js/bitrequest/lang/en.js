@@ -479,8 +479,6 @@ const lang_en_obj = {
         "locktime": "Lock time",
         "resetpin": "Reset pin",
         "enternewpin": "Enter new pin",
-        "minute": "minute",
-        "minutes": "minutes",
         "never": "never",
         "pincodeactivated": "Pincode activated",
         "pincodedisabled": "Pincode disabled",

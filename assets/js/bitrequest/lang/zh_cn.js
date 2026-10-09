@@ -479,8 +479,6 @@ const lang_zh_cn_obj = {
         "locktime": "锁定时间",
         "resetpin": "重置PIN",
         "enternewpin": "输入新PIN码",
-        "minute": "分钟",
-        "minutes": "分钟",
         "never": "从不",
         "pincodeactivated": "PIN码已激活",
         "pincodedisabled": "PIN码已禁用",

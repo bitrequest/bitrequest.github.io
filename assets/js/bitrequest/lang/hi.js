@@ -479,8 +479,6 @@ const lang_hi_obj = {
         "locktime": "लॉक समय",
         "resetpin": "पिन रीसेट करें",
         "enternewpin": "नया पिन दर्ज करें",
-        "minute": "मिनट",
-        "minutes": "मिनट",
         "never": "कभी नहीं",
         "pincodeactivated": "पिन सक्रिय",
         "pincodedisabled": "पिन अक्षम",

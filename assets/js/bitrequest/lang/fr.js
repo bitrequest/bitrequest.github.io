@@ -479,8 +479,6 @@ const lang_fr_obj = {
         "locktime": "Temps de verrouillage",
         "resetpin": "Réinitialiser le code PIN",
         "enternewpin": "Entrez un nouveau code PIN",
-        "minute": "minute",
-        "minutes": "minutes",
         "never": "jamais",
         "pincodeactivated": "Code PIN activé",
         "pincodedisabled": "Code PIN désactivé",
