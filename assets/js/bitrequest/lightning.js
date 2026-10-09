@@ -787,7 +787,7 @@ function trigger_ln() {
                     node_key_input.focus();
                     return;
                 }
-                if (key_length > 1600) { // invoice macaroons should be less than 300 characters
+                if (key_length > 300) { // invoice macaroons should be less than 300 characters
                     popnotify("error", tl("entermacaroon"));
                     return;
                 }
@@ -1179,7 +1179,7 @@ function lnurl_deform(lnurl_string) {
         console.error("error", "lnurl must be string")
         return false;
     }
-    if (lnurl_string.startsWith("lnurl")) {
+    if (starts_with_ci(lnurl_string, "lnurl")) {
         const decoded_url = lnurl_decode(lnurl_string).replace(/\0/g, ""),
             url_parts = decoded_url.split("#");
         return {
@@ -1195,7 +1195,7 @@ function lnurl_deform(lnurl_string) {
 
 // Formats URL for persistent storage with LNURL encoding
 function lnurl_encode_save(url) {
-    return url.startsWith("lnurl") ? url : lnurl_encode("lnurl", complete_url(url));
+    return starts_with_ci(url, "lnurl") ? url : lnurl_encode("lnurl", complete_url(url));
 }
 
 // Encodes data into LNURL format with specified prefix

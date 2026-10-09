@@ -492,6 +492,11 @@ function str_match(str1, str2) {
     return false;
 }
 
+// Case insensitive strartsWith
+function starts_with_ci(str, prefix) {
+    return str.toLowerCase().startsWith(prefix.toLowerCase());
+}
+
 // Executes case-insensitive substring search
 function str_includes(main, chunk) {
     if (main && chunk) {

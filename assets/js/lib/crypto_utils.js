@@ -1470,7 +1470,7 @@ function address_to_scripthash(addr, currency) {
     const address = (currency === "bitcoin-cash") ? bch_legacy(addr) : addr;
     let script_pub_key;
 
-    if (address.startsWith("bc1") || address.startsWith("tb1") || address.startsWith("ltc1")) {
+    if (starts_with_ci(address, "bc1") || starts_with_ci(address, "tb1") || starts_with_ci(address, "ltc1")) {
         try {
             const decoded = bech32_decode(address);
             if (!decoded) throw new Error("Invalid bech32 address");
