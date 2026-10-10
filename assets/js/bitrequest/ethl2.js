@@ -186,6 +186,23 @@ function base_apis(dat) {
     }
 }
 
+// Network number to name
+function get_network_by_name(nw_number) {
+    if (nw_number === 42161) {
+        return "alchemy";
+    }
+    if (nw_number === 137) {
+        return "polygon pos";
+    }
+    if (nw_number === 56) {
+        return "binance smart chain";
+    }
+    if (nw_number === 8453) {
+        return "base";
+    }
+    return false;
+}
+
 // ** API Request Handling: **
 
 // Routes Layer 2 API queries based on pending status
@@ -633,12 +650,12 @@ function get_layer2_config(currency) {
 
 // Retrieves node configuration for specified network
 function get_network_node_config(payment, network, l2_dat, type) {
-    const selected = q_obj(l2_dat, type);
+    const selected = q_obj(l2_dat, type) || get_network_by_name(l2_dat);
     if (selected) {
         const eth_settings = get_coinsettings(payment),
             eth_l2_settings = q_obj(eth_settings, "layer2.options." + network + "." + type + ".apis");
         if (eth_l2_settings) {
-            return objectkey_from_array(eth_l2_settings, "name", selected) || selected?.selected;
+            return objectkey_from_array(eth_l2_settings, "name", selected);
         }
     }
     return false;

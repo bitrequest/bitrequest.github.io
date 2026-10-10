@@ -868,7 +868,8 @@ function update_transaction_count(status_panel, count) {
 
 // Triggers historical fiat data retrieval for transactions based on confirmation status
 function init_fiat_history(rd, rdo, latestconf, latest_input, firstinput) {
-    const latest_input_conf = latest_input + latestconf,
+    const latest_time = Number(latest_input),
+        latest_input_conf = latest_time + (Number(latestconf) || 0),
         cache_prefix = "historic_" + rd.requestid,
         cache_timestamp = br_get_session(cache_prefix), // set to small amount to trigger lookup exchange rates
         historic_cache = parseInt(cache_timestamp) || 1,
@@ -876,7 +877,8 @@ function init_fiat_history(rd, rdo, latestconf, latest_input, firstinput) {
     if (latestinput > historic_cache) { //new input detected; call historic api
         br_remove_session(cache_prefix); // remove historic price cache
         const historic_payload = $.extend(rd, {
-                latestinput,
+                "latestinput": latest_time,
+                "historic_key": latestinput,
                 firstinput
             }),
             api_list = "historic_fiat_price_apis",
@@ -1164,7 +1166,7 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                     "lightning": rd.lightning
                 }, false);
                 if (pending !== "no") {
-                    br_set_session("historic_" + requestid, latest_input); // 'cache' historic data
+                    br_set_session("historic_" + requestid, rd.historic_key); // 'cache' historic data
                 }
                 finalize_request_state(rdo);
                 return;
