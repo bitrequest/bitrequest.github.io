@@ -83,33 +83,18 @@ function lang_tl(translations, id, data) {
     return str;
 }
 
-const tl_cache = {}; // resolved no-data strings, keyed "langcode:id" (langcode is const per session)
-
 function tl(id, dat) {
     if (id === "obj") {
         const languages = {};
         $.each(LANG_META, function(code, meta) {
-            const fn = window[meta.fn];
             languages[code] = {
                 "lang": meta.lang,
-                "flag": meta.flag,
-                "obj": typeof fn === "function" ? fn(id, dat || {}) : null
+                "flag": meta.flag
             };
         });
         return languages;
     }
-    // No-data lookups are deterministic per language — memoize so each lang function
-    // (which rebuilds its full ~500-key object per call) runs at most once per id
-    // instead of on every call. Calls WITH data interpolate and bypass the cache.
-    if (!dat) {
-        const key = langcode + ":" + id,
-            cached = tl_cache[key];
-        if (cached !== undefined) {
-            return cached;
-        }
-        return tl_cache[key] = tl_resolve(id, {});
-    }
-    return tl_resolve(id, dat);
+    return tl_resolve(id, dat || {});
 }
 
 // Resolve via the selected language, fall back to English, then the raw id.
@@ -124,13 +109,11 @@ function tl_resolve(id, data) {
         if (langcode === "en") {
             return id;
         }
-        const en_string = (typeof window.lang_en === "function") ? window.lang_en(id, data) : null;
-        return en_string || id;
     } catch (err) {
         console.error(err.name, err.message);
-        const en_string = (typeof window.lang_en === "function") ? window.lang_en(id, data) : null;
-        return en_string || id;
     }
+    const en_string = (typeof window.lang_en === "function") ? window.lang_en(id, data) : null;
+    return en_string || id;
 }
 
 // translate and clear accents

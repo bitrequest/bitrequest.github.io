@@ -64,13 +64,9 @@ $(document).ready(function() {
 
     // ** Cryptocurrency price data: **
     configure_crypto_api();
-    select_crypto_api();
-    save_crypto_api_settings();
-
-    // ** FIAT price data: **
     configure_fiat_api();
-    select_fiat_api();
-    save_fiat_api_settings();
+    select_api();
+    save_api_settings();
 
     // ** API Proxy: **
     trigger_proxy_dialog();
@@ -327,33 +323,7 @@ function select_language() {
                         "data-currentlang": langcode
                     },
                     "content": [{
-                            "div": {
-                                "class": "selectbox",
-                                "content": [{
-                                        "input": {
-                                            "attr": {
-                                                "type": "text",
-                                                "value": curr_val,
-                                                "placeholder": "Pick language",
-                                                "readonly": "readonly"
-                                            },
-                                            "close": true
-                                        },
-                                        "div": {
-                                            "class": "selectarrows icon-menu2",
-                                            "attr": {
-                                                "data-pe": "none"
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "div": {
-                                            "class": "options",
-                                            "content": langlist
-                                        }
-                                    }
-                                ]
-                            }
+                            "div": selectbox_data(curr_val, "Pick language", langlist)
                         },
                         submit_input()
                     ]
@@ -402,33 +372,7 @@ function edit_theme() {
                     "div": {
                         "class": "popform",
                         "content": [{
-                            "div": {
-                                "class": "selectbox",
-                                "content": [{
-                                        "input": {
-                                            "attr": {
-                                                "type": "text",
-                                                "value": theme,
-                                                "placeholder": "Pick a theme",
-                                                "readonly": "readonly"
-                                            },
-                                            "close": true
-                                        },
-                                        "div": {
-                                            "class": "selectarrows icon-menu2",
-                                            "attr": {
-                                                "data-pe": "none"
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "div": {
-                                            "class": "options",
-                                            "content": default_theme
-                                        }
-                                    }
-                                ]
-                            }
+                            "div": selectbox_data(theme, "Pick a theme", default_theme)
                         }]
                     }
                 },
@@ -2289,33 +2233,7 @@ function urlshortener() {
                             "data-currentapi": val
                         },
                         "content": [{
-                                "div": {
-                                    "class": "selectbox",
-                                    "content": [{
-                                            "input": {
-                                                "attr": {
-                                                    "type": "text",
-                                                    "value": val,
-                                                    "placeholder": tl("choose") + " " + tl("url_shorten_settings"),
-                                                    "readonly": "readonly"
-                                                },
-                                                "close": true
-                                            },
-                                            "div": {
-                                                "class": "selectarrows icon-menu2",
-                                                "attr": {
-                                                    "data-pe": "none"
-                                                }
-                                            }
-                                        },
-                                        {
-                                            "div": {
-                                                "class": "options",
-                                                "content": "<span data-pe='none'>bitly</span><span data-pe='none'>" + d_proxy() + "</span>"
-                                            }
-                                        }
-                                    ]
-                                }
+                                "div": selectbox_data(val, tl("choose") + " " + tl("url_shorten_settings"), "<span data-pe='none'>bitly</span><span data-pe='none'>" + d_proxy() + "</span>")
                             },
                             {
                                 "input": {
@@ -2444,94 +2362,109 @@ function submit_urlshortener_select() {
 
 // ** Cryptocurrency price data: **
 
+// Builds a readonly selectbox with its options list
+function selectbox_data(value, placeholder, options) {
+    const input_attr = {
+        "type": "text",
+        value
+    };
+    if (placeholder) input_attr.placeholder = placeholder;
+    input_attr.readonly = "readonly";
+    return {
+        "class": "selectbox",
+        "content": [{
+                "input": {
+                    "attr": input_attr,
+                    "close": true
+                },
+                "div": {
+                    "class": "selectarrows icon-menu2",
+                    "attr": {
+                        "data-pe": "none"
+                    }
+                }
+            },
+            {
+                "div": {
+                    "class": "options",
+                    "content": options
+                }
+            }
+        ]
+    };
+}
+
 // Opens cryptocurrency price API configuration dialog with provider selection
 function configure_crypto_api() {
     $(document).on("click", "#cmcapisettings", function() {
-        const settings = $("#cmcapisettings").data(),
-            apisrc = settings.selected,
-            apikey = settings.cmcapikey,
-            keyval = settings.cmcapikey || "",
-            keyclass = apisrc === "coinmarketcap" ? "" : "hide",
-            options = "<span data-pe='none'>" + glob_config.apilists.crypto_price_apis.join("</span><span data-pe='none'>") + "</span>",
-            ddat = [{
-                "div": {
-                    "class": "popform",
-                    "attr": {
-                        "data-currentapi": apisrc
+        const settings = $("#cmcapisettings").data();
+        api_settings_dialog({
+            "id": "ccapiformbox",
+            "icon": "icon-stats-dots",
+            "title": tl("cmcapisettings"),
+            "setting": "cmcapisettings",
+            "apis": glob_config.apilists.crypto_price_apis,
+            "selected": settings.selected,
+            "keyed_api": "coinmarketcap",
+            "apikey": settings.cmcapikey
+        });
+    })
+}
+
+// Builds the API provider dialog, the key input only shows for the provider that needs one
+function api_settings_dialog(opts) {
+    const apisrc = opts.selected,
+        keyval = opts.apikey || "",
+        keyclass = apisrc === opts.keyed_api ? "" : "hide",
+        options = "<span data-pe='none'>" + opts.apis.join("</span><span data-pe='none'>") + "</span>",
+        ddat = [{
+            "div": {
+                "class": "popform",
+                "attr": {
+                    "data-currentapi": apisrc,
+                    "data-keyedapi": opts.keyed_api,
+                    "data-setting": opts.setting
+                },
+                "content": [{
+                        "div": selectbox_data(apisrc, "Choose API", options)
                     },
-                    "content": [{
-                            "div": {
-                                "class": "selectbox",
-                                "content": [{
-                                        "input": {
-                                            "attr": {
-                                                "type": "text",
-                                                "value": apisrc,
-                                                "placeholder": "Choose API",
-                                                "readonly": "readonly"
-                                            },
-                                            "close": true
-                                        },
-                                        "div": {
-                                            "class": "selectarrows icon-menu2",
-                                            "attr": {
-                                                "data-pe": "none"
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "div": {
-                                            "class": "options",
-                                            "content": options
-                                        }
-                                    }
-                                ]
+                    {
+                        "input": {
+                            "class": keyclass,
+                            "attr": {
+                                "type": "text",
+                                "value": keyval,
+                                "placeholder": tl("apikey"),
+                                "data-apikey": keyval,
+                                "data-checkchange": keyval
                             }
-                        },
-                        {
-                            "input": {
-                                "class": keyclass,
-                                "attr": {
-                                    "type": "text",
-                                    "value": keyval,
-                                    "placeholder": tl("apikey"),
-                                    "data-apikey": keyval,
-                                    "data-checkchange": apikey
-                                }
-                            }
-                        },
-                        submit_input()
-                    ]
-                }
-            }],
-            content = template_dialog({
-                "id": "ccapiformbox",
-                "icon": "icon-stats-dots",
-                "title": tl("cmcapisettings"),
-                "elements": ddat
-            });
-        popdialog(content, "triggersubmit");
-    })
+                        }
+                    },
+                    submit_input()
+                ]
+            }
+        }],
+        content = template_dialog({
+            "id": opts.id,
+            "icon": opts.icon,
+            "title": opts.title,
+            "elements": ddat
+        });
+    popdialog(content, "triggersubmit");
 }
 
-// Toggles CoinMarketCap API key input field visibility based on provider selection
-function select_crypto_api() {
-    $(document).on("mousedown", "#ccapiformbox .selectbox > .options span", function() {
+// Toggles the API key input visibility based on provider selection
+function select_api() {
+    $(document).on("mousedown", "#ccapiformbox .selectbox > .options span, #fiatxrapiformbox .selectbox > .options span", function() {
         const select = $(this),
-            val = select.text(),
-            form = select.closest(".popform"),
-            input = form.find("input:nth-child(2)");
-        if (val === "coinmarketcap") {
-            input.removeClass("hide");
-        } else {
-            input.addClass("hide");
-        }
+            form = select.closest(".popform");
+        form.find("input:nth-child(2)").toggleClass("hide", select.text() !== form.attr("data-keyedapi"));
     })
 }
 
-// Processes cryptocurrency API settings with key validation and persistence
-function save_crypto_api_settings() {
-    $(document).on("click", "#ccapiformbox input.submit", function(e) {
+// Processes API settings with key validation and persistence
+function save_api_settings() {
+    $(document).on("click", "#ccapiformbox input.submit, #fiatxrapiformbox input.submit", function(e) {
         e.preventDefault();
         const form = $(this).closest(".popform"),
             curapi = form.attr("data-currentapi"),
@@ -2547,7 +2480,7 @@ function save_crypto_api_settings() {
             return;
         }
         if (val !== curapi) {
-            set_setting("cmcapisettings", {
+            set_setting(form.attr("data-setting"), {
                 "selected": val
             }, val);
         }
@@ -2557,7 +2490,7 @@ function save_crypto_api_settings() {
                 return;
             }
             api_input.attr("data-checkchange", apival);
-            validate_api_key("coinmarketcap", apival, true);
+            validate_api_key(form.attr("data-keyedapi"), apival, true);
             return;
         }
         canceldialog();
@@ -2571,69 +2504,17 @@ function save_crypto_api_settings() {
 // Renders fiat exchange rate API configuration dialog with Fixer integration
 function configure_fiat_api() {
     $(document).on("click", "#fiatapisettings", function() {
-        const data = $(this).data(),
-            apisrc = data.selected,
-            apikey = data.fxapikey || "",
-            options = "<span data-pe='none'>" + glob_config.apilists.fiat_price_apis.join("</span><span data-pe='none'>") + "</span>",
-            keyclass = apisrc === "fixer" ? "" : "hide",
-            ddat = [{
-                "div": {
-                    "class": "popform",
-                    "attr": {
-                        "data-currentapi": apisrc
-                    },
-                    "content": [{
-                            "div": {
-                                "class": "selectbox",
-                                "content": [{
-                                        "input": {
-                                            "attr": {
-                                                "type": "text",
-                                                "value": apisrc,
-                                                "placeholder": "Choose API",
-                                                "readonly": "readonly"
-                                            },
-                                            "close": true
-                                        },
-                                        "div": {
-                                            "class": "selectarrows icon-menu2",
-                                            "attr": {
-                                                "data-pe": "none"
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "div": {
-                                            "class": "options",
-                                            "content": options
-                                        }
-                                    }
-                                ]
-                            }
-                        },
-                        {
-                            "input": {
-                                "class": keyclass,
-                                "attr": {
-                                    "type": "text",
-                                    "value": apikey,
-                                    "placeholder": tl("apikey"),
-                                    "data-apikey": apikey,
-                                    "data-checkchange": apikey
-                                }
-                            }
-                        },
-                        submit_input()
-                    ]
-                }
-            }],
-            content = template_dialog({
-                "id": "fiatxrapiformbox",
-                "icon": "icon-stats-bars",
-                "title": tl("fiatapisettings"),
-                "elements": ddat
-            });
-        popdialog(content, "triggersubmit");
+        const settings = $(this).data();
+        api_settings_dialog({
+            "id": "fiatxrapiformbox",
+            "icon": "icon-stats-bars",
+            "title": tl("fiatapisettings"),
+            "setting": "fiatapisettings",
+            "apis": glob_config.apilists.fiat_price_apis,
+            "selected": settings.selected,
+            "keyed_api": "fixer",
+            "apikey": settings.fxapikey
+        });
     })
 }
 
@@ -2762,14 +2643,8 @@ function pick_api_proxy() {
 // Validates proxy endpoint availability via API ping test
 function test_append_proxy(options, key, value, selected, dfault) {
     const proxy = value.proxy;
-    $.ajax({
-        "method": "POST",
-        "cache": false,
-        "timeout": 5000,
-        "url": proxy + "/proxy/v1/ln/api/",
-        "data": {
-            "ping": true
-        }
+    ln_api(proxy, {
+        "ping": true
     }).done(function(e) {
         const result = br_result(e);
         if (result.result === "pong") {
@@ -3479,32 +3354,7 @@ function permissions_callback() {
                     "data-current": selected
                 },
                 "content": [{
-                        "div": {
-                            "class": "selectbox",
-                            "content": [{
-                                    "input": {
-                                        "attr": {
-                                            "type": "text",
-                                            "value": selected,
-                                            "readonly": "readonly"
-                                        },
-                                        "close": true
-                                    },
-                                    "div": {
-                                        "class": "selectarrows icon-menu2",
-                                        "attr": {
-                                            "data-pe": "none"
-                                        }
-                                    }
-                                },
-                                {
-                                    "div": {
-                                        "class": "options",
-                                        "content": "<span data-pe='none'>admin</span><span data-pe='none'>cashier</span>"
-                                    }
-                                }
-                            ]
-                        }
+                        "div": selectbox_data(selected, "", "<span data-pe='none'>admin</span><span data-pe='none'>cashier</span>")
                     },
                     submit_input()
                 ]

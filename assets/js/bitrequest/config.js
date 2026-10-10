@@ -213,6 +213,31 @@ const soundbytes = {
     "selected": "collect",
     "options": ["none", "cashier", "collect"]
 };
+// Default coin settings shared by most coins, each call returns a fresh object since settings are changed per coin
+function setting_confirmations() {
+    return {
+        "icon": "clock",
+        "selected": 0
+    };
+}
+
+function setting_random_address() {
+    return {
+        "icon": "dice",
+        "selected": false,
+        "switch": true
+    };
+}
+
+function setting_reuse_address() {
+    return {
+        "icon": "recycle",
+        "selected": false,
+        "switch": true,
+        "custom_switch": true
+    };
+}
+
 const glob_config = {
     "bitrequest_coin_data": [{
             "currency": "bitcoin",
@@ -221,9 +246,7 @@ const glob_config = {
                 "currency": "bitcoin",
                 "ccsymbol": "btc",
                 "cmcid": 1,
-                "urlscheme": function(payment, address, amount, iszero, label, message) {
-                    return btc_urlscheme(payment, address, amount, iszero, label, message);
-                },
+                "urlscheme": btc_urlscheme,
                 "address_regex": "^([13][a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[ac-hj-np-zAC-HJ-NP-Z02-9]{11,71})$"
             },
             "wallets": {
@@ -330,26 +353,14 @@ const glob_config = {
                 ]
             },
             "settings": {
-                "confirmations": {
-                    "icon": "clock",
-                    "selected": 0
-                },
+                "confirmations": setting_confirmations(),
                 "showsatoshis": {
                     "icon": "eye",
                     "selected": false,
                     "switch": true,
                 },
-                "Use random address": {
-                    "icon": "dice",
-                    "selected": false,
-                    "switch": true,
-                },
-                "Reuse address": {
-                    "icon": "recycle",
-                    "selected": false,
-                    "switch": true,
-                    "custom_switch": true
-                },
+                "Use random address": setting_random_address(),
+                "Reuse address": setting_reuse_address(),
                 "Lightning network": {
                     "icon": "power",
                     "selected": false,
@@ -486,9 +497,7 @@ const glob_config = {
                 "currency": "litecoin",
                 "ccsymbol": "ltc",
                 "cmcid": 2,
-                "urlscheme": function(payment, address, amount, iszero, label, message) {
-                    return btc_urlscheme(payment, address, amount, iszero, label, message);
-                },
+                "urlscheme": btc_urlscheme,
                 "address_regex": "^([LM][a-km-zA-HJ-NP-Z1-9]{26,33}|ltc1[a-zA-HJ-NP-Z0-9]{26,39})$"
             },
             "wallets": {
@@ -512,21 +521,9 @@ const glob_config = {
                 ]
             },
             "settings": {
-                "confirmations": {
-                    "icon": "clock",
-                    "selected": 0
-                },
-                "Use random address": {
-                    "icon": "dice",
-                    "selected": false,
-                    "switch": true,
-                },
-                "Reuse address": {
-                    "icon": "recycle",
-                    "selected": false,
-                    "switch": true,
-                    "custom_switch": true
-                },
+                "confirmations": setting_confirmations(),
+                "Use random address": setting_random_address(),
+                "Reuse address": setting_reuse_address(),
                 "blockexplorers": {
                     "icon": "eye",
                     "selected": "litecoinspace.org",
@@ -642,9 +639,7 @@ const glob_config = {
                 "currency": "dogecoin",
                 "ccsymbol": "doge",
                 "cmcid": 74,
-                "urlscheme": function(payment, address, amount, iszero, label, message) {
-                    return btc_urlscheme(payment, address, amount, iszero, label, message);
-                },
+                "urlscheme": btc_urlscheme,
                 "address_regex": "^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$"
             },
             "wallets": {
@@ -659,21 +654,9 @@ const glob_config = {
                 ]
             },
             "settings": {
-                "confirmations": {
-                    "icon": "clock",
-                    "selected": 0
-                },
-                "Use random address": {
-                    "icon": "dice",
-                    "selected": false,
-                    "switch": true,
-                },
-                "Reuse address": {
-                    "icon": "recycle",
-                    "selected": false,
-                    "switch": true,
-                    "custom_switch": true
-                },
+                "confirmations": setting_confirmations(),
+                "Use random address": setting_random_address(),
+                "Reuse address": setting_reuse_address(),
                 "blockexplorers": {
                     "icon": "eye",
                     "selected": "blockchair.com"
@@ -763,9 +746,7 @@ const glob_config = {
                 "currency": "dash",
                 "ccsymbol": "dash",
                 "cmcid": 131,
-                "urlscheme": function(payment, address, amount, iszero, label, message) {
-                    return btc_urlscheme(payment, address, amount, iszero, label, message);
-                },
+                "urlscheme": btc_urlscheme,
                 "address_regex": "^X[1-9A-HJ-NP-Za-km-z]{33}$"
             },
             "wallets": {
@@ -787,21 +768,9 @@ const glob_config = {
                 ]
             },
             "settings": {
-                "confirmations": {
-                    "icon": "clock",
-                    "selected": 0
-                },
-                "Use random address": {
-                    "icon": "dice",
-                    "selected": false,
-                    "switch": true,
-                },
-                "Reuse address": {
-                    "icon": "recycle",
-                    "selected": false,
-                    "switch": true,
-                    "custom_switch": true
-                },
+                "confirmations": setting_confirmations(),
+                "Use random address": setting_random_address(),
+                "Reuse address": setting_reuse_address(),
                 "blockexplorers": {
                     "icon": "eye",
                     "selected": "blockchair.com",
@@ -918,21 +887,9 @@ const glob_config = {
                 ]
             },
             "settings": {
-                "confirmations": {
-                    "icon": "clock",
-                    "selected": 0
-                },
-                "Use random address": {
-                    "icon": "dice",
-                    "selected": false,
-                    "switch": true,
-                },
-                "Reuse address": {
-                    "icon": "recycle",
-                    "selected": false,
-                    "switch": true,
-                    "custom_switch": true
-                },
+                "confirmations": setting_confirmations(),
+                "Use random address": setting_random_address(),
+                "Reuse address": setting_reuse_address(),
                 "blockexplorers": {
                     "icon": "eye",
                     "selected": "blockchain.com",
@@ -1041,15 +998,8 @@ const glob_config = {
                 ]
             },
             "settings": {
-                "confirmations": {
-                    "icon": "clock",
-                    "selected": 0
-                },
-                "Use random address": {
-                    "icon": "dice",
-                    "selected": false,
-                    "switch": true,
-                },
+                "confirmations": setting_confirmations(),
+                "Use random address": setting_random_address(),
                 "Reuse address": {
                     "icon": "recycle",
                     "selected": true,
@@ -1160,9 +1110,7 @@ const glob_config = {
                 "currency": "nano",
                 "ccsymbol": "xno",
                 "cmcid": 1567,
-                "urlscheme": function(payment, address, amount, iszero, label, message) {
-                    return nano_urlscheme(payment, address, amount, iszero, label, message);
-                },
+                "urlscheme": nano_urlscheme,
                 "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
             },
             "wallets": {
@@ -1194,11 +1142,7 @@ const glob_config = {
                 ]
             },
             "settings": {
-                "Use random address": {
-                    "icon": "dice",
-                    "selected": false,
-                    "switch": true,
-                },
+                "Use random address": setting_random_address(),
                 "Reuse address": {
                     "icon": "recycle",
                     "selected": true,
@@ -1325,9 +1269,7 @@ const glob_config = {
                 "currency": "monero",
                 "ccsymbol": "xmr",
                 "cmcid": "328",
-                "urlscheme": function(payment, address, amount, iszero, label, message) {
-                    return xmr_urlscheme(payment, address, amount, iszero, label, message);
-                },
+                "urlscheme": xmr_urlscheme,
                 "address_regex": "^[48](?:[0-9AB]|[1-9A-HJ-NP-Za-km-z]{12}(?:[1-9A-HJ-NP-Za-km-z]{30})?)[1-9A-HJ-NP-Za-km-z]{93}$"
             },
             "wallets": {
@@ -1355,15 +1297,8 @@ const glob_config = {
                 ]
             },
             "settings": {
-                "confirmations": {
-                    "icon": "clock",
-                    "selected": 0
-                },
-                "Use random address": {
-                    "icon": "dice",
-                    "selected": false,
-                    "switch": true,
-                },
+                "confirmations": setting_confirmations(),
+                "Use random address": setting_random_address(),
                 "Share viewkey": {
                     "icon": "eye",
                     "selected": "Let the receiver monitor your request",
@@ -1486,21 +1421,9 @@ const glob_config = {
                 ]
             },
             "settings": {
-                "confirmations": {
-                    "icon": "clock",
-                    "selected": 0
-                },
-                "Use random address": {
-                    "icon": "dice",
-                    "selected": false,
-                    "switch": true,
-                },
-                "Reuse address": {
-                    "icon": "recycle",
-                    "selected": false,
-                    "switch": true,
-                    "custom_switch": true
-                },
+                "confirmations": setting_confirmations(),
+                "Use random address": setting_random_address(),
+                "Reuse address": setting_reuse_address(),
                 "blockexplorers": {
                     "icon": "eye",
                     "selected": "explorer.kaspa.org",
@@ -1577,9 +1500,7 @@ const glob_config = {
                 "currency": "nimiq",
                 "ccsymbol": "nim",
                 "cmcid": 2916,
-                "urlscheme": function(payment, address, amount, iszero, label, message) {
-                    return btc_urlscheme(payment, address, amount, iszero, label, message);
-                },
+                "urlscheme": btc_urlscheme,
                 "address_regex": "^NQ[0-9]{2}[0-9A-HJ-NP-VXY]{32}$"
             },
             "wallets": {
@@ -1604,21 +1525,9 @@ const glob_config = {
                 ]
             },
             "settings": {
-                "confirmations": {
-                    "icon": "clock",
-                    "selected": 0
-                },
-                "Use random address": {
-                    "icon": "dice",
-                    "selected": false,
-                    "switch": true,
-                },
-                "Reuse address": {
-                    "icon": "recycle",
-                    "selected": false,
-                    "switch": true,
-                    "custom_switch": true
-                },
+                "confirmations": setting_confirmations(),
+                "Use random address": setting_random_address(),
+                "Reuse address": setting_reuse_address(),
                 "blockexplorers": {
                     "icon": "eye",
                     "selected": "nimiq.watch",

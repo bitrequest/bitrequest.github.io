@@ -5,7 +5,6 @@ $(document).ready(function() {
     handle_rpc_node_selection();
     submit_rpcnode();
     delete_rpc_node();
-    delete_lws_node();
     toggle_lws();
 });
 
@@ -500,38 +499,8 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
                 "action": "want",
                 "data": ["stats"]
             });
-        } else if (currency_name === "nano") {
-            ws_message = JSON.stringify({
-                "action": "subscribe",
-                "topic": "confirmation",
-                "all_local_accounts": true,
-                "options": {
-                    "accounts": [test_address]
-                },
-                "ack": true
-            });
-        } else if (currency_name === "ethereum") {
-            ws_message = JSON.stringify({
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "eth_subscribe",
-                "params": ["alchemy_pendingTransactions", {
-                    "toAddress": [test_address],
-                    "hashesOnly": false
-                }]
-            });
-            node_config.name = "alchemy";
-        } else if (glob_let.is_erc20t === true) {
-            ws_message = JSON.stringify({
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "eth_subscribe",
-                "params": ["logs", {
-                    "address": glob_const.test_address.ethereum,
-                    "topics": []
-                }]
-            });
-            node_config.name = "infura";
+        } else {
+            ws_message = ws_test_message(currency_name, test_address, node_config) || ws_message;
         }
         const socket_id = currency_name + node_id,
             test_socket = glob_let.sockets[socket_id] = new WebSocket(ws_url);
@@ -550,6 +519,45 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
             glob_let.sockets[socket_id] = null;
             close_socket(socket_id);
         };
+    }
+}
+
+// Builds the websocket test message for nano and ethereum nodes. Sets the provider name on node_config for ethereum and erc20 tokens
+function ws_test_message(currency_name, test_address, node_config) {
+    if (currency_name === "nano") {
+        return JSON.stringify({
+            "action": "subscribe",
+            "topic": "confirmation",
+            "all_local_accounts": true,
+            "options": {
+                "accounts": [test_address]
+            },
+            "ack": true
+        });
+    }
+    if (currency_name === "ethereum") {
+        node_config.name = "alchemy";
+        return JSON.stringify({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_subscribe",
+            "params": ["alchemy_pendingTransactions", {
+                "toAddress": [test_address],
+                "hashesOnly": false
+            }]
+        });
+    }
+    if (glob_let.is_erc20t === true) {
+        node_config.name = "infura";
+        return JSON.stringify({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_subscribe",
+            "params": ["logs", {
+                "address": glob_const.test_address.ethereum,
+                "topics": []
+            }]
+        });
     }
 }
 
@@ -1033,39 +1041,11 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 "data": ["mempool-blocks", "stats"]
             });
             node_config.name = "mempool.space";
-        } else if (currency_name === "nano") {
-            ws_message = JSON.stringify({
-                "action": "subscribe",
-                "topic": "confirmation",
-                "all_local_accounts": true,
-                "options": {
-                    "accounts": [test_address]
-                },
-                "ack": true
-            });
-            node_config.name = "nano";
-        } else if (currency_name === "ethereum") {
-            ws_message = JSON.stringify({
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "eth_subscribe",
-                "params": ["alchemy_pendingTransactions", {
-                    "toAddress": [test_address],
-                    "hashesOnly": false
-                }]
-            });
-            node_config.name = "alchemy";
-        } else if (glob_let.is_erc20t === true) {
-            ws_message = JSON.stringify({
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "eth_subscribe",
-                "params": ["logs", {
-                    "address": glob_const.test_address.ethereum,
-                    "topics": []
-                }]
-            });
-            node_config.name = "infura";
+        } else {
+            ws_message = ws_test_message(currency_name, test_address, node_config);
+            if (currency_name === "nano") {
+                node_config.name = "nano";
+            }
         }
         const test_socket = glob_let.sockets["ws_submit"] = new WebSocket(ws_url);
         test_socket.onopen = function(event) {
@@ -1201,15 +1181,18 @@ function save_lws_settings(currency_name, node_config, is_new_node) {
     save_cc_settings(currency_name, true);
 }
 
-// Manages removal of custom RPC nodes with safeguards for default nodes
+// Manages removal of custom RPC and Monero-lws nodes with safeguards for default nodes. The lws list is
+// keyed to the "apis" settings node and its lws_options array
 function delete_rpc_node() {
-    $(document).on("click", "#settingsbox #rpc_list .opt_icon_box .icon-bin, #settingsbox #api_list .opt_icon_box .icon-bin", function(e) {
+    $(document).on("click", "#settingsbox #rpc_list .opt_icon_box .icon-bin, #settingsbox #api_list .opt_icon_box .icon-bin, #settingsbox #lws_list .opt_icon_box .icon-bin", function(e) {
         e.preventDefault();
         const delete_btn = $(this),
+            is_lws = delete_btn.closest("#lws_list").length > 0,
+            options_key = is_lws ? "lws_options" : "options",
             dialog_box = $("#settingsbox"),
             currency_name = dialog_box.find("#rpc_input_box").attr("data-currency"),
-            settings_item = cs_node(currency_name, glob_let.ap_id),
-            custom_nodes = settings_item.data("options");
+            settings_item = cs_node(currency_name, is_lws ? "apis" : glob_let.ap_id),
+            custom_nodes = settings_item.data(options_key);
         if (custom_nodes && custom_nodes.length) {
             const node_element = delete_btn.closest(".optionwrap"),
                 node_config = node_element.data(),
@@ -1231,52 +1214,9 @@ function delete_rpc_node() {
                 node_element.slideUp(500, function() {
                     $(this).remove();
                 });
-                settings_item.data("options", filtered_nodes);
+                settings_item.data(options_key, filtered_nodes);
                 notify(tl("rpcnoderemoved"));
-                $("#rpc_url_input").val("");
-                save_cc_settings(currency_name, true);
-            }
-        }
-        return;
-    })
-}
-
-// Manages removal of custom Monero-lws nodes. Mirrors delete_rpc_node but is
-// keyed to the "apis" settings node and its lws_options array. Scoped to
-// #lws_list so it never fires on RPC rows — all three selectboxes render
-// identical .icon-bin markup.
-function delete_lws_node() {
-    $(document).on("click", "#settingsbox #lws_list .opt_icon_box .icon-bin", function(e) {
-        e.preventDefault();
-        const delete_btn = $(this),
-            dialog_box = $("#settingsbox"),
-            currency_name = dialog_box.find("#rpc_input_box").attr("data-currency"),
-            settings_item = cs_node(currency_name, "apis"),
-            custom_nodes = settings_item.data("lws_options");
-        if (custom_nodes && custom_nodes.length) {
-            const node_element = delete_btn.closest(".optionwrap"),
-                node_config = node_element.data(),
-                node_url = node_config.url,
-                is_default = node_config.default !== false,
-                matching_nodes = delete_btn.closest(".selectbox").find(".options span[data-value='" + node_url + "']"),
-                has_duplicates = matching_nodes.length > 1;
-            if (is_default === true && !has_duplicates) {
-                play_audio("funk");
-                topnotify(tl("removedefaultnode"));
-                return;
-            }
-            const node_name = node_url || node_config.name,
-                user_confirmed = confirm(tl("confirmremovenode", {
-                    "thisval": node_name
-                }));
-            if (user_confirmed) {
-                const filtered_nodes = custom_nodes.filter(node => node.url !== node_url);
-                node_element.slideUp(500, function() {
-                    $(this).remove();
-                });
-                settings_item.data("lws_options", filtered_nodes);
-                notify(tl("rpcnoderemoved"));
-                $("#lws_url_input").val("");
+                $(is_lws ? "#lws_url_input" : "#rpc_url_input").val("");
                 save_cc_settings(currency_name, true);
             }
         }

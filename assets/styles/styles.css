@@ -160,11 +160,6 @@ img[src=""] {
     font-family: monospace;
 }
 
-.inlinediv {
-    display: inline-block;
-    width: 100%;
-}
-
 /* Global buttons and elements */
 .button {
     display: inline-block;
@@ -1294,10 +1289,6 @@ main {
     white-space: nowrap;
 }
 
-.nowrap {
-    white-space: nowrap;
-}
-
 .requestlist li[data-status="insufficient"] .metalist li .amountshort.show_as {
     display: inline;
 }
@@ -1596,17 +1587,9 @@ li[data-checked="false"] .checkbox:before,
     cursor: pointer;
 }
 
-.switchpanel.switchon,
 .switchpanel.true {
     background-color: #00b800;
     box-shadow: 0 0 0 0.15em #00b800;
-}
-
-.switchmap {
-    float: left;
-    width: 1.6em;
-    height: 2em;
-    cursor: pointer;
 }
 
 .switch {
@@ -1622,7 +1605,6 @@ li[data-checked="false"] .checkbox:before,
     pointer-events: none;
 }
 
-.switchpanel.switchon .switch,
 .switchpanel.true .switch {
     transform: translate(60%, 0%);
 }
@@ -2000,11 +1982,6 @@ input:invalid {
     text-align: left;
     padding: 1em 0;
     font-weight: 600;
-    cursor: pointer;
-}
-
-#optionslist.ed_options li {
-    padding: 0.3em 0;
     cursor: pointer;
 }
 

@@ -78,7 +78,7 @@ function test_bip39() {
     if (!bip39_results.compatible) {
         disable_bip39_support();
         const failed_coins = ["bitcoin", "litecoin", "dogecoin", "dash", "bitcoin-cash", "ethereum", "nano", "monero", "kaspa", "nimiq"];
-        mark_coins_non_derivable(failed_coins);
+        mark_coins(failed_coins, "no_derive");
         failed_coins.forEach(coin => {
             bip39_const.c_derive[coin] = false;
         });
@@ -129,7 +129,7 @@ function test_bip39() {
         coins
     }) {
         if (check() === false) {
-            mark_coins_non_derivable(coins);
+            mark_coins(coins, "no_derive");
             coins.forEach(coin => {
                 bip39_const.c_derive[coin] = false;
             });
@@ -139,7 +139,7 @@ function test_bip39() {
     // Test 4: Xpub derivation
     if (!bip39_results.xpub) {
         const xpub_failed = ["bitcoin", "litecoin", "dogecoin", "dash", "bitcoin-cash", "ethereum", "kaspa"];
-        mark_coins_xpub_incompatible(xpub_failed);
+        mark_coins(xpub_failed, "no_xpub");
         xpub_failed.forEach(coin => {
             bip39_const.can_xpub[coin] = false;
         });
@@ -147,7 +147,7 @@ function test_bip39() {
 
     // Test 5: Ethereum xpub (same as keccak256 test)
     if (!CryptoUtils.test_keccak256()) {
-        mark_coins_xpub_incompatible(["ethereum"]);
+        mark_coins(["ethereum"], "no_xpub");
         bip39_const.can_xpub.ethereum = false;
     }
     const spark_support = test_spark_derivation();
@@ -160,20 +160,11 @@ function disable_bip39_support() {
     glob_let.test_derive = false;
 }
 
-// Marks specified cryptocurrencies as non-derivable in UI with 500ms DOM ready delay
-function mark_coins_non_derivable(arr) {
+// Marks specified cryptocurrencies in UI with a class (no_derive / no_xpub) after a 500ms DOM ready delay
+function mark_coins(arr, class_name) {
     setTimeout(function() {
         arr.forEach(function(coin) {
-            $("#" + coin + "_settings").addClass("no_derive");
-        });
-    }, 500)
-}
-
-// Marks specified cryptocurrencies as xpub-incompatible in UI with 500ms DOM ready delay
-function mark_coins_xpub_incompatible(arr) {
-    setTimeout(function() {
-        arr.forEach(function(coin) {
-            $("#" + coin + "_settings").addClass("no_xpub");
+            $("#" + coin + "_settings").addClass(class_name);
         });
     }, 500)
 }

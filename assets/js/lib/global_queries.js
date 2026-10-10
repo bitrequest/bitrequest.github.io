@@ -420,6 +420,11 @@ function parse_datetime_string(date_string) {
     return new Date(Date.UTC(year, parseInt(month, 10) - 1, day, hours, minutes, seconds));
 }
 
+// Converts a raw base-unit amount to a coin value with 8 decimals
+function to_ccval(raw, decimals) {
+    return parseFloat((raw / 10 ** decimals).toFixed(8));
+}
+
 // Converts ISO timestamp string to milliseconds since epoch
 function to_ts(timestamp) {
     if (timestamp) {
@@ -540,15 +545,7 @@ function is_integer(value) {
 }
 
 function to_integer(value) {
-    if (is_integer(value)) {
-        return value;
-    }
-    try {
-        return parseInt(value, 10);
-    } catch (e) {
-        console.error(e);
-    }
-    return false;
+    return is_integer(value) ? value : parseInt(value, 10);
 }
 
 // Checks if timestamp is in seconds or milliseconds
@@ -742,7 +739,7 @@ function clone(object) {
 
 // Verifies if object key value exists array
 function objectkey_in_array(array, key, val) {
-    return (objectkey_from_array(array, key, val)) ? true : false;
+    return Boolean(objectkey_from_array(array, key, val));
 }
 
 // Extracts object key value exists array
@@ -763,12 +760,8 @@ function objectkey_from_array_ci(array, key, val) {
 
 // Finds the index of an object in an array
 function find_object_index(array, key, url) {
-    return array.findIndex(item => {
-        if (!item[key]) return false;
-        const item_url = item[key].endsWith("/") ? item[key].slice(0, -1) : item[key],
-            check_url = url.endsWith("/") ? url.slice(0, -1) : url;
-        return item_url === check_url;
-    });
+    const check_url = strip_slash(url);
+    return array.findIndex(item => item[key] && strip_slash(item[key]) === check_url);
 }
 
 // Finds the next value in an array if exists
@@ -1480,6 +1473,27 @@ function make_local(url) {
 
 // ** API & Proxy Management: **
 
+// Sends a POST request to the Lightning proxy API
+function ln_api(proxy_url, data, timeout) {
+    return $.ajax({
+        "method": "POST",
+        "cache": false,
+        "timeout": timeout || 5000,
+        "url": proxy_url + "/proxy/v1/ln/api/",
+        data
+    });
+}
+
+// Returns a readable message from an error object or string
+function err_text(error, fallback) {
+    return error.message || (typeof error === "string" ? error : fallback);
+}
+
+// Checks if a Lightning proxy error code means the proxy is locked
+function is_locked_code(code) {
+    return code == 1 || code == 2;
+}
+
 // Handles API requests through proxy with automatic failover and authentication
 function api_proxy(ad, p_proxy) {
     const custom_url = ad.api_url || false,
@@ -1542,7 +1556,11 @@ function api_proxy(ad, p_proxy) {
             };
         return $.ajax(proxy_config);
     }
-    return $.ajax();
+    return $.Deferred().rejectWith({
+        "url": ""
+    }, [{
+        "status": 0
+    }, "error", "unknown api"]).promise();
 }
 
 // Normalizes API names for consistent proxy handling
@@ -1560,11 +1578,9 @@ function br_result(e) {
         const version = ping.br_cache.version;
         if (version < glob_const.proxy_version) {
             proxy_alert(version);
-        } else {
-            if (glob_const.html.hasClass("proxyupdate")) {
-                glob_const.html.removeClass("proxyupdate");
-                glob_const.body.removeClass("haschanges");
-            }
+        } else if (glob_const.html.hasClass("proxyupdate")) {
+            glob_const.html.removeClass("proxyupdate");
+            glob_const.body.removeClass("haschanges");
         }
     }
     return {
@@ -2008,28 +2024,19 @@ function nano_urlscheme(payment, address, amount, is_zero, label, message) {
 function xmr_urlscheme(payment, address, amount, is_zero, label, message) {
     const base_uri = "monero:" + address;
     if (is_zero) return base_uri;
-    let label_str = "&recipient_name=Bitrequest",
-        message_str = "";
-    if (label) {
-        label_str = "&recipient_name=" + encodeURIComponent(label);
-    }
-    if (message) {
-        message_str = "&tx_description=" + encodeURIComponent(message);
-    }
-    return base_uri + "?tx_amount=" + amount + label_str + message_str;
+    return base_uri + uri_query(["tx_amount", "recipient_name", "tx_description"], amount, label, message);
 }
 
 // Generates Bip21 payment URI scheme
 function bip21_urlscheme(amount, label, message) {
-    let label_str = "&label=Bitrequest",
-        message_str = "";
-    if (label) {
-        label_str = "&label=" + encodeURIComponent(label);
-    }
-    if (message) {
-        message_str = "&message=" + encodeURIComponent(message);
-    }
-    return "?amount=" + amount + label_str + message_str;
+    return uri_query(["amount", "label", "message"], amount, label, message);
+}
+
+// Builds a payment URI query string, label defaults to Bitrequest and message is optional
+function uri_query(keys, amount, label, message) {
+    const label_str = "&" + keys[1] + "=" + (label ? encodeURIComponent(label) : "Bitrequest"),
+        message_str = message ? "&" + keys[2] + "=" + encodeURIComponent(message) : "";
+    return "?" + keys[0] + "=" + amount + label_str + message_str;
 }
 
 // ** Animations: **

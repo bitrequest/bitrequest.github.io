@@ -196,29 +196,22 @@ function node_option_li(node_info, selected, action, proxy_url, proxy_key) {
     set_loader_text(tl("connecttolnur", {
         "url": truncate_middle(proxy_url)
     }));
-    const implementation = node_info.imp,
-        request_data = {
-            "method": "POST",
-            "cache": false,
-            "timeout": 5000,
-            "url": proxy_url + "/proxy/v1/ln/api/",
-            "data": {
-                "imp": implementation,
-                "fn": "ln-list-invoices",
-                "host": node_info.host,
-                "key": node_info.key,
-                "x-api": proxy_key
-            }
-        };
-    $.ajax(request_data).done(function(response) {
+    const implementation = node_info.imp;
+    ln_api(proxy_url, {
+        "imp": implementation,
+        "fn": "ln-list-invoices",
+        "host": node_info.host,
+        "key": node_info.key,
+        "x-api": proxy_key
+    }).done(function(response) {
             closeloader();
             const invoices = response.invoices,
                 error = response.error;
             if (error) {
                 const default_error = tl("unabletoconnect"),
-                    error_message = error.message || (typeof error === "string" ? error : default_error),
+                    error_message = err_text(error, default_error),
                     error_code = error.code,
-                    locked = error_code && (error_code === 1 || error_code === 2) ? "locked" : null;
+                    locked = is_locked_code(error_code) ? "locked" : null;
                 if (action === "append") {
                     lightning_option_li(false, node_info, selected, locked, proxy_url);
                     popnotify("error", error_message);
@@ -419,15 +412,9 @@ function add_proxy_option(option_list, key, proxy_info, selected) {
     set_loader_text(tl("connecttolnur", {
         "url": truncate_middle(proxy_url)
     }));
-    $.ajax({
-        "method": "POST",
-        "cache": false,
-        "timeout": 5000,
-        "url": proxy_url + "/proxy/v1/ln/api/",
-        "data": {
-            "pingpw": true,
-            "x-api": proxy_data.k
-        }
+    ln_api(proxy_url, {
+        "pingpw": true,
+        "x-api": proxy_data.k
     }).done(function(response) {
         closeloader();
         const api_result = br_result(response),
@@ -435,7 +422,7 @@ function add_proxy_option(option_list, key, proxy_info, selected) {
             error = result.error;
         if (error) {
             const error_code = error.code;
-            is_locked = error_code && (error_code == 1 || error_code == 2);
+            is_locked = is_locked_code(error_code);
             create_proxy_option(option_list, false, key, proxy_info, selected, proxy_url, is_locked);
             return;
         }
@@ -563,15 +550,9 @@ function test_lnd_proxy(proxy, proxy_id, proxy_key) {
     set_loader_text(tl("connecttolnur", {
         "url": truncate_middle(proxy)
     }));
-    $.ajax({
-        "method": "POST",
-        "cache": false,
-        "timeout": 5000,
-        "url": proxy + "/proxy/v1/ln/api/",
-        "data": {
-            "add": true,
-            "x-api": proxy_key
-        }
+    ln_api(proxy, {
+        "add": true,
+        "x-api": proxy_key
     }).done(function(response) {
         closeloader();
         const api_result = br_result(response),
@@ -579,11 +560,11 @@ function test_lnd_proxy(proxy, proxy_id, proxy_key) {
             error = result.error;
         if (error) {
             const default_error = tl("unabletoconnect"),
-                error_message = error.message || (typeof error === "string" ? error : default_error),
+                error_message = err_text(error, default_error),
                 formatted_message = error_message === "no write acces" ? tl("folderpermissions") : error_message,
                 error_code = error.code;
             popnotify("error", formatted_message);
-            if (error_code && (error_code === 1 || error_code === 2)) {
+            if (is_locked_code(error_code)) {
                 $("#proxy_pw_input").slideDown(200, function() {
                     $(this).focus();
                 })
@@ -685,7 +666,7 @@ function trigger_ln() {
         proxy_data = current_proxy ? lnurl_deform(current_proxy.proxy) : false,
         current_proxy_url = proxy_data ? proxy_data.url : false,
         no_proxy_change = current_proxy && current_proxy_url == selected_proxy_url;
-    if (no_proxy_change || !current_proxy) {} else {
+    if (!no_proxy_change && current_proxy) {
         const selected_proxy_id = proxy_select_input.attr("data-pid"),
             fetched_proxy = fetch_proxy(proxy_list, selected_proxy_id);
         if (fetched_proxy) {
@@ -730,7 +711,7 @@ function trigger_ln() {
         const proxy_key = $("#proxy_pw_input").val(),
             proxy_key_hash = proxy_key ? sha_sub(proxy_key, 10) : false;
         test_lnd_proxy(normalized_url, proxy_id, proxy_key_hash);
-        if (no_proxy_change || !current_proxy) {} else {
+        if (!no_proxy_change && current_proxy) {
             notify(tl("datasaved"));
         }
         return;
@@ -889,32 +870,26 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
         set_loader_text(tl("connecttolnur", {
             "url": truncate_middle(proxy_url)
         }));
-        $.ajax({
-            "method": "POST",
-            "cache": false,
-            "timeout": 20000,
-            "url": proxy_url + "/proxy/v1/ln/api/",
-            "data": {
-                "imp": implementation,
-                "host": node_host,
-                "key": node_key,
-                "fn": "ln-create-invoice",
-                "amount": 10000,
-                "memo": "test invoice " + implementation,
-                "id": unique_id,
-                "expiry": 180,
-                "pingtest": true,
-                "x-api": proxy_key
-            }
-        }).done(function(response) {
+        ln_api(proxy_url, {
+            "imp": implementation,
+            "host": node_host,
+            "key": node_key,
+            "fn": "ln-create-invoice",
+            "amount": 10000,
+            "memo": "test invoice " + implementation,
+            "id": unique_id,
+            "expiry": 180,
+            "pingtest": true,
+            "x-api": proxy_key
+        }, 20000).done(function(response) {
             closeloader();
             if (response) {
                 const error = response.error;
                 if (error) {
-                    const error_message = error.message || (typeof error === "string" ? error : default_error),
+                    const error_message = err_text(error, default_error),
                         error_code = error.code;
                     popnotify("error", error_message);
-                    if (error_code && (error_code == 1 || error_code == 2)) {
+                    if (is_locked_code(error_code)) {
                         setTimeout(function() {
                             prompt_proxy_unlock(proxy_data.id);
                         }, 500);
@@ -1069,22 +1044,16 @@ function prompt_proxy_unlock(proxy_id) {
             "proxy": proxy_url
         })),
         proxy_key_hash = proxy_password ? sha_sub(proxy_password, 10) : false;
-    $.ajax({
-        "method": "POST",
-        "cache": false,
-        "timeout": 5000,
-        "url": proxy_url + "/proxy/v1/ln/api/",
-        "data": {
-            "pingpw": true,
-            "x-api": proxy_key_hash
-        }
+    ln_api(proxy_url, {
+        "pingpw": true,
+        "x-api": proxy_key_hash
     }).done(function(response) {
         const api_result = br_result(response),
             result = api_result.result,
             error = result.error;
         if (error) {
             const default_error = tl("unabletoconnect"),
-                error_message = error.message || (typeof error === "string" ? error : default_error);
+                error_message = err_text(error, default_error);
             popnotify("error", error_message);
             return;
         }
@@ -1245,31 +1214,24 @@ function validate_lnurl_connection(lightning_node) {
         node_id = lightning_node.nid || null,
         proxy_details = lnurl_deform(lightning_node.proxy_host),
         proxy_host = proxy_details.url,
-        proxy_key = proxy_details.k,
-        proxy_url = proxy_host + "/proxy/v1/ln/api/";
+        proxy_key = proxy_details.k;
     if (!proxy_host) {
         notify(tl("proxydatamissing"));
         return;
     }
-    $.ajax({
-        "method": "POST",
-        "cache": false,
-        "timeout": 5000,
-        "url": proxy_url,
-        "data": {
-            "fn": "ln-list-invoices",
-            "imp": implementation,
-            "host": node_host,
-            "key": node_key,
-            "nid": node_id,
-            "pingtest": true,
-            "x-api": proxy_key
-        }
+    ln_api(proxy_host, {
+        "fn": "ln-list-invoices",
+        "imp": implementation,
+        "host": node_host,
+        "key": node_key,
+        "nid": node_id,
+        "pingtest": true,
+        "x-api": proxy_key
     }).done(function(response) {
         const error = response.error;
         if (error) {
             const default_error = tl("unabletoconnect"),
-                error_message = error.message || (typeof error === "string" ? error : default_error);
+                error_message = err_text(error, default_error);
             if (request.isrequest) {
                 if (helper.lnd_only) {
                     topnotify(error_message);

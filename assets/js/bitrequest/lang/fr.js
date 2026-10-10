@@ -451,6 +451,7 @@ const lang_fr_obj = {
         "congratulations": "Toutes nos félicitations. Vous êtes désormais votre propre banque!",
         "seedphraseverified": "Phrase secrète vérifiée",
         "backupasap": "Veuillez sauvegarder votre phrase secrète dès que possible",
+        "seederror": "La phrase secrète n'a pas pu être lue",
         // confirm
         "resoresecretphrase": "Restaurer phrase secrète",
         "areyousuredfp": "Êtes-vous sûr de vouloir supprimer votre phrase secrète?",

@@ -1216,8 +1216,7 @@
 }
 
 /* Conditional show/hide and offline states */
-#paymentdialogbox.request #sharerequest,
-#paymentdialogbox.request .actionbar.hideshare #sharerequest {
+#paymentdialogbox.request #sharerequest {
     display: none;
 }
 

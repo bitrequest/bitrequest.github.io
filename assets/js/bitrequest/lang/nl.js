@@ -187,6 +187,7 @@ const lang_nl_obj = {
         "minimal3": "Naam moet minimaal 3 karakters bevatten",
         "checkyourform": "Controleer uw formulier",
         "entertitle": "Voeg een omschrijving toe",
+        "latincharacters": "Alleen letters (A-Z), cijfers en symbolen toegestaan",
         "successshare": "Succesvol gedeeld!",
         // confirm
         "opencoinsettings": "Open {currency} instellingen?",
@@ -450,6 +451,7 @@ const lang_nl_obj = {
         "congratulations": "Gefeliciteerd. Je bent nu je eigen bank!",
         "seedphraseverified": "Geheime zin geverifieerd",
         "backupasap": "Maak zsm een backup van je geheime zin!",
+        "seederror": "Geheime zin kon niet worden gelezen",
         // confirm
         "resoresecretphrase": "Herstel geheime zin",
         "areyousuredfp": "Weet je zeker dat je je geheime zin wilt verwijderen?",

@@ -451,6 +451,7 @@ const lang_hi_obj = {
         "congratulations": "बधाई हो! अब आप अपने खुद के बैंक हैं!",
         "seedphraseverified": "वाक्यांश सत्यापित",
         "backupasap": "कृपया जल्द से जल्द अपने गोपनीय वाक्यांश का बैकअप लें",
+        "seederror": "गोपनीय वाक्यांश पढ़ा नहीं जा सका",
         // confirm
         "resoresecretphrase": "गोपनीय वाक्यांश पुनर्स्थापित करें",
         "areyousuredfp": "क्या आप अपना गोपनीय वाक्यांश हटाना चाहते हैं?",

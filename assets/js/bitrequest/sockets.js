@@ -508,178 +508,158 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
             }
             glob_let.ndef_timer = now_utc();
             closenotify();
-            const nfc_message = event.message;
-            if (nfc_message) {
-                const nfc_records = nfc_message.records;
-                if (nfc_records) {
-                    const first_record = nfc_records[0];
-                    if (first_record) {
-                        const card_data = first_record.data;
-                        if (card_data) {
-                            const lnurl_withdraw = utf8_decoder.decode(card_data);
-                            if (lnurl_withdraw) {
-                                if (lnurl_withdraw.includes("p=") && lnurl_withdraw.includes("c=")) {
-                                    const url_parts = lnurl_withdraw.split("urlw://");
-                                    if (url_parts[0] == "ln") {
-                                        const amount_rel = $("#open_wallet").attr("data-rel"),
-                                            crypto_amount = amount_rel.length ? parseFloat(amount_rel) : 0,
-                                            milli_sats = (crypto_amount * glob_const.msats_per_btc).toFixed(0);
-                                        if (crypto_amount <= 0) {
-                                            play_audio("funk");
-                                            notify(tl("enteramount"), 5000);
-                                            return;
-                                        }
-                                        if (glob_let.ndef_processing) {
-                                            play_audio("funk");
-                                            console.error("error", "already processing");
-                                            return;
-                                        }
-                                        play_audio("blip");
-                                        notify("Processing...", 50000);
-                                        glob_const.paymentdialogbox.addClass("accept_lnd");
-                                        set_dialog_timeout();
-                                        const lnurl_endpoint = "https://" + url_parts[1];
-                                        glob_let.ndef_processing = true;
-                                        api_proxy({
-                                            "api_url": lnurl_endpoint,
-                                            "params": {
-                                                "method": "GET",
-                                                "cache": false
-                                            }
-                                        }, proxy_host).done(function(e) {
-                                            const api_response = br_result(e).result;
-                                            if (!api_response) { // catch lightning node connection failure
-                                                play_audio("funk");
-                                                notify(tl("unabletoconnectln"), 5000);
-                                                glob_const.paymentdialogbox.removeClass("accept_lnd");
-                                                glob_let.ndef_processing = false;
-                                                return;
-                                            }
-                                            if (api_response.status === "ERROR") {
-                                                play_audio("funk");
-                                                const error_message = api_response.reason;
-                                                notify(escape_html(error_message), 5000);
-                                                glob_const.paymentdialogbox.removeClass("accept_lnd");
-                                                glob_let.ndef_processing = false;
-                                                return;
-                                            }
-                                            if (api_response.error) {
-                                                play_audio("funk");
-                                                fail_dialogs(null, {
-                                                    "error": api_response.error
-                                                });
-                                                glob_const.paymentdialogbox.removeClass("accept_lnd");
-                                                closenotify();
-                                                glob_let.ndef_processing = false;
-                                                return;
-                                            }
-                                            if (milli_sats > api_response.maxWithdrawable) {
-                                                play_audio("funk");
-                                                notify(tl("cardmax"), 5000);
-                                                glob_const.paymentdialogbox.removeClass("accept_lnd");
-                                                glob_let.ndef_processing = false;
-                                                return;
-                                            }
-                                            if (milli_sats < api_response.minWithdrawable) {
-                                                play_audio("funk");
-                                                notify(tl("minamount", {
-                                                    "min": api_response.minWithdrawable
-                                                }), 5000);
-                                                glob_const.paymentdialogbox.removeClass("accept_lnd");
-                                                glob_let.ndef_processing = false;
-                                                return;
-                                            }
-                                            const callback_url = api_response.callback;
-                                            if (callback_url) {
-                                                const auth_key = api_response.k1;
-                                                if (auth_key) {
-                                                    const memo_text = $("#paymentdialog input#requesttitle").val(),
-                                                        final_memo = (memo_text && memo_text.length > 1) ? memo_text + " (Boltcard)" :
-                                                        (api_response.defaultDescription) ? api_response.defaultDescription : "bitrequest " + payment_id + " (Boltcard)",
-                                                        request_type = request.requesttype,
-                                                        invoice_data = {
-                                                            "imp": invoice_mode,
-                                                            "fn": "ln-create-invoice",
-                                                            "amount": milli_sats,
-                                                            "memo": final_memo,
-                                                            "id": payment_id,
-                                                            "nid": node_id,
-                                                            "expiry": 60,
-                                                            "boltcard": true,
-                                                            "x-api": proxy_key
-                                                        };
-                                                    if (request_type === "incoming") {
-                                                        invoice_data.b11 = true;
-                                                    }
-                                                    $.ajax({
-                                                        "method": "POST",
-                                                        "cache": false,
-                                                        "timeout": 5000,
-                                                        "url": proxy_host + "/proxy/v1/ln/api/",
-                                                        "data": invoice_data
-                                                    }).done(function(invoice_result) {
-                                                        const bolt11 = invoice_result.bolt11;
-                                                        if (bolt11) {
-                                                            glob_const.paymentdialogbox.addClass("transacting blockd").attr("data-status", "pending");
-                                                            $("#paymentdialogbox .brstatuspanel #confnumber").text("1");
-                                                            notify("Monitoring...", 50000);
-                                                            const url_separator = callback_url.includes("?") ? "&" : "?",
-                                                                final_url = callback_url + url_separator + "k1=" + auth_key + "&pr=" + bolt11;
-                                                            api_proxy({
-                                                                "proxy": false,
-                                                                "api_url": final_url,
-                                                                "params": {
-                                                                    "method": "GET",
-                                                                    "cache": false,
-                                                                    "timeout": 15000
-                                                                }
-                                                            }, proxy_host).done(function(e) {
-                                                                const callback_response = br_result(e).result;
-                                                                if (callback_response.status === "ERROR") {
-                                                                    show_nfc_error(callback_response.reason);
-                                                                    return;
-                                                                }
-                                                                if (callback_response.status === "OK") {
-                                                                    stop_monitors(payment_id);
-                                                                    force_close_socket(payment_id).then(() => {
-                                                                        stop_nfc_scan();
-                                                                        update_boltcard(true);
-                                                                        lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id);
-                                                                        set_ping(invoice_result.hash, function() {
-                                                                            lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id);
-                                                                        }, 3000);
-                                                                    });
-                                                                    return;
-                                                                }
-                                                            }).fail(function(xhr, stat, err) {
-                                                                handle_nfc_api_error(xhr, stat, err);
-                                                            });
-                                                            return;
-                                                        }
-                                                        show_nfc_error("failed to create invoice");
-                                                    }).fail(function(xhr, stat, err) {
-                                                        handle_nfc_api_error(xhr, stat, err);
-                                                    }).always(function() {
-                                                        glob_let.ndef_processing = false;
-                                                    });
-                                                    return;
-                                                }
-                                            }
-                                            glob_let.ndef_processing = false;
-                                        }).fail(function(xhr, stat, err) {
-                                            handle_nfc_api_error(xhr, stat, err);
-                                        });
-                                        return;
-                                    }
-                                }
-                                notify("invalid lnurlw", 5000);
-                                return;
-                            }
-                        }
-                    }
-                }
+            const card_data = event.message?.records?.[0]?.data,
+                lnurl_withdraw = card_data && utf8_decoder.decode(card_data);
+            if (!lnurl_withdraw) {
+                notify("lnurlw not found", 5000);
+                return;
             }
-            notify("lnurlw not found", 5000);
+            const url_parts = lnurl_withdraw.split("urlw://"),
+                is_valid_lnurlw = lnurl_withdraw.includes("p=") && lnurl_withdraw.includes("c=") && url_parts[0] == "ln";
+            if (!is_valid_lnurlw) {
+                notify("invalid lnurlw", 5000);
+                return;
+            }
+            const amount_rel = $("#open_wallet").attr("data-rel"),
+                crypto_amount = amount_rel.length ? parseFloat(amount_rel) : 0,
+                milli_sats = (crypto_amount * glob_const.msats_per_btc).toFixed(0);
+            if (crypto_amount <= 0) {
+                play_audio("funk");
+                notify(tl("enteramount"), 5000);
+                return;
+            }
+            if (glob_let.ndef_processing) {
+                play_audio("funk");
+                console.error("error", "already processing");
+                return;
+            }
+            play_audio("blip");
+            notify("Processing...", 50000);
+            glob_const.paymentdialogbox.addClass("accept_lnd");
+            set_dialog_timeout();
+            const lnurl_endpoint = "https://" + url_parts[1];
+            glob_let.ndef_processing = true;
+            api_proxy({
+                "api_url": lnurl_endpoint,
+                "params": {
+                    "method": "GET",
+                    "cache": false
+                }
+            }, proxy_host).done(function(e) {
+                const api_response = br_result(e).result;
+                if (!api_response) { // catch lightning node connection failure
+                    play_audio("funk");
+                    notify(tl("unabletoconnectln"), 5000);
+                    glob_const.paymentdialogbox.removeClass("accept_lnd");
+                    glob_let.ndef_processing = false;
+                    return;
+                }
+                if (api_response.status === "ERROR") {
+                    play_audio("funk");
+                    const error_message = api_response.reason;
+                    notify(escape_html(error_message), 5000);
+                    glob_const.paymentdialogbox.removeClass("accept_lnd");
+                    glob_let.ndef_processing = false;
+                    return;
+                }
+                if (api_response.error) {
+                    play_audio("funk");
+                    fail_dialogs(null, {
+                        "error": api_response.error
+                    });
+                    glob_const.paymentdialogbox.removeClass("accept_lnd");
+                    closenotify();
+                    glob_let.ndef_processing = false;
+                    return;
+                }
+                if (milli_sats > api_response.maxWithdrawable) {
+                    play_audio("funk");
+                    notify(tl("cardmax"), 5000);
+                    glob_const.paymentdialogbox.removeClass("accept_lnd");
+                    glob_let.ndef_processing = false;
+                    return;
+                }
+                if (milli_sats < api_response.minWithdrawable) {
+                    play_audio("funk");
+                    notify(tl("minamount", {
+                        "min": api_response.minWithdrawable
+                    }), 5000);
+                    glob_const.paymentdialogbox.removeClass("accept_lnd");
+                    glob_let.ndef_processing = false;
+                    return;
+                }
+                const callback_url = api_response.callback,
+                    auth_key = api_response.k1;
+                if (!callback_url || !auth_key) {
+                    glob_let.ndef_processing = false;
+                    return;
+                }
+                const memo_text = $("#paymentdialog input#requesttitle").val(),
+                    final_memo = (memo_text && memo_text.length > 1) ? memo_text + " (Boltcard)" :
+                    (api_response.defaultDescription) ? api_response.defaultDescription : "bitrequest " + payment_id + " (Boltcard)",
+                    request_type = request.requesttype,
+                    invoice_data = {
+                        "imp": invoice_mode,
+                        "fn": "ln-create-invoice",
+                        "amount": milli_sats,
+                        "memo": final_memo,
+                        "id": payment_id,
+                        "nid": node_id,
+                        "expiry": 60,
+                        "boltcard": true,
+                        "x-api": proxy_key
+                    };
+                if (request_type === "incoming") {
+                    invoice_data.b11 = true;
+                }
+                ln_api(proxy_host, invoice_data).done(function(invoice_result) {
+                    const bolt11 = invoice_result.bolt11;
+                    if (!bolt11) {
+                        show_nfc_error("failed to create invoice");
+                        return;
+                    }
+                    glob_const.paymentdialogbox.addClass("transacting blockd").attr("data-status", "pending");
+                    $("#paymentdialogbox .brstatuspanel #confnumber").text("1");
+                    notify("Monitoring...", 50000);
+                    const url_separator = callback_url.includes("?") ? "&" : "?",
+                        final_url = callback_url + url_separator + "k1=" + auth_key + "&pr=" + bolt11;
+                    api_proxy({
+                        "proxy": false,
+                        "api_url": final_url,
+                        "params": {
+                            "method": "GET",
+                            "cache": false,
+                            "timeout": 15000
+                        }
+                    }, proxy_host).done(function(e) {
+                        const callback_response = br_result(e).result;
+                        if (callback_response.status === "ERROR") {
+                            show_nfc_error(callback_response.reason);
+                            return;
+                        }
+                        if (callback_response.status === "OK") {
+                            stop_monitors(payment_id);
+                            force_close_socket(payment_id).then(() => {
+                                stop_nfc_scan();
+                                update_boltcard(true);
+                                lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id);
+                                set_ping(invoice_result.hash, function() {
+                                    lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id);
+                                }, 3000);
+                            });
+                            return;
+                        }
+                    }).fail(function(xhr, stat, err) {
+                        handle_nfc_api_error(xhr, stat, err);
+                    });
+                }).fail(function(xhr, stat, err) {
+                    handle_nfc_api_error(xhr, stat, err);
+                }).always(function() {
+                    glob_let.ndef_processing = false;
+                });
+            }).fail(function(xhr, stat, err) {
+                handle_nfc_api_error(xhr, stat, err);
+            });
         }
     } catch (error) {
         notify(error, 5000);
@@ -732,22 +712,16 @@ function stop_nfc_scan() {
 // Polls Lightning Network node for payment request status with automatic retry
 function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode) {
     if (is_openrequest()) { // only when request is visible
-        $.ajax({
-            "method": "POST",
-            "cache": false,
-            "timeout": 5000,
-            "url": proxy_host + "/proxy/v1/ln/api/",
-            "data": {
-                "fn": "ln-request-status",
-                "id": payment_id,
-                "x-api": proxy_key
-            }
+        ln_api(proxy_host, {
+            "fn": "ln-request-status",
+            "id": payment_id,
+            "x-api": proxy_key
         }).done(function(response) {
             poll_animate();
             const error = response.error;
             if (error) {
                 const default_error = tl("unabletoconnect"),
-                    error_message = error.message || (typeof error === "string" ? error : default_error);
+                    error_message = err_text(error, default_error);
                 notify(error_message, 500000);
                 return;
             }
@@ -786,21 +760,15 @@ function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode)
 function lnd_poll_invoice(proxy_host, proxy_key, imp, invoice_data, payment_id, node_id) {
     if (is_openrequest()) { // only when request is visible
         const hash = invoice_data.request_id || invoice_data.hash;
-        $.ajax({
-            "method": "POST",
-            "cache": false,
-            "timeout": 5000,
-            "url": proxy_host + "/proxy/v1/ln/api/",
-            "data": {
-                "fn": "ln-invoice-status",
-                imp,
-                hash,
-                "id": payment_id,
-                "nid": node_id,
-                "callback": "yes",
-                "type": request.requesttype,
-                "x-api": proxy_key
-            }
+        ln_api(proxy_host, {
+            "fn": "ln-invoice-status",
+            imp,
+            hash,
+            "id": payment_id,
+            "nid": node_id,
+            "callback": "yes",
+            "type": request.requesttype,
+            "x-api": proxy_key
         }).done(function(response) {
             poll_animate();
             const payment_status = response.status;
@@ -1150,7 +1118,7 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
                 const contract_data = log_data.data.slice(2),
                     raw_value = hex_to_number_string(contract_data),
                     token_decimals = get_l2_decimals(network_type, contract_address),
-                    token_amount = parseFloat((raw_value / Math.pow(10, token_decimals)).toFixed(8));
+                    token_amount = to_ccval(raw_value, token_decimals);
                 if (!Number.isFinite(token_amount) || token_amount <= 0) return;
                 const setconfirmations = request.set_confirmations || 0,
                     tx_details = {

@@ -349,7 +349,6 @@ function finish_functions() {
     showtransactions();
     addressinfo();
     show_pk();
-    show_vk();
 
     // ** Notifications: **
     closenotifytrigger();
@@ -719,7 +718,7 @@ function pinvalidate(pin_button) {
             encrypt_seed_data(seed_decrypt(old_pin));
         } else {
             topnotify(tl("pinmatch"));
-            if (navigator.vibrate) {} else {
+            if (!navigator.vibrate) {
                 play_audio("funk");
             }
             shake(pin_container);
@@ -1855,7 +1854,8 @@ function escape_and_back() {
 // Manages keyboard input actions across app
 function keyup() {
     $(document).keyup(function(e) {
-        if (e.keyCode === 39) { // ArrowRight
+        if (e.keyCode === 39 || e.keyCode === 37) { // ArrowRight / ArrowLeft
+            const is_right = e.keyCode === 39;
             if (glob_const.paymentdialogbox.find("input").is(":focus")) {
                 play_audio("funk");
                 return;
@@ -1867,45 +1867,30 @@ function keyup() {
             }
             glob_const.paymentpopup.removeClass("flipping");
             if (glob_const.paymentdialogbox.hasClass("flipped")) {
-                flip_right2();
+                if (is_right) {
+                    flip_right2();
+                    setTimeout(function() {
+                        glob_const.paymentpopup.addClass("flipping");
+                        glob_const.paymentdialogbox.css("-webkit-transform", "");
+                    }, 400);
+                } else {
+                    flip_left2();
+                }
+                return;
+            }
+            if (glob_const.paymentdialogbox.hasClass("norequest") && (glob_const.paymentdialogbox.attr("data-pending") === "ispending")) {
+                play_audio("funk");
+                return;
+            }
+            if (is_right) {
+                flip_right1();
+            } else {
+                flip_left1();
                 setTimeout(function() {
                     glob_const.paymentpopup.addClass("flipping");
-                    glob_const.paymentdialogbox.css("-webkit-transform", "");
+                    glob_const.paymentdialogbox.css("-webkit-transform", "rotateY(180deg)");
                 }, 400);
-                return;
             }
-            if (glob_const.paymentdialogbox.hasClass("norequest") && (glob_const.paymentdialogbox.attr("data-pending") === "ispending")) {
-                play_audio("funk");
-                return;
-            }
-            flip_right1();
-            glob_let.sa_timer = now_utc();
-            return;
-        }
-        if (e.keyCode === 37) { // ArrowLeft
-            if (glob_const.paymentdialogbox.find("input").is(":focus")) {
-                play_audio("funk");
-                return;
-            }
-            const time_passed = now_utc() - glob_let.sa_timer;
-            if (time_passed < 500) { // prevent clicking too fast
-                play_audio("funk");
-                return;
-            }
-            glob_const.paymentpopup.removeClass("flipping");
-            if (glob_const.paymentdialogbox.hasClass("flipped")) {
-                flip_left2();
-                return;
-            }
-            if (glob_const.paymentdialogbox.hasClass("norequest") && (glob_const.paymentdialogbox.attr("data-pending") === "ispending")) {
-                play_audio("funk");
-                return;
-            }
-            flip_left1();
-            setTimeout(function() {
-                glob_const.paymentpopup.addClass("flipping");
-                glob_const.paymentdialogbox.css("-webkit-transform", "rotateY(180deg)");
-            }, 400);
             glob_let.sa_timer = now_utc();
             return;
         }
@@ -2665,9 +2650,9 @@ function addressinfo() {
     })
 }
 
-// Shows/hides private key after validating view-only status and handling pin panel
+// Shows/hides private key or view key after validating view-only status and handling pin panel
 function show_pk() {
-    $(document).on("click", "#show_pk", function() {
+    $(document).on("click", "#show_pk, #show_vk", function() {
         if (is_viewonly()) {
             show_view_only_error();
             return;
@@ -2685,7 +2670,10 @@ function show_pk() {
             return;
         }
         $("#optionsbox").html("");
-        all_pinpanel({
+        all_pinpanel(show_btn.attr("id") === "show_vk" ? {
+            "func": show_vk_cb,
+            "args": show_btn.attr("data-vk")
+        } : {
             "func": show_pk_cb
         }, true, true)
     })
@@ -3766,7 +3754,7 @@ function remove_address_function(trigger) {
             current_entry = filter_addressli(currency, "address", address);
         current_entry.remove();
         const remaining_addrs = get_addresslist(currency).children("li"); // check length after removing address
-        if (remaining_addrs.length) {} else {
+        if (!remaining_addrs.length) {
             loadpage("?p=currencies");
             const currency_item = get_currencyli(currency),
                 home_item = get_homeli(currency);
@@ -4108,7 +4096,7 @@ function add_historical_data(transaction_list, tx_history) {
         if (history_item) {
             const history_title = format_transaction_details(tx_data);
             if (history_title) {
-                if (history_item.attr("title") === history_title) {} else {
+                if (history_item.attr("title") !== history_title) {
                     history_item.append(wrap_historic_data(history_title)).attr("title", history_title);
                 }
             }
@@ -4163,28 +4151,20 @@ function lnd_lookup_invoice(proxy, imp, hash, node_id, peer_id, password, spark_
     const proxy_data = lnurl_deform(proxy),
         proxy_host = proxy_data.url,
         proxy_key = password || proxy_data.k,
-        api_url = proxy_host + "/proxy/v1/ln/api/",
-        hash_id = spark_request_id || hash,
-        request_data = {
-            "method": "POST",
-            "cache": false,
-            "timeout": 5000,
-            "url": api_url,
-            "data": {
-                "fn": "ln-invoice-decode",
-                imp,
-                "hash": hash_id,
-                "nid": node_id,
-                "callback": "no",
-                "id": peer_id,
-                "x-api": proxy_key
-            }
-        };
+        hash_id = spark_request_id || hash;
     loader(true);
     set_loader_text(tl("connecttolnur", {
         "url": lnurl_encode("lnurl", proxy_host)
     }));
-    $.ajax(request_data).done(function(response) {
+    ln_api(proxy_host, {
+        "fn": "ln-invoice-decode",
+        imp,
+        "hash": hash_id,
+        "nid": node_id,
+        "callback": "no",
+        "id": peer_id,
+        "x-api": proxy_key
+    }).done(function(response) {
         if (!response) {
             notify(tl("nofetchincoice"));
             closeloader();
@@ -5347,8 +5327,8 @@ function append_request(rd) {
             <div class='brmarker'></div>\
             <div class='expired_panel'><h2>" + tl("expired") + "</h2></div>\
         </li>");
-    rd.coindata = null, // no need to save coindata
-        request_item.data(rd).prependTo(request_container);
+    rd.coindata = null; // no need to save coindata
+    request_item.data(rd).prependTo(request_container);
     if (show_history) {
         const tx_list = request_container.find("#" + CSS.escape(requestid)).find(".transactionlist");
         add_historical_data(tx_list, txhistory);
@@ -5438,7 +5418,7 @@ function save_cc_settings(currency, trigger_update) {
 // Manages change counter and triggers backup notifications based on thresholds
 function update_changes(key, trigger_update, suppress_alert) {
     const pass_state = get_auth_status();
-    if (pass_state.active === false) {} else {
+    if (pass_state.active !== false) {
         if (pass_state.pass) {
             sync_drive_data(pass_state);
             return;

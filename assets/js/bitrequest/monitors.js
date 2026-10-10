@@ -159,7 +159,7 @@ function finalize_request_state(rdo) {
                     current_data = current_node.data();
                 if (current_data) {
                     transaction_push.push(current_data);
-                    if (current_node.attr("title")) {} else {
+                    if (!current_node.attr("title")) {
                         const history_string = format_transaction_details(current_data);
                         if (history_string) {
                             current_node.append(wrap_historic_data(history_string)).attr("title", history_string);
@@ -777,11 +777,7 @@ function validate_payment_amounts(rd, rdo) {
                         total_crypto_amount += parseFloat(transaction_data.ccval) || 0; // sum of outputs
                     if (total_crypto_amount >= crypto_amount * amount_margin) { // compensation for small fluctuations in rounding amount
                         current_transaction.prevAll().remove();
-                        if (crypto_confirmations >= correction_confirmations || no_conf || transaction_data.setconfirmations === false) { // check all confirmations + whitelist for currencies unable to fetch confirmations
-                            is_crypto_confirmed = true;
-                        } else {
-                            is_crypto_confirmed = false;
-                        }
+                        is_crypto_confirmed = Boolean(crypto_confirmations >= correction_confirmations || no_conf || transaction_data.setconfirmations === false); // check all confirmations + whitelist for currencies unable to fetch confirmations
                         return false;
                     }
                 });
@@ -1123,11 +1119,7 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                     current_transaction.prevAll().remove();
                     // historic_object.fetched === false is a stale fallback price (no data point after the tx timestamp):
                     // let it accumulate toward the amount for display, but never confirm on it — the next scan re-fetches. See DECISIONS.md.
-                    if (historic_object.fetched && (confirmations >= conf_correct || rd.no_conf === true || transaction_data.setconfirmations === false)) { // check all confirmations + whitelist for currencies unable to fetch confirmations
-                        confirmed = true;
-                    } else {
-                        confirmed = false;
-                    }
+                    confirmed = Boolean(historic_object.fetched && (confirmations >= conf_correct || rd.no_conf === true || transaction_data.setconfirmations === false)); // check all confirmations + whitelist for currencies unable to fetch confirmations
                     return false;
                 }
             });

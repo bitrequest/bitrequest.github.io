@@ -891,17 +891,11 @@ function lightning_setup() {
 function lnd_put(proxy_url, proxy_key, payload) {
     const request_type = request.requesttype === "local" ? undefined : request.requesttype;
     glob_let.proxy_attempts[proxy_url] = true;
-    $.ajax({
-        "method": "POST",
-        "cache": false,
-        "timeout": 5000,
-        "url": proxy_url + "/proxy/v1/ln/api/",
-        "data": {
-            "fn": "put",
-            "pl": payload,
-            "rqtype": request_type,
-            "x-api": proxy_key
-        }
+    ln_api(proxy_url, {
+        "fn": "put",
+        "pl": payload,
+        "rqtype": request_type,
+        "x-api": proxy_key
     }).done(function(response) {
         const is_successful = response.stat;
         if (is_successful === true) {
@@ -915,7 +909,7 @@ function lnd_put(proxy_url, proxy_key, payload) {
             response_error = data.error,
             default_error_message = tl("unabletoconnect");
         if (response_error) {
-            const error_message = response_error.message || (typeof response_error === "string" ? response_error : default_error_message);
+            const error_message = err_text(response_error, default_error_message);
             if (request.isrequest) {
                 if (helper.lnd_only) {
                     topnotify(error_message);
@@ -1584,7 +1578,7 @@ function get_payment(ccrateeuro, ccapi) {
     if (lightning_info) {
         if (!request.lightning_id) {
             const saved_pid = br_get_session("lndpid");
-            if (saved_pid && saved_pid == lightning_info.pid) {} else {
+            if (!saved_pid || saved_pid != lightning_info.pid) {
                 br_set_session("lndpid", lightning_info.pid);
             }
         }

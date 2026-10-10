@@ -451,6 +451,7 @@ const lang_ja_obj = {
         "congratulations": "おめでとうございます。あなたは自分自身の銀行になりました！",
         "seedphraseverified": "パスフレーズを確認しました",
         "backupasap": "できるだけ早くシークレットフレーズをバックアップしてください",
+        "seederror": "シークレットフレーズを読み取れませんでした",
         // confirm
         "resoresecretphrase": "シークレットフレーズを復元",
         "areyousuredfp": "シークレットフレーズを削除してもよろしいですか？",

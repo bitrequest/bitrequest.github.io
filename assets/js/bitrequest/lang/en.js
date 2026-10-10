@@ -451,6 +451,7 @@ const lang_en_obj = {
         "congratulations": "Congratulations. You are now your own bank!",
         "seedphraseverified": "Seedphrase verified",
         "backupasap": "Please backup your secret phrase asap",
+        "seederror": "Secret phrase could not be read",
         // confirm
         "resoresecretphrase": "Restore secret phrase",
         "areyousuredfp": "Are you sure you want to delete your secret phrase?",

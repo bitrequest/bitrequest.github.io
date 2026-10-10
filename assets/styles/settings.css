@@ -1116,13 +1116,6 @@ body.seed_dialog #sd_panel {
     display:none;
 }
 
-.si_li {
-    position: relative;
-    padding: 0.5em 0 0.8em;
-    width: 100%;
-    border-bottom: 1px solid #d5d5d5;
-}
-
 #deletephrase {
     float: left;
     padding: 0;
@@ -1152,21 +1145,6 @@ body.seed_dialog #sd_panel {
     float: left;
     width: 100%;
     margin-bottom: 1em;
-}
-
-.sw_icon_box {
-    float: left;
-    text-align: center;
-}
-
-.sw_icon_box img {
-    width: 80px;
-}
-
-.sw_icon_box span {
-    font-weight: 600;
-    font-size: 70%;
-    color: #939393;
 }
 
 .pd_hide {
