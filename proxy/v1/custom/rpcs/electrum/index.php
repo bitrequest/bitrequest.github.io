@@ -36,43 +36,8 @@ function socket_fetch($pl) {
 		}
 		// Top-level POST field from current clients; $pl["tor_proxy"] from older ones
 		$tor_proxy = $pl["tor_proxy"] ?? $_POST["tor_proxy"] ?? TOR_PROXY;
-		// tor_proxy is client-controlled: https only, bare origin, public IPs, DNS pinned
-		$safe_proxy = safe_tor_proxy($tor_proxy);
-		if (!$safe_proxy) {
-			return err_obj("403", "Tor proxy not allowed");
-		}
-		if ((strpos($safe_proxy["base"], $_SERVER["HTTP_HOST"]) !== false)) {
-			return err_obj("411", "Failed to connect via Tor");
-		}
-		// Call default proxy if TOR is not installed
-		$ch = curl_init();
-		if ($ch === false) {  // Added curl initialization check
-			return err_obj("411", "Failed to initialize CURL");
-		}
-		$payload = ["fetch" => "true"];
-		$merged = array_merge($payload, $pl);
-		$tor_url = $safe_proxy["base"] . "/proxy/v1/custom/rpcs/electrum/index.php";
-		curl_setopt($ch, CURLOPT_URL, $tor_url);
-		curl_setopt($ch, CURLOPT_RESOLVE, [$safe_proxy["pin"]]);
-		curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($merged));
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 20); // timeout in seconds
-		
-		$response = curl_exec($ch);
-		$curl_error = curl_errno($ch);
-		$error_message = $curl_error ? curl_error($ch) : null;
-		
-		curl_close($ch);
-		if ($curl_error) {
-			return err_obj("411", $error_message);
-		}
-		if ($response) {
-			return json_decode($response, true);
-		} 
-		return err_obj("411", "no result");
+		$result = forward_to_tor_proxy($tor_proxy, "/proxy/v1/custom/rpcs/electrum/index.php", array_merge(["fetch" => "true"], $pl), $error);
+		return $result ? json_decode($result, true) : err_obj($error[0], $error[1]);
 	}
 	// Original function for non-Tor addresses
 	return socket_fetch_ssl($pl);

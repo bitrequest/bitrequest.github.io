@@ -281,6 +281,48 @@
 			"pin" => $resolved["host"] . ":" . $resolved["port"] . ":" . $pin_ip,
 		];
 	}
+	
+	// Forwards a JSON payload to the endpoint of another Bitrequest proxy that has Tor.
+	// Returns the raw response body, or false with $error set to [code, message].
+	function forward_to_tor_proxy($tor_proxy, $path, $payload, &$error) {
+		// tor_proxy is client-controlled: https only, bare origin, public IPs, DNS pinned
+		$safe_proxy = safe_tor_proxy($tor_proxy);
+		if (!$safe_proxy) {
+			$error = ["403", "Tor proxy not allowed"];
+			return false;
+		}
+		if ((strpos($safe_proxy["base"], $_SERVER["HTTP_HOST"]) !== false)) {
+			$error = ["411", "Failed to connect via Tor"];
+			return false;
+		}
+		$ch = curl_init();
+		if ($ch === false) {
+			$error = ["411", "Failed to initialize CURL"];
+			return false;
+		}
+		curl_setopt($ch, CURLOPT_URL, $safe_proxy["base"] . $path);
+		curl_setopt($ch, CURLOPT_RESOLVE, [$safe_proxy["pin"]]);
+		curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
+		$result = curl_exec($ch);
+		$curl_error = curl_errno($ch);
+		$error_message = $curl_error ? curl_error($ch) : null;
+		curl_close($ch);
+		if ($curl_error) {
+			$error = ["411", $error_message];
+			return false;
+		}
+		if ($result) {
+			return $result;
+		}
+		$error = ["411", "no result"];
+		return false;
+	}
 
 	// Sanitizes user input for safe use in file paths
 	function safe_filename($input) {

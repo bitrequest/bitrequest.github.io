@@ -1,5 +1,5 @@
 <?php
-   
+
 header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 header("Access-Control-Allow-Origin: *");
@@ -18,14 +18,14 @@ if (isset($pd_obj)) {
 		echo curl_get_tor($pd_obj);
 		return;
 	}
-	echo err_obj("411", "TOR not supported on " . $_SERVER["HTTP_HOST"]);
+	echo error_object("411", "TOR not supported on " . $_SERVER["HTTP_HOST"]);
 	return;
 }
 
 //Fetches data from a URL using Tor network or falls back to default proxy
 function fetch_tor($url, $data, $headers) {
 	if (!is_onion_url($url)) {
-		return err_obj("403", "Only .onion hosts are routed via Tor");
+		return error_object("403", "Only .onion hosts are routed via Tor");
 	}
 	$method = (isset($data)) ? $data["method"] ?? "POST" : "GET";
 	$plo = ["url" => $url, "data" => $data, "headers" => $headers, "method" => $method];    
@@ -53,46 +53,13 @@ function fetch_tor($url, $data, $headers) {
 		if ($response) {
 			return $response; // Return last response even if it's an error
 		} 
-		return err_obj("411", "Failed to connect via Tor after " . $max_retries . " attempts");
+		return error_object("411", "Failed to connect via Tor after " . $max_retries . " attempts");
 	}
 	// Client choice arrives as a top-level POST field (api_proxy sets ad.tor_proxy);
 	// $data["tor_proxy"] is kept for form-array payloads from older clients.
 	$tor_proxy = (is_array($data) ? ($data["tor_proxy"] ?? null) : null) ?? $_POST["tor_proxy"] ?? TOR_PROXY;
-	// tor_proxy is client-controlled: https only, bare origin, public IPs, DNS pinned
-	$safe_proxy = safe_tor_proxy($tor_proxy);
-	if (!$safe_proxy) {
-		return err_obj("403", "Tor proxy not allowed");
-	}
-	if ((strpos($safe_proxy["base"], $_SERVER["HTTP_HOST"]) !== false)) {
-		return err_obj("411", "Failed to connect via Tor");
-	}
-	
-	// Call default proxy if TOR is not installed
-	$ch = curl_init();
-	if ($ch === false) {
-		return err_obj("411", "Failed to initialize CURL");
-	}  
-	$tor_url = $safe_proxy["base"] . "/proxy/v1/ln/tor/index.php";
-	curl_setopt($ch, CURLOPT_URL, $tor_url);
-	curl_setopt($ch, CURLOPT_RESOLVE, [$safe_proxy["pin"]]);
-	curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
-	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
-	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($plo));
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-	curl_setopt($ch, CURLOPT_TIMEOUT, 20); // increased timeout for proxy
-	curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);   
-	$result = curl_exec($ch);
-	$curl_error = curl_errno($ch);
-	$error_message = $curl_error ? curl_error($ch) : null;   
-	curl_close($ch);
-	if ($curl_error) {
-		return err_obj("411", $error_message);
-	} 
-	if ($result) {
-		return $result;
-	}
-	return err_obj("411", "no resulta");
+	$result = forward_to_tor_proxy($tor_proxy, "/proxy/v1/ln/tor/index.php", $plo, $error);
+	return $result ?: error_object($error[0], $error[1]);
 }
 
 //Check if response is an error response
@@ -114,7 +81,7 @@ function curl_get_tor($pl) {
 	try {
 		$url = $pl["url"] ?? null;
 		if (!is_onion_url($url)) {
-			return err_obj("403", "Only .onion hosts are routed via Tor");
+			return error_object("403", "Only .onion hosts are routed via Tor");
 		}
 		$data = $pl["data"] ?? null;
 		$headers = $pl["headers"] ?? [];
@@ -211,7 +178,7 @@ function curl_get_tor($pl) {
 			$location = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
 			if (!$location || $hop >= $max_redirects || !is_onion_url($location)) {
 				curl_close($ch);
-				return err_obj("411", "Redirect not allowed");
+				return error_object("411", "Redirect not allowed");
 			}
 			curl_setopt($ch, CURLOPT_URL, $location);
 		}
@@ -225,27 +192,17 @@ function curl_get_tor($pl) {
 		
 		if ($curl_errno) {
 			curl_close($ch);
-			return err_obj("411", "cURL error (" . $curl_errno . "): " . $curl_error);
+			return error_object("411", "cURL error (" . $curl_errno . "): " . $curl_error);
 		}     
 		curl_close($ch);  
 		if ($http_code >= 400) {
-			return err_obj((string)$http_code, "HTTP error: " . $http_code . ", Response: " . substr($result, 0, 100));
+			return error_object((string)$http_code, "HTTP error: " . $http_code . ", Response: " . substr($result, 0, 100));
 		} 
 		if ($result === false) {
-			return err_obj("411", "No result from Tor request");
+			return error_object("411", "No result from Tor request");
 		} 
 		return $result;
 	} catch (Exception $e) {
-		return err_obj("500", "Exception: " . $e->getMessage());
+		return error_object("500", "Exception: " . $e->getMessage());
 	}
-}
-
-//Creates a JSON-encoded error object with code and message for standardized error responses
-function err_obj($code, $message) {
-	return json_encode([
-		"error" => [
-			"code" => $code,
-			"message" => $message,
-		],
-	]);
 }
