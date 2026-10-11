@@ -146,6 +146,7 @@ const br_bipobj = br_get_local("bpdat", true),
         // --- BTC / Kaspa / mempool.space ---
         "main_bc_ws": "ws://socket.blockcypher.com/v1/",
         "main_bc_wss": "wss://socket.blockcypher.com/v1/",
+        "insight_wss": "wss://insight.dash.org/",
         "main_kas_wss": "wss://api.kaspa.org",
         "sec_kas_wss": "wss://api-v2-do.kas.fyi",
         "mempool_space": {

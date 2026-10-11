@@ -794,7 +794,7 @@ const glob_config = {
                             "name": "blockcypher",
                             "url": "blockcypher.com",
                             "api": true,
-                            "display": false
+                            "display": true
                         },
                         {
                             "name": "blockchair",
@@ -807,11 +807,21 @@ const glob_config = {
                 "websockets": {
                     "icon": "tab",
                     "selected": {
-                        "name": "blockcypher wss",
-                        "url": glob_const.main_bc_wss,
+                        "name": "insight websocket",
+                        "url": glob_const.insight_wss,
                         "display": true
                     },
                     "apis": [{
+                            "name": "insight websocket",
+                            "url": glob_const.insight_wss,
+                            "display": true
+                        },
+                        {
+                            "name": "dash.org",
+                            "url": "insight.dash.org",
+                            "display": true
+                        },
+                        {
                             "name": "blockcypher wss",
                             "url": glob_const.main_bc_wss,
                             "display": true
@@ -820,11 +830,6 @@ const glob_config = {
                             "name": "blockcypher ws",
                             "url": glob_const.main_bc_ws,
                             "display": false
-                        },
-                        {
-                            "name": "dash.org",
-                            "url": "insight.dash.org",
-                            "display": true
                         }
                     ],
                     "poll_fallback": true

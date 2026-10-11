@@ -562,16 +562,16 @@ function initialize_alchemy_scan(rd, api_data, rdo, ctract) {
 // Fetches the current block height (or bluescore) and hands it to the scan function
 function fetch_block_height(rd, api_data, rdo, request, height_path, scan_function) {
     api_proxy(request).done(function(response) {
-        const block_data = br_result(response);
-        if (block_data) {
-            const block_height = q_obj(block_data, height_path);
-            if (block_height) {
-                scan_function(block_height);
-                return;
+            const block_data = br_result(response);
+            if (block_data) {
+                const block_height = q_obj(block_data, height_path);
+                if (block_height) {
+                    scan_function(block_height);
+                    return;
+                }
             }
-        }
-        handle_scan_failure(null, rd, api_data, rdo);
-    }).fail(scan_fail(rd, api_data, rdo))
+            handle_scan_failure(null, rd, api_data, rdo);
+        }).fail(scan_fail(rd, api_data, rdo))
         .always(function() {
             update_api_source(rdo, api_data);
         });
@@ -2015,6 +2015,26 @@ function blockcypher_scan_data(data, setconfirmations, ccsymbol) {
         "confirmations": data.confirmations || 0,
         setconfirmations,
         "double_spend": !!data.double_spend,
+        ccsymbol
+    };
+}
+
+// Processes Insight websocket transaction data
+function insight_ws_data(tx, setconfirmations, ccsymbol, wallet_address) {
+    if (!tx || !tx.txid) return null;
+    let duffs = 0;
+    $.each(tx.vout || [], function(i, output) {
+        if (output[wallet_address] !== undefined) {
+            duffs += output[wallet_address];
+        }
+    });
+    if (!(duffs > 0)) return null;
+    return {
+        "ccval": duffs / 1e8,
+        "transactiontime": now_utc(),
+        "txhash": tx.txid,
+        "confirmations": 0,
+        setconfirmations,
         ccsymbol
     };
 }

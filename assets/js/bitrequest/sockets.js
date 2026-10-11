@@ -98,6 +98,10 @@ function pick_dogecoin_socket(socket_node, wallet_address) {
 
 function pick_dash_socket(socket_node, wallet_address) {
     const node_name = socket_node.name;
+    if (node_name === "insight websocket") {
+        insight_dash_socket(socket_node, wallet_address);
+        return;
+    }
     if (node_name === "dash.org") {
         start_address_monitor(5000);
         return;
@@ -949,6 +953,50 @@ function sochain_socket(socket_node, wallet_address, network) {
                 tx_data = msg_data.data;
             if (tx_data.update_available) {
                 start_address_monitor(null, null, true);
+            }
+        } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+        }
+    };
+    socket.onclose = function(e) {
+        handle_socket_close(socket_node, wallet_address);
+    };
+    socket.onerror = function(e) {
+        console.error("Socket error:", socket_node.url);
+    };
+}
+
+function insight_dash_socket(socket_node, wallet_address) {
+    if (glob_let.sockets[wallet_address]) {
+        return;
+    }
+    const socket = glob_let.sockets[wallet_address] = new WebSocket(socket_node.url + "socket.io/?EIO=3&transport=websocket");
+    socket.onopen = function(e) {
+        set_ping(wallet_address, function() {
+            socket.send("2");
+            poll_animate();
+        }, 20000);
+    };
+    socket.onmessage = function(e) {
+        const frame = e.data;
+        if (frame === "2") {
+            socket.send("3");
+            return;
+        }
+        if (frame.slice(0, 2) === "40") {
+            socket_info(socket_node, true);
+            socket.send("42" + JSON.stringify(["subscribe", "inv"]));
+            return;
+        }
+        if (frame.slice(0, 2) !== "42") return;
+        try {
+            const [event, tx] = JSON.parse(frame.slice(2));
+            if (event !== "tx" && event !== "txlock") return;
+            const tx_details = insight_ws_data(tx, request.set_confirmations || 0, request.currencysymbol, wallet_address);
+            if (tx_details && tx_details.ccval > 0) {
+                force_close_socket().then(() => {
+                    start_transaction_monitor(tx_details);
+                });
             }
         } catch (error) {
             console.error("Error parsing WebSocket message:", error);
