@@ -22,7 +22,7 @@
 // by the fetch handler (cache successful same-origin responses).
 // ============================================================
 
-const CODE_CACHE_VERSION = "v0.364",
+const CODE_CACHE_VERSION = "v0.365",
 	CODE_CACHE = "bitrequest-code-" + CODE_CACHE_VERSION,
 	STATIC_CACHE = "bitrequest-static-v1",
 	OFFLINE_FALLBACK = "index.html";
