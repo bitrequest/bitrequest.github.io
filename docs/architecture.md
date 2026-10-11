@@ -66,7 +66,7 @@ wrappers around the same PWA.
 | `xmr_utils.js` | Monero / Zano (CryptoNote curve) helpers. Standalone, also [xmr-utils-js](https://github.com/bitrequest/xmr-utils-js). |
 | `bip39_utils.js` | BIP39 mnemonic + BIP32/BIP44/SLIP-0010 derivation. Standalone, also [bip39-utils-js](https://github.com/bitrequest/bip39-utils-js). |
 | `gd_api.js` | Google Drive backup integration. |
-| `global_queries.js` | The catch-all utility file. Defines `glob_const`/`glob_let`, `api_proxy`, storage helpers, URL schemes, formatting, and the DOM data accessors (`get_setting`, `get_requestli`, etc.). Everything in here is callable from any other file. |
+| `global_queries.js` | The catch-all utility file. Defines `glob_const`/`glob_let`, `api_proxy`, `ln_api`, storage helpers, URL schemes, formatting, and the DOM data accessors (`get_setting`, `get_requestli`, etc.). Everything in here is callable from any other file. |
 
 ### `assets/js/bitrequest/` — first-party code
 
@@ -98,7 +98,7 @@ proxy/
 └── v1/
     ├── index.php           # Generic API proxy entry point (POST → /proxy/v1/)
     ├── api.php             # Shared API helper (caching, HTTP fetch)
-    ├── filter.php          # Request validation / sanitization
+    ├── filter.php          # Request validation / sanitization, SSRF-safe URL checks, Tor forwarding (forward_to_tor_proxy)
     ├── custom/             # Per-chain custom RPC handlers (electrum, nano)
     │   └── rpcs/
     ├── inv/                # Invoice / receipt rendering
@@ -279,7 +279,9 @@ It does one of three things:
    array, appends it to the URL, fetches, returns the response wrapped in
    `{ping: {br_cache: {...}, br_result: ...}}`.
 3. **Tor proxy** (`.onion` URLs): adds a `tor_proxy` field pointing at a
-   random Tor-capable proxy from `glob_let.tor_proxies`.
+   random Tor-capable proxy from `glob_let.tor_proxies`. A proxy without Tor
+   of its own passes the request on with `forward_to_tor_proxy()` in
+   `filter.php` (https only, public IPs, DNS pinned).
 
 The POST body sent to `v1/index.php` for a generic proxied call:
 
@@ -310,8 +312,9 @@ For Lightning, the contract is different: `POST <proxy>/proxy/v1/ln/api/`
 with `fn` (function: `ln-create-invoice`, `ln-invoice-status`, etc.) and
 `imp` (`lnd` / `core-lightning` / `lnbits` / `nwc` / `spark`). The server
 dispatches via `if ($imp === ...)` branches inside each top-level function
-in `v1/ln/api/index.php`. See [`proxy/README.md`](../proxy/README.md) for the
-Lightning endpoint reference.
+in `v1/ln/api/index.php`. On the client every one of these calls goes through
+`ln_api(proxy_url, data, timeout)` in `global_queries.js`. See
+[`proxy/README.md`](../proxy/README.md) for the Lightning endpoint reference.
 
 ### Dispatch routing
 

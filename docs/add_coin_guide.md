@@ -41,7 +41,7 @@ Insert a new object into the `bitrequest_coin_data` array. Use an existing coin 
         "cmcid": 99999,            // CoinMarketCap ID (for price lookups)
         "urlscheme": function(payment, address, amount, iszero, label, message) {
             // Return a BIP-21 style payment URI
-            // For BTC-like coins, reuse: btc_urlscheme(payment, address, amount, iszero, label, message)
+            // For BTC-like coins, skip this function and use: "urlscheme": btc_urlscheme,
             // For custom schemes, build the URI string manually
             return "yourcoin:" + address + "?amount=" + amount;
         },
@@ -135,6 +135,9 @@ Insert a new object into the `bitrequest_coin_data` array. Use an existing coin 
     }
 }
 ```
+
+> [!NOTE]
+> The shared defaults are also available as `setting_confirmations()`, `setting_random_address()` and `setting_reuse_address()` at the top of `config.js`. Use them instead of copying the three blocks above (they return a fresh object each time).
 
 **Anchored `address_regex` must match the real address length.** Test it against real addresses of every address type the coin has. Kaspa uses 61 characters after `kaspa:` for Schnorr/P2SH addresses and 63 for ECDSA, so its regex is `^(kaspa):([a-z0-9]{61}|[a-z0-9]{63})$`. Anchoring with a guessed length silently rejects valid addresses.
 
