@@ -807,24 +807,24 @@ const glob_config = {
                 "websockets": {
                     "icon": "tab",
                     "selected": {
-                        "name": "dash.org",
-                        "url": "insight.dash.org",
+                        "name": "blockcypher wss",
+                        "url": glob_const.main_bc_wss,
                         "display": true
                     },
                     "apis": [{
-                            "name": "dash.org",
-                            "url": "insight.dash.org",
-                            "display": true
-                        },
-                        {
                             "name": "blockcypher wss",
                             "url": glob_const.main_bc_wss,
-                            "display": false
+                            "display": true
                         },
                         {
                             "name": "blockcypher ws",
                             "url": glob_const.main_bc_ws,
                             "display": false
+                        },
+                        {
+                            "name": "dash.org",
+                            "url": "insight.dash.org",
+                            "display": true
                         }
                     ],
                     "poll_fallback": true
@@ -1322,11 +1322,10 @@ const glob_config = {
                         "display": true
                     },
                     "apis": [{
-                            "name": "xmr_node",
-                            "url": "https://node.bitrequest.app:18090",
-                            "display": true
-                        }
-                    ],
+                        "name": "xmr_node",
+                        "url": "https://node.bitrequest.app:18090",
+                        "display": true
+                    }],
                     "options": [],
                     "lws_selected": {
                         "name": "lws",
