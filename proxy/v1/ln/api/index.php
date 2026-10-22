@@ -262,6 +262,9 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 			}
 		}
 
+		if (in_array($imp, ["lnd", "core-lightning", "lnbits"]) && !empty($cred["key"]) && $key === $cred["key"] && $host !== ($cred["host"] ?? "")) {
+			$key = false;
+		}
 		// Check if host and key are available, return error if not
 		if (!$host || !$key) {
 			$cname = !$key ? "keys" : "hostname";
@@ -1007,7 +1010,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 	
 		return array_merge($base_result, [
 			"status" => $br_state,
-			"bolt11" => $dat["bolt11"],
+			"bolt11" => $dat["invoice"] ?? $dat["bolt11"] ?? null,
 			"hash" => $inv_hash,
 			"amount" => $inv_amount,
 			"amount_paid" => ($br_state === "paid") ? $inv_amount : null,

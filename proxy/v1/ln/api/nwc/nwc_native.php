@@ -184,7 +184,10 @@ function nwc_ws_connect($url, $timeout = 10) {
     if (!$parts || empty($parts["host"])) throw new Exception("Bad relay URL: $url");
     $scheme = $parts["scheme"] ?? "wss";
     $host = $parts["host"];
-    $port = $parts["port"] ?? ($scheme === "wss" ? 443 : 80);
+    if ($scheme !== "wss") throw new Exception("Relay must use wss");
+    $port = $parts["port"] ?? 443;
+    $ip = gethostbyname($host);
+    if (!filter_var($ip, FILTER_VALIDATE_IP) || !is_public_ip($ip)) throw new Exception("Relay host not allowed");
     $path = ($parts["path"] ?? "/") . (isset($parts["query"]) ? "?" . $parts["query"] : "");
     $transport = ($scheme === "wss") ? "ssl://" : "tcp://";
     $ctx = stream_context_create([
@@ -197,7 +200,7 @@ function nwc_ws_connect($url, $timeout = 10) {
     ]);
     $errno = 0; $errstr = "";
     $sock = @stream_socket_client(
-        $transport . $host . ":" . $port,
+        $transport . $ip . ":" . $port,
         $errno, $errstr,
         $timeout,
         STREAM_CLIENT_CONNECT,

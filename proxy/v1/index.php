@@ -152,7 +152,7 @@ try {
 
     // Add Authorization header if needed
     if ($bearer) {
-        if ($auth_token) {
+        if ($auth_token && !preg_match("/[\r\n]/", $auth_token)) {
             $postheaders[] = "Authorization: Bearer " . $auth_token;
         }
     }

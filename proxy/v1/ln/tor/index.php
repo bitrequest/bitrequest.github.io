@@ -4,7 +4,7 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 header("Access-Control-Allow-Origin: *");
 
-include_once "../../filter.php";
+include_once __DIR__ . "/../../filter.php";
 
 // Handle direct requests with Tor support
 $pd = file_get_contents("php://input");
