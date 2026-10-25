@@ -40,6 +40,7 @@ $(document).ready(function() {
     // ** Seed Generation & Management: **
     make_seed();
     restore_seed();
+    b39_input();
     restore_seed_verify();
     submit_disclaimer();
 
@@ -349,6 +350,19 @@ function restore_seed() {
     })
 }
 
+// restrict key inputs
+function b39_input() {
+    $(document).on("keydown", "#bip39phrase", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            $(".submit_seedphrase").trigger("click");
+            return;
+        }
+        if (e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
+        if (!/^[a-z ]$/.test(e.key)) e.preventDefault();
+    });
+}
+
 // Validates and processes seed phrase restoration attempts
 function restore_seed_verify() {
     $(document).on("click", "#restore_seed", function() {
@@ -556,7 +570,7 @@ function bip39(dat) {
         reminder_text = dialog_type === "restore" ? "<p>" + tl("overwritten") + "</p>" : "<p>" + tl("pleaseverify") + "</p>",
         verify_header = dialog_type === "restore" ? tl("verifycurrent") : tl("verifybackup"),
         save_prompt = is_restore ? tl("entersecretphrase") : tl("writedownsecretphrase"),
-        verify_button = is_restore ? "<div id='restore_seed' class='button" + restore_bu_class + "' data-seedid='" + dialog_data.seedid + "'>" + tl("restorebttn") + "</div>" : "<div id='cfbu2' class='button'>" + tl("ivebackeditup") + "</div>",
+        verify_button = is_restore ? "<div id='restore_seed' class='button submit_seedphrase" + restore_bu_class + "' data-seedid='" + dialog_data.seedid + "'>" + tl("restorebttn") + "</div>" : "<div id='cfbu2' class='button submit_seedphrase'>" + tl("ivebackeditup") + "</div>",
         markup = $("<div id='seed_steps' class='panel" + current_step + "' data-goal='" + dialog_type + "' data-spark='" + spark_init + "'>\
         <div id='seed_step1' class='seed_step'>\
             <div class='ss_header'>\
@@ -802,6 +816,7 @@ function verify_words() {
                     glob_let.hasbip = false;
                     glob_let.bipv = false;
                     glob_let.bipid = false;
+                    glob_let.bipobj = false;
                     update_address_lists();
                     hide_seed_panel();
                     notify(tl("secretphrasedeleted"));
@@ -881,22 +896,9 @@ function complete_seed_setup() {
 // Processes final seed setup steps and initializes derivation
 function seed_callback() {
     if (!glob_let.hasbip) {
-        const phrase_obj = {},
-            seed_string = btoa(JSON.stringify(glob_let.phrasearray)),
-            phrase_id = hmacsha(seed_string, "sha256").slice(0, 8),
-            storage_data = {
-                "id": phrase_id,
-                "dat": null
-            };
-        phrase_obj.pid = phrase_id;
-        phrase_obj.pob = seed_string;
-        br_set_local("bpdat", storage_data, true);
-        br_set_local("tp", now_utc());
-        glob_let.bipobj = storage_data,
-            glob_let.hasbip = true,
-            glob_let.bipid = phrase_id;
+        const phrase_obj = phrase_object();
         notify("🎉 " + tl("congratulations") + " 🎉");
-        const seed_id = phrase_id,
+        const seed_id = phrase_obj.pid,
             seed_phrase = glob_let.phrasearray.join(" "),
             seed_steps = $("#seed_steps"),
             spark_init = seed_steps.attr("data-spark") === "true";
@@ -967,6 +969,24 @@ function seed_callback() {
         notify(tl("backupasap"));
     }
     hide_seed_panel();
+}
+
+// Construct phrase_object and set variables
+function phrase_object() {
+    const phrase_obj = {},
+        seed_string = btoa(JSON.stringify(glob_let.phrasearray)),
+        phrase_id = hmacsha(seed_string, "sha256").slice(0, 8),
+        storage_data = {
+            "id": phrase_id,
+            "dat": null
+        };
+    phrase_obj.pid = phrase_id,
+        phrase_obj.pob = seed_string,
+        glob_let.bipobj = storage_data,
+        glob_let.hasbip = true,
+        glob_let.bipid = phrase_id;
+    br_set_local("tp", now_utc());
+    return phrase_obj;
 }
 
 // Disables xpub settings across all supported cryptocurrencies

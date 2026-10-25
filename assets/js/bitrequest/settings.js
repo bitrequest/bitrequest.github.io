@@ -1226,6 +1226,7 @@ function select_gd_restore() {
 
 // Validates and executes backup restoration with team invite handling
 function restore(cb64, meta) {
+    canceldialog();
     if (inj(cb64)) return;
     if (inj(meta)) return;
     const file = meta.filename,
@@ -1375,7 +1376,12 @@ function restore_callback(data, ns) {
     const type = data.type,
         newseed = ns || !glob_let.hasbip;
     if (newseed) {
-        br_set_local("tp", now_utc());
+        const phrase_obj = phrase_object(),
+            init_data = br_get_local("init", true),
+            updated_init = get_default_object(init_data, true);
+        updated_init.bipv = "yes";
+        br_set_local("init", updated_init, true);
+        encrypt_seed_data(phrase_obj);
     }
     if (type) {
         if (type === "gd") {
