@@ -624,7 +624,6 @@ function enterapp(pin_input) {
             canceloptions(true);
         }
         pin_config.attempts = 0;
-        save_settings(is_global);
         remove_cashier();
     } else {
         if (!navigator.vibrate) {
