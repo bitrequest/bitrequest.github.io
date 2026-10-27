@@ -3455,10 +3455,15 @@ function compile_teaminvite() {
             "bitrequest_backupfile_id", "bitrequest_appstore_dialog", "bitrequest_init",
             "bitrequest_eth_l2_contracts", "bitrequest_k", "bitrequest_awl", "bitrequest_dat", "bitrequest_rt", "bitrequest_tp", "bitrequest_bpdat",
             "bitrequest_requests", "bitrequest_archive", "sameseed"
-        ];
+        ],
+        currency_list = br_get_local("currencies", true),
+        checked = [],
+        unchecked = [];
+    currency_list.forEach(a => (a.checked ? checked : unchecked).push(a));
+    const skip = new Set(unchecked.map(u => u.currency));
     for (let key in localStorage) {
         const val = localStorage.getItem(key);
-        if (val !== null && !skip_keys.includes(key)) {
+        if (val !== null && !skip_keys.includes(key) && !key.split("_").some(part => skip.has(part))) {
             let parsed;
             try {
                 parsed = JSON.parse(val);
@@ -3475,32 +3480,46 @@ function compile_teaminvite() {
             } else {
                 jsonfile[key] = parsed;
             }
+        } else {
+            if (key.startsWith("bitrequest_cc_") || key.match(/^bitrequest_([^_]+)_settings$/)) {
+                jsonfile[key] = []; // remove addresses and settings
+            }
         }
+    }
+    if (unchecked) {
+        unchecked.forEach(item => {
+            const currency = item.currency,
+                address_key = "bitrequest_cc_" + currency,
+                settings_key = "bitrequest_" + currency + "_settings";
+            jsonfile[address_key] = []; // reset unchecked addresses
+            jsonfile[settings_key] = []; // reset unchecked settings
+        });
     }
     const seedobj = glob_let.hasbip ? ls_phrase_obj() : {
             "pid": false,
             "pob": false
         },
-        adjusted = adjust_object(jsonfile, seedobj);
+        adjusted = adjust_object(jsonfile, seedobj, checked);
     return encode_rd_payload(adjusted);
 }
 
 // Modifies configuration data for team member access
-function adjust_object(object, seedobj) {
+function adjust_object(object, seedobj, checked_c) {
     const seedid = seedobj.pid;
     object.bitrequest_cashier = {
         "cashier": true,
         seedid
     };
-    let phrase, seed, rootkey, key, cc;
+    let key, cc;
     if (seedid) {
-        phrase = seedobj.pob.join(" ");
-        seed = mnemonic_to_seed(phrase);
-        rootkey = get_rootkey(seed);
+        const phrase = seedobj.pob.join(" "),
+            seed = mnemonic_to_seed(phrase),
+            rootkey = get_rootkey(seed);
         key = rootkey.slice(0, 64);
         cc = rootkey.slice(64);
     }
-    $.each(glob_config.bitrequest_coin_data, function(i, coinconfig) {
+    const bitrequest_coin_data = glob_config.bitrequest_coin_data.filter(a => checked_c.some(f => f.currency === a.currency));
+    $.each(bitrequest_coin_data, function(i, coinconfig) {
         const currency = coinconfig.currency,
             default_coinsettings = coinconfig.settings,
             bip32dat = default_coinsettings.Xpub,
