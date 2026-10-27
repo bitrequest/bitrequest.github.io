@@ -712,6 +712,10 @@ function continue_request(contracts) {
     // Extend global helper object
     $.extend(helper, extended_helper_data);
     if (payment_currency === "monero" && view_key) {
+        if (glob_const.offline) {
+            proceed_pf();
+            return;
+        }
         monero_setup(api_details.data);
         return;
     }
@@ -889,6 +893,14 @@ function lightning_setup() {
 
 // Initializes communication with Lightning Network proxy server and handles authentication
 function lnd_put(proxy_url, proxy_key, payload) {
+    const is_proxy = q_obj(helper, "lnd.lnurl");
+    if (glob_const.offline) {
+        if (is_proxy) { // allow offline lightning payments
+            helper.lnd_status = true;
+        }
+        proceed_pf();
+        return;
+    }
     const request_type = request.requesttype === "local" ? undefined : request.requesttype;
     glob_let.proxy_attempts[proxy_url] = true;
     ln_api(proxy_url, {
@@ -922,7 +934,6 @@ function lnd_put(proxy_url, proxy_key, payload) {
         }
         proceed_pf();
     }).fail(function(xhr, status, error) {
-        const is_proxy = q_obj(helper, "lnd.lnurl");
         if (!is_proxy) {
             const saved_proxy = s_lnd_proxy();
             if (saved_proxy === false) {

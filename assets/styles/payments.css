@@ -432,13 +432,9 @@
     display: inline-block;
 }
 
-#paymentdialogbox.br_offline .actionbar .openwallet {
-    display: inline-block;
-    float: none;
-}
-
-#paymentdialogbox.br_offline .actionbar .openwallet_lnd {
-    display: none;
+#paymentdialogbox.br_offline .openwallet,
+#paymentdialogbox.br_offline .openwallet_lnd {
+    display: none!important;
 }
 
 #request_back .actionbar {
