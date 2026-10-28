@@ -414,6 +414,9 @@ function finish_functions() {
         console.log({
             glob_const
         });
+        if (glob_const.offline) {
+            br_offline(true);
+        }
     }, 700);
     close_app_panel();
     gk();

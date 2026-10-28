@@ -1006,6 +1006,7 @@ function get_vk(address) {
 
 // Rotates to next available proxy server while preventing request overflow
 function get_next_proxy() {
+    if (glob_const.offline) return false; // do not bother when offline
     if (over_budget_request("proxy")) return false; // prevent overflow
     const proxies = all_proxies(),
         current = d_proxy(),

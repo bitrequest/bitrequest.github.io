@@ -595,6 +595,7 @@ function next_unused_endpoint(list, match_field, match_value, cache_key) {
 
 // Retrieves next available Layer 2 API endpoint while preventing overflow
 function get_next_layer2_api(this_payment, api_data, request_id, l2, rdo) {
+    if (glob_const.offline) return false; // do not bother when offline
     if (over_budget(rdo, "l2")) return false // prevent overflow
     const api_settings = q_obj(get_coinsettings(this_payment), "layer2.options." + l2 + ".apis");
     if (api_settings) {
@@ -612,6 +613,7 @@ function get_next_layer2_api(this_payment, api_data, request_id, l2, rdo) {
 // calls this before an rdo exists, in which case we fall back to the
 // request-scoped budget.
 function get_next_rpc(this_payment, api_data, request_id, l2, rdo) {
+    if (glob_const.offline) return false; // do not bother when offline
     if (rdo ? over_budget(rdo, "rpc") : over_budget_request("rpc")) return false; // prevent overflow
     const api_settings = cs_node(this_payment, "apis", true);
     if (api_settings) {
