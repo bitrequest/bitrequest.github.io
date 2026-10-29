@@ -1,5 +1,4 @@
 RewriteEngine on
-RewriteRule ^(.*)4bR(.*)$ https://bit.ly/$1 [L,R=301]
 RewriteRule ^apple-app-site-association$ .well-known/apple-app-site-association.json [NC,L]
 RewriteRule ^.well-known/apple-app-site-association$ .well-known/apple-app-site-association.json [NC,L]
 Header set Access-Control-Allow-Origin "*"
