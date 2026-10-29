@@ -68,7 +68,8 @@ if ($pid && file_exists($path)) {
             $status = json_encode([
                 "pid" => $pid,
                 "status" => "confirm",
-                "rqtype" => $type_txt
+                "rqtype" => $type_txt,
+                "nid" => $current["nid"] ?? null
             ]);
             if (file_put_contents($path, $status) !== false) {
                 // Notify payment server about the confirmed payment

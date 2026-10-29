@@ -72,7 +72,6 @@
 		<meta http-equiv="refresh" content="0;URL=<?php safe_echo($longurl); ?>" />
 	<?php endif; ?>
 	<title><?php safe_echo($sharedtitle); ?></title>
-	<link rel="stylesheet" media="screen" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700"/>
 	<style>
 		* {
 			box-sizing: border-box;

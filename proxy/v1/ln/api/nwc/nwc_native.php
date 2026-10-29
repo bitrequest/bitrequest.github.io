@@ -355,6 +355,16 @@ function nwc_ws_recv($sock, $deadline) {
  *
  * Returns the wallet's result array, or throws on error/timeout.
  */
+// A response counts only when it comes from the wallet and, if it has e tags, answers this request
+function nwc_is_reply($ev, $wallet_pubkey, $request_id) {
+    if (strtolower((string) ($ev["pubkey"] ?? "")) !== $wallet_pubkey) return false;
+    $e_tags = [];
+    foreach ($ev["tags"] ?? [] as $tag) {
+        if (is_array($tag) && ($tag[0] ?? null) === "e") $e_tags[] = $tag[1] ?? null;
+    }
+    return !$e_tags || in_array($request_id, $e_tags, true);
+}
+
 function nwc_request_native($nwc_uri, $method, array $params, $encryption = "nip44") {
     if (!preg_match('#^nostr\+walletconnect://([0-9a-fA-F]{64})\?(.+)$#', $nwc_uri, $m)) {
         throw new Exception("Invalid NWC URI");
@@ -397,7 +407,12 @@ function nwc_request_native($nwc_uri, $method, array $params, $encryption = "nip
             }
             // Wallet response
             if ($msg[0] === "EVENT" && isset($msg[2]) && ($msg[2]["kind"] ?? 0) === 23195) {
-                $plain = nwc_decrypt_content($msg[2]["content"], strtolower($secret), $wallet_pubkey);
+                if (!nwc_is_reply($msg[2], $wallet_pubkey, $event["id"])) continue;
+                try {
+                    $plain = nwc_decrypt_content($msg[2]["content"], strtolower($secret), $wallet_pubkey);
+                } catch (Exception $e) {
+                    continue; // someone else's event
+                }
                 $result = json_decode($plain, true);
                 if (!is_array($result)) throw new Exception("NWC: invalid response JSON");
                 if (isset($result["error"])) {

@@ -67,7 +67,7 @@ const br_bipobj = br_get_local("bpdat", true),
     glob_const = {
         // --- App metadata ---
         "apptitle": "Bitrequest",
-        "proxy_version": "0.044",
+        "proxy_version": "0.045",
         "androidpackagename": br_androidpackagename,
         "approot": br_approot,
         "app_origins": ["https://bitrequest.github.io", "https://bitrequest.web.app"], // origins a decoded share/short link may redirect to
@@ -247,7 +247,6 @@ const br_bipobj = br_get_local("bpdat", true),
         },
 
         // --- Ethereum L2 ---
-        "l2_fetched": {}, // owner: ethl2.js    — { id, l2 } for last fetched L2 chain
         "l2s": {}, // owner: ethl2.js    — per-request L2 chain memo
         "is_erc20t": null, // owner: payments.js — flag: current dialog is an ERC20 token
 

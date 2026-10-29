@@ -44,11 +44,23 @@ function handle_systembu_request($params, $postheaders) {
 
 // Handles OAuth credential fetch requests to Google's token endpoint
 function handle_fetchcreds_request($postdata, $keys) {
-    $postdata["MIME-type"] = "application/x-www-form-urlencoded; charset=UTF-8";
-    $postdata["client_id"] = $keys["googleauth"] ?? "";
-    $postdata["client_secret"] = $keys["google_secret"] ?? "";
+    $grant_type = $postdata["grant_type"] ?? "";
+    if (!in_array($grant_type, ["authorization_code", "refresh_token"], true)) {
+        return ["error" => "unsupported_grant_type", "error_description" => "Only authorization_code and refresh_token are supported"];
+    }
+    $payload = [
+        "grant_type" => $grant_type,
+        "client_id" => $keys["googleauth"] ?? "",
+        "client_secret" => $keys["google_secret"] ?? ""
+    ];
+    if ($grant_type === "authorization_code") {
+        $payload["code"] = (string) ($postdata["code"] ?? "");
+        $payload["redirect_uri"] = (string) ($postdata["redirect_uri"] ?? "");
+    } else {
+        $payload["refresh_token"] = (string) ($postdata["refresh_token"] ?? "");
+    }
     // No cache folder: token responses must never be written to disk.
-    return api("https://oauth2.googleapis.com/token", $postdata, null, 0, null, null, null);
+    return api("https://oauth2.googleapis.com/token", http_build_query($payload), null, 0, null, null, null);
 }
 
 // Routes custom request types to their appropriate handler functions

@@ -134,12 +134,20 @@ if ($fn === "put") {
 		// Process status information
 		if ($status) {
 			$statfile = "cache/tx/" . $status;
-			if (file_exists($statfile) && $rqtype === "local") {
+			$prev = file_exists($statfile) ? json_decode((string) file_get_contents($statfile), true) : null;
+			$stat_content["nid"] = (is_array($prev) && array_key_exists("nid", $prev)) ? $prev["nid"] : ($cred_resp ? $cred_file : null);
+			$prev_payable = is_array($prev) && !empty($prev["bolt11"]) && (int) ($prev["timestamp"] ?? 0) + (int) ($prev["expiry"] ?? 60) * 1000 > time() * 1000;
+			if ($prev_payable) {
+				// Keep an invoice that can still be paid, a re-put must not orphan it
+				$stat_content = $prev;
+				$stat_resp = true;
+			} elseif (file_exists($statfile) && $rqtype === "local") {
 				// Update existing status file for local request
 				$get_content = file_get_contents($statfile);
 				if ($get_content) {
 					$stat_obj = json_decode($get_content, true);
 					$stat_obj["status"] = "waiting";
+					$stat_obj["nid"] = $stat_content["nid"];
 					$stat_content = $stat_obj;
 					file_put_contents($statfile, json_encode($stat_content));
 				}
@@ -201,7 +209,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 		}
 		
 		// Initialize variables for host, key, and other settings
-		$host = $key = false;
+		$host = $key = $cached = false;
 		$type = "lnurl";
 		$isproxy = false;
 		$nid = safe_filename($get_nid ? $get_nid : ($post_nid ? $post_nid : false));
@@ -214,6 +222,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 				// Attempt to read and decode cached credentials
 				$get_content = file_get_contents($filename);
 				if ($get_content && ($contents = json_decode(base64_decode($get_content), true))) {
+					$cached = $contents;
 					
 					// Use cached host and key if available
 					if (!empty($contents["host"])) {
@@ -265,6 +274,19 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 		if (in_array($imp, ["lnd", "core-lightning", "lnbits"]) && !empty($cred["key"]) && $key === $cred["key"] && $host !== ($cred["host"] ?? "")) {
 			$key = false;
 		}
+		if ($posthost && !$postkey && !empty($cached["key"]) && $key === $cached["key"] && $posthost !== ($cached["host"] ?? "")) {
+			$key = false;
+		}
+
+		// Tracking-bound calls may only use the node that was bound to this payment id at put time
+		$rq_pid = $lnget ? $get_pid : $post_pid;
+		$track = ($rq_pid && is_file("cache/tx/" . $rq_pid)) ? json_decode((string) file_get_contents("cache/tx/" . $rq_pid), true) : null;
+		$uses_track = $lnget || $fn === "ln-invoice-status" || ($fn === "ln-create-invoice" && !empty($pdat["b11"]));
+		if ($uses_track && ($type === "post" || ($type === "cache" && !hash_equals((string) ($track["nid"] ?? ""), (string) $nid)))) {
+			$e_msg = "node does not match this payment id";
+			echo json_encode($lnget ? ["status" => "ERROR", "reason" => $e_msg] : r_err($e_msg, null));
+			return;
+		}
 		// Check if host and key are available, return error if not
 		if (!$host || !$key) {
 			$cname = !$key ? "keys" : "hostname";
@@ -305,7 +327,9 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 							"amount_paid" => null,
 							"timestamp" => time() * 1000,
 							"txtime" => null,
-							"conf" => 0
+							"conf" => 0,
+							"nid" => $track["nid"] ?? null,
+							"expiry" => (int) $p_expiry
 						];
 						if (isset($invoice["request_id"])) {
 							$s_content["request_id"] = $invoice["request_id"];
@@ -332,10 +356,13 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 
 		if ($fn === "ln-invoice-status" || $fn === "ln-invoice-decode") {
 			$hash = $pdat["hash"] ?? false;
+			if ($fn === "ln-invoice-status" && (!$hash || !hash_equals((string) ($track["request_id"] ?? $track["hash"] ?? ""), (string) $hash))) {
+				echo json_encode(r_err("invoice does not belong to this payment id", null));
+				return;
+			}
 			$itype = $pdat["type"] ?? false;
 			$ttype = ($itype === "incoming") ? "outgoing" : $itype;
-			
-			$lndecode = invoice_lookup($imp, $post_pid, $host, $key, $hash, $ttype, $p_expiry, $fn === "ln-invoice-status");
+			$lndecode = invoice_lookup($imp, $post_pid, $host, $key, $hash, $ttype, $track["expiry"] ?? $p_expiry, $fn === "ln-invoice-status");
 			echo json_encode($lndecode);
 			
 			// Process callbacks for paid or canceled invoices
@@ -343,7 +370,9 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 				$callback = ($pdat["callback"] ?? "") === "yes" ? "yes" : "no";
 				if ($callback === "yes" && $ttype) {
 					$inv_status = $lndecode["status"];
-					if ($inv_status === "paid" || $inv_status === "canceled") {
+					if (($inv_status === "paid" || $inv_status === "canceled") && ($track["cb"] ?? null) !== $inv_status) {
+						$track["cb"] = $inv_status;
+						file_put_contents("cache/tx/" . $post_pid, json_encode($track));
 						handle_callback($callback_url, $lndecode, $ttype, $remote_tracking, $local_tracking);
 					}
 				}
@@ -372,7 +401,8 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 					// Check for existing valid invoice
 					$g_dec = json_decode($g_content, true);
 					$timestamp = $g_dec["timestamp"] ?? false;
-					if ($timestamp && (time() * 1000 - $timestamp) < 90000) {
+					$reuse_ms = (int) ($g_dec["expiry"] ?? 60) * 1000 - 20000;
+					if ($timestamp && (time() * 1000 - $timestamp) < $reuse_ms && (int) ($g_dec["amount"] ?? 0) === (int) $specified_amount) {
 						$saved_inv = $g_dec["bolt11"] ?? false;
 						if ($saved_inv) {
 							echo json_encode(["pr" => $saved_inv, "routes" => $routes]);
@@ -447,7 +477,9 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 							"amount_paid" => null,
 							"timestamp" => time() * 1000,
 							"txtime" => null,
-							"conf" => 0
+							"conf" => 0,
+							"nid" => $track["nid"] ?? null,
+							"expiry" => (int) $p_expiry
 						];
 						if (isset($result["request_id"])) {
 							$s_content["request_id"] = $result["request_id"];
@@ -849,7 +881,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 		if ($imp === "nwc") {
 			// Spark uses request_id for lookups (passed via hash parameter)
 			$result = nwc_lookup_invoice($key, $hash);
-			$is_valid = !isset($result["error"]);
+			$is_valid = !isset($result["error"]) && strtolower((string) ($result["payment_hash"] ?? "")) === strtolower((string) $hash);
 			return process_invoice_lookup($imp, $result, $is_valid, $pid, $type, $expiry, $status);
 		}
 

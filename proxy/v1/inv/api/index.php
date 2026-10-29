@@ -111,7 +111,7 @@
 		}
 	
 		$decoded = json_decode(base64_decode($content), true);
-		if ($decoded === null) {
+		if ($decoded === null || !valid_longurl($content)) {
 			send_response(["error" => "Invalid cache data"]);
 			return;
 		}

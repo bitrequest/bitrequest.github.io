@@ -391,6 +391,7 @@ function decode_bitcoin_tx($hex_data) {
 	
 	// Helper functions for reading data
 	$read_bytes = function($length) use (&$data, &$position) {
+		if ($length < 0 || $position + $length > strlen($data)) throw new Exception("Truncated transaction data");
 		$result = substr($data, $position, $length);
 		$position += $length;
 		return $result;

@@ -1,6 +1,6 @@
 <?php	
 // PROXY
-const VERSION = "0.044";
+const VERSION = "0.045";
 const CACHE_DURATIONS = [
 	"2m" => 6220800,  // 2 months in seconds
 	"1w" => 604800,   // 1 week in seconds
@@ -195,6 +195,19 @@ function extract_tls_wildcard($headers) {
 	return [$headers, $tls_wildcard];
 }
 
+// Same host and port, or an http -> https upgrade on the default ports
+function redirect_keeps_auth($from, $to) {
+	$a = parse_url($from);
+	$b = parse_url($to);
+	if (strtolower($a["host"] ?? "") !== strtolower($b["host"] ?? "")) return false;
+	$scheme_a = strtolower($a["scheme"] ?? "");
+	$scheme_b = strtolower($b["scheme"] ?? "");
+	$port_a = $a["port"] ?? ($scheme_a === "https" ? 443 : 80);
+	$port_b = $b["port"] ?? ($scheme_b === "https" ? 443 : 80);
+	if ($scheme_a === $scheme_b) return $port_a === $port_b;
+	return $scheme_a === "http" && $scheme_b === "https" && $port_a === 80 && $port_b === 443;
+}
+
 // Removes credential-bearing headers from the flat "Key: Value" header array so
 // they aren't re-sent across a cross-host redirect. Names matched case-insensitively.
 function strip_credential_headers($headers) {
@@ -257,7 +270,6 @@ function curl_get($url, $data, $headers) {
 		// closes that, while still letting legitimate redirects through.
 		$current_url = $url;
 		$max_redirects = 3;
-		$origin_host = strtolower(parse_url($url, PHP_URL_HOST) ?? "");
 
 		for ($hop = 0; $hop <= $max_redirects; $hop++) {
 			// Resolve and validate this hop. resolve_safe_url returns the IP we
@@ -314,11 +326,10 @@ function curl_get($url, $data, $headers) {
 				if (!$location || $hop >= $max_redirects) {
 					return error_object("411", "too many redirects");
 				}
-				// Leaving the original host: drop credential headers, and the body on 301/302/303,
-				// so neither is handed to another host. Same-host redirects (trailing slash,
-				// http -> https) keep the POST body, as callbacks rely on that.
-				$redirect_host = strtolower(parse_url($location, PHP_URL_HOST) ?? "");
-				if ($redirect_host !== $origin_host) {
+				// Leaving the original origin: drop credential headers, and the body on 301/302/303,
+				// so neither is handed to another host, port or a downgraded scheme. Same-origin
+				// redirects (trailing slash) and http -> https upgrades keep the POST body, as callbacks rely on that.
+				if (!redirect_keeps_auth($url, $location)) {
 					$headers = strip_credential_headers($headers);
 					if ($http_code !== 307 && $http_code !== 308) {
 						$data = null;

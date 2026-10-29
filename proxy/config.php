@@ -15,6 +15,7 @@ $keys = array(
 	"googleauth" => "",
 	"google_secret" => "",
 	"alchemy" => "",
+	// Sent to every app user for browser websockets; when empty, the infura/blockcypher/alchemy keys above are sent instead
 	"infura_public" => "",
 	"blockcypher_public" => "",
 	"alchemy_public" => ""
