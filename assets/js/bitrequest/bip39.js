@@ -1356,6 +1356,10 @@ function derive_obj(key_source, key_data, coin_data, bip32_settings, add) {
 // Handles mnemonic phrase copy functionality with confirmation
 function copy_phrase() {
     $(document).on("click", "#copyphrase", function() {
+        if (glob_let.hasbip && $("#phrase_cb").hasClass("hidephrase")) { // reveal first, that is where the PIN is asked
+            $("#showphrase").trigger("click");
+            return;
+        }
         const phrase = get_mnemonic_phrase(),
             is_valid = check_phrase(phrase),
             phrase_label = tl("bip39_seedphrase");
@@ -1427,6 +1431,10 @@ function delete_phrase_verify() {
 // Sets up phrase info dialog event listener
 function phrase_info() {
     $(document).on("click", "#phrase_info", function() {
+        if (glob_let.hasbip && $("#phrase_cb").hasClass("hidephrase")) { // reveal first, that is where the PIN is asked
+            $("#showphrase").trigger("click");
+            return;
+        }
         phrase_info_pu(null);
     })
 }
@@ -1462,7 +1470,7 @@ function phrase_info_pu(selected_coin) {
         const spark_keys = seed_to_spark_keys_and_address(seed_hex),
             id_privkey = spark_keys?.identity?.privkey,
             spark_address = spark_keys.spark_address;
-        spark_span = "<li class='clearfix noline' style='margin:0;padding:0'><ul id='spark_box'><li class='clearfix pd_hide pd_bitcoin' data-currency='bitcoin' style='display:list-item'><strong>Spark: </strong><span id='show_vk' class='ref' data-vk='derive'>" + tl("show") + "</span><div id='pk_span' class='shwpk' style='display: none;'><br><strong style='color:#8d8d8d'>⚡️ Identity private key</strong> <span class='adbox adboxl select' data-type='Identity private key'>" + id_privkey + "</span><br><br><strong style='color:#8d8d8d'>⚡️ Spark address</strong> <span class='adbox adboxl select' data-type='Spark address'>" + spark_address + "</span></div></li></li>";
+        spark_span = "<li class='clearfix noline' style='margin:0;padding:0'><ul id='spark_box'><li class='clearfix pd_hide pd_bitcoin' data-currency='bitcoin' style='display:list-item'><strong>Spark: </strong><span id='show_vk' class='ref' data-vk='spark'>" + tl("show") + "</span><div id='pk_span' style='display: none;'><br><strong style='color:#8d8d8d'>⚡️ Identity private key</strong> <span class='adbox adboxl select' data-type='Identity private key'>" + id_privkey + "</span><br><br><strong style='color:#8d8d8d'>⚡️ Spark address</strong> <span class='adbox adboxl select' data-type='Spark address'>" + spark_address + "</span></div></li></li>";
     }
     const delete_option = selected_coin ? "" : (glob_let.hasbip === true ? "<li class='clearfix'><div id='deletephrase' class='icon-bin'></div></li>" : ""),
         dialog_content = $("<div id='ad_info_wrap' class='" + view_class + "' data-class='" + coin_class + "'>" + header + "<ul>" +

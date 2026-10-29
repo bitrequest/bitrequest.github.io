@@ -35,8 +35,7 @@ function scan_pending_requests(trigger, active_req_list) {
     glob_let.rpc_attempts = {}, // reset cache and index
         glob_let.proxy_attempts = {},
         glob_let.tx_list = [], // reset transaction index
-        glob_let.statuspush = [],
-        glob_let.l2_fetched = {};
+        glob_let.statuspush = [];
     const requests = active_req_list || $("#requestlist .rqli").filter(function() {
         return $(this).data("pending") !== "unknown";
     });
@@ -309,8 +308,6 @@ function process_scan_results(rd, api_data, rdo, tx_details, l2) {
                 if (!has_l2) {
                     // save eth l2 chain
                     rd.eth_layer2 = eth_layer2;
-                    glob_let.l2_fetched.id = rd.requestid;
-                    glob_let.l2_fetched.l2 = eth_layer2;
                 }
             }
             validate_payment_amounts(rd, rdo);

@@ -601,7 +601,6 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                 const memo_text = $("#paymentdialog input#requesttitle").val(),
                     final_memo = (memo_text && memo_text.length > 1) ? memo_text + " (Boltcard)" :
                     (api_response.defaultDescription) ? api_response.defaultDescription : "bitrequest " + payment_id + " (Boltcard)",
-                    request_type = request.requesttype,
                     invoice_data = {
                         "imp": invoice_mode,
                         "fn": "ln-create-invoice",
@@ -611,11 +610,9 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                         "nid": node_id,
                         "expiry": 60,
                         "boltcard": true,
+                        "b11": true,
                         "x-api": proxy_key
                     };
-                if (request_type === "incoming") {
-                    invoice_data.b11 = true;
-                }
                 ln_api(proxy_host, invoice_data).done(function(invoice_result) {
                     const bolt11 = invoice_result.bolt11;
                     if (!bolt11) {

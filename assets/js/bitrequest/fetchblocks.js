@@ -917,7 +917,7 @@ function process_blockcypher_transactions(rd, api_data, rdo) {
                 return (unconfirmed_txs && confirmed_txs) ? unconfirmed_txs.concat(confirmed_txs) : confirmed_txs || unconfirmed_txs;
             },
             "parse": (tx, rd, rdo) => blockcypher_scan_data(tx, rdo.setconfirmations, rd.currencysymbol),
-            "tx_filter": (tx) => !tx.spent, // filter outgoing transactions
+            "tx_filter": (tx) => tx.tx_input_n < 0, // outputs only: inputs are outgoing transactions
             "match": (parsed_tx, _tx, _rd, rdo) => parsed_tx.ccval && parsed_tx.transactiontime > rdo.request_timestamp
         });
         return;

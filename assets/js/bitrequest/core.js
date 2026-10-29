@@ -2702,36 +2702,13 @@ function show_pk_cb() {
     $("#qrcodea").slideUp(200);
 }
 
-// Shows/hides view key after validating view-only status and handling pin panel
-function show_vk() {
-    $(document).on("click", "#show_vk", function() {
-        if (is_viewonly()) {
-            show_view_only_error();
-            return;
-        }
-        const show_btn = $(this),
-            view_key = show_btn.attr("data-vk"),
-            key_panel = $("#pk_span");
-        if (key_panel.is(":visible")) {
-            key_panel.slideUp(200);
-            show_btn.text(tl("show"));
-            return;
-        }
-        if (key_panel.hasClass("shwpk")) {
-            key_panel.slideDown(200);
-            show_btn.text(tl("hide"));
-            return;
-        }
-        $("#optionsbox").html("");
-        all_pinpanel({
-            "func": show_vk_cb,
-            "args": view_key
-        }, true, true)
-    })
-}
-
 // Callback that displays view key details in UI with proper formatting
 function show_vk_cb(view_key) {
+    if (view_key === "spark") {
+        $("#show_vk").text(tl("hide"));
+        $("#pk_span").addClass("shwpk").slideDown(200);
+        return;
+    }
     let key_data = {};
     if (view_key === "derive") {
         const addr_data = $("#ad_info_wrap").data(),
@@ -4501,7 +4478,7 @@ function expand_shorturl(input_param) {
                         }
                         if (status === "file exists") {
                             const long_url = parsed_data.sharedurl;
-                            if (long_url) {
+                            if (long_url && is_own_app_url(long_url)) {
                                 const local_url = make_local(long_url);
                                 ios_redirections(local_url, true);
                                 br_set_session("longurl_" + input_param, local_url);

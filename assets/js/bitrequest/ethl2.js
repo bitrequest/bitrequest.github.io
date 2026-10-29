@@ -240,7 +240,6 @@ function route_layer2_api_request_contracts(params, token_contracts) {
 
 // Scans Layer 2 networks for transaction data
 function scan_layer2_networks(rd, rdo, api_dat, network, ctracts) {
-    glob_let.l2_fetched = {};
     const req_l2_arr = rd.eth_l2s,
         req_l2_3 = req_l2_arr.slice(0, 3); // allow 3 l2's max
     if (empty_obj(req_l2_3)) { // No l2's
@@ -278,51 +277,29 @@ function scan_layer2_networks(rd, rdo, api_dat, network, ctracts) {
         route_layer2_operation(dat, nw);
         return;
     }
-    const requestid = rd.requestid,
-        static_array = Object.keys(static_l2_options),
+    const static_array = Object.keys(static_l2_options),
         set_array = Object.keys(set_l2_options),
-        l2_length = set_array.length,
-        add_delay = 2000,
-        fetch_match = (requestid && glob_let.l2_fetched.id === requestid);
-    let index = 0,
-        delay = 0;
-    req_l2_3.forEach(function(i) {
+        add_delay = 2000;
+    req_l2_3.forEach(function(i, delay) {
         setTimeout(function() {
-            if (fetch_match) { // Stop scanning for other networks if tx is found
-            } else {
-                const l2 = static_array[i],
-                    ss_val = static_l2_options[l2],
-                    ss_select = q_obj(ss_val, "apis.selected"),
-                    sa_key = set_array[i],
-                    l2_dat = set_l2_options[sa_key],
-                    appdt = get_network_node_config(currency, l2, l2_dat, "apis"),
-                    api_data = api_dat || appdt || ss_select;
-                if (api_data) {
-                    const contract = ctracts[l2],
-                        dat = {
-                            contract,
-                            rd,
-                            api_data,
-                            rdo
-                        };
-                    route_layer2_operation(dat, l2);
-                }
-            }
-            index++;
-            if (index === l2_length) {
-                // Detect when scanning is finished
-                setTimeout(function() {
-                    if (fetch_match) { // Process tx if found
-                        rd.eth_layer2 = glob_let.l2_fetched.l2;
-                        validate_payment_amounts(rd, rdo);
-                        glob_let.l2_fetched = {};
-                    } else { // Move to next request
-                        finalize_request_state(rdo);
-                    }
-                }, add_delay);
+            const l2 = static_array[i],
+                ss_val = static_l2_options[l2],
+                ss_select = q_obj(ss_val, "apis.selected"),
+                sa_key = set_array[i],
+                l2_dat = set_l2_options[sa_key],
+                appdt = get_network_node_config(currency, l2, l2_dat, "apis"),
+                api_data = appdt || ss_select;
+            if (api_data) {
+                const contract = ctracts[l2],
+                    dat = {
+                        contract,
+                        rd,
+                        api_data,
+                        rdo
+                    };
+                route_layer2_operation(dat, l2);
             }
         }, delay * add_delay);
-        delay++;
     });
 }
 

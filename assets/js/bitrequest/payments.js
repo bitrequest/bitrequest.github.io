@@ -855,7 +855,7 @@ function lightning_setup() {
             is_local_node_host = is_local_node(node_host),
             node_key = selected_service.key,
             is_lnurl = !!selected_service.lnurl,
-            saved_payment_id = br_get_session("lndpid"),
+            saved_payment_id = br_get_session("lndnid") === String(node_id) ? br_get_session("lndpid") : null,
             payment_id = saved_payment_id ? saved_payment_id : sha_sub(now_utc(), 10),
             lnd_config = {
                 "request": false,
@@ -1592,6 +1592,7 @@ function get_payment(ccrateeuro, ccapi) {
             if (!saved_pid || saved_pid != lightning_info.pid) {
                 br_set_session("lndpid", lightning_info.pid);
             }
+            br_set_session("lndnid", String(lightning_info.nid));
         }
     }
 }
@@ -2726,7 +2727,7 @@ function bitly_shorten(shared_url, shared_title, url_hash, service, site_thumb) 
 }
 
 // Manages custom proxy server URL shortening
-function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash) {
+function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, retried) {
     const is_custom_service = service && String(service).indexOf("http") === 0,
         server = is_custom_service ? service : d_proxy(),
         request_data = btoa(JSON.stringify({
@@ -2751,6 +2752,14 @@ function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash)
             if (data.error) {
                 notify(escape_html(server + ": " + data.error), 500000, "yes");
                 share_request(shared_url, shared_title);
+                return;
+            }
+            if (data.status === "file exists") { // id collision: the stored link belongs to another request
+                if (retried) {
+                    share_request(shared_url, shared_title);
+                    return;
+                }
+                custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, true);
                 return;
             }
             const request_id = data.shorturl;

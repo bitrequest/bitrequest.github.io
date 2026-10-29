@@ -1239,8 +1239,14 @@ function restore(cb64, meta) {
         }),
         result = confirm(type_result);
     if (result) {
-        const json = JSON.parse(cb64),
-            json_decrypt = json.lock ? decrypt_json_bu(json, meta) : json;
+        let json;
+        try {
+            json = JSON.parse(cb64);
+        } catch (e) {
+            popnotify("error", tl("error") + " " + tl("restorefrombackup"));
+            return;
+        }
+        const json_decrypt = json.lock ? decrypt_json_bu(json, meta) : json;
         if (json_decrypt) {
             if (json_decrypt === "bail") {
                 return;
@@ -3794,12 +3800,16 @@ function install_teaminvite_trigger() {
         if (result) {
             const bu_dat = btn.attr("data-base64"),
                 cb64 = strip_quotes(bu_dat),
-                b64 = atob(cb64);
+                b64 = safe_atob(cb64);
             if (inj(b64)) return;
-            const j_object = JSON.parse(b64),
+            const j_object = b64_json(cb64),
                 j_filename = btn.attr("data-filename");
             if (inj(j_filename)) return;
             if (inj(installid)) return;
+            if (!j_object) {
+                popnotify("error", tl("error"));
+                return;
+            }
             install_teaminvite(j_object, j_filename, installid);
         }
     })
