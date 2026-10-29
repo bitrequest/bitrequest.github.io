@@ -63,11 +63,14 @@ Bitrequest is designed to run without a trusted server, including offline and
 directly from local files. This has security implications users should
 understand:
 
-- **Seed storage.** A wallet seed created in the app is stored on the user's
-  device, encrypted under a key derived from the user's PIN; a PIN must be set
-  before a seed can be stored. The PIN is a convenience gate intended to deter
-  casual access to a device or a stray copy of its data; it is **not** a
-  substitute for full-disk encryption or a hardware wallet and should not be
+- **Seed storage.** A wallet seed created in the app is stored in the browser's
+  local storage on the user's device, encrypted under a key derived from the
+  stored PIN hash; a PIN must be set before a seed can be stored. This keeps
+  the seed out of plain sight, but anyone who can read the app's browser
+  storage (device access, malware, a copied browser profile) can decrypt it
+  without knowing the PIN. The PIN is a convenience gate for the app's own
+  screens; it is **not** a substitute for full-disk encryption, a locked
+  device or a hardware wallet and should not be
   relied on to protect large balances. Bitrequest is intended for point-of-sale
   use with modest balances. For significant holdings, use a dedicated hardware
   wallet.
@@ -81,9 +84,9 @@ understand:
   10,000 possibilities), and backups do contain payment history, receiving
   addresses, extended public keys, and any API keys the user has configured —
   so backup files should still be kept private. Importing a backup or team
-  invite never overwrites device-local state: the PIN-encrypted seed, PIN and
-  lock settings, and similar keys are skipped on import, so a crafted file
-  cannot replace them.
+  invite never overwrites the device's encrypted seed or lock state, so a
+  crafted file cannot replace them. A team invite does carry the manager's
+  PIN (hashed), so a cashier device can be unlocked by the team manager.
 - **Shared files.** Backups, team invites, and CSV exports can optionally be
   shared through a payment proxy. Shared files are stored encrypted on the
   proxy and are deleted after one week. Shared backups use the same seed- or

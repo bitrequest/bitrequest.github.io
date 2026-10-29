@@ -47,10 +47,11 @@ source, an attacker with the encrypted blob brute-forces it in a trivial
 script regardless of iteration count in the 4-digit-PIN search space — no
 realistic amount of stretching turns a 4-digit PIN into something a
 targeted attacker can't break. The PIN realistically defends only against
-*incidental* discovery of a backup/localStorage blob (a phone found on the
-street, a backup file that leaked without the finder knowing what it is),
-not a targeted attacker. Encrypted-but-weak beats plaintext for that threat
-model, and that's the actual bar being cleared.
+*incidental* discovery of a PIN-locked backup file (one that leaked without
+the finder knowing what it is), not a targeted attacker. It does not defend
+the seed in localStorage at all: the key input is the stored `pinhash`,
+which sits in the same localStorage as `datenc`, so any copy of that
+storage decrypts without knowing the PIN.
 
 **Planned hardening (not yet implemented):** version the `datenc` blob
 (`{id, dat, v}`, absent `v` = v1). `pin_key_v1` stays untouched;
@@ -64,10 +65,11 @@ makes the hardening free in practice. Migration v1→v2 happens silently on
 successful unlock. An optional `v:3` (real-entropy passphrase, PIN staying
 default) was scoped but not committed to.
 
-**Do not** bother replacing `generate_hash` (djb2, used for the stored
-PIN-hash comparison) — with a 10,000-value input space, hash quality
-there is irrelevant. Fixing the KDF fixes the actual exposure; fixing djb2
-fixes nothing.
+For v2 to protect the stored seed at all, the key must come from the PIN as
+typed, not from the stored `pinhash`, and the stored djb2 `pinhash` has to
+go as well: djb2 over 10,000 PINs hands the PIN back instantly, after which
+the v2 key is one derivation away. Even done right, a GPU clears 10,000
+PBKDF2 guesses in seconds, so v2 only removes the zero-effort decode.
 
 ### The seed phrase is never included in backups
 
@@ -128,9 +130,11 @@ low enough that this hasn't mattered yet).
 
 `restore_storage` and `install_teaminvite` share one denylist
 (`no_import_keys` in `settings.js`). Keys that belong to the device (the
-encrypted seed, PIN and lock state, and similar) are never written from an
-imported file, even though the file is decrypted successfully. Export already
-skips them; import enforces the same boundary.
+encrypted seed, lock state, and similar) are never written from an imported
+file, even though the file is decrypted successfully. Export already skips
+them; import enforces the same boundary. The one deliberate exception: a team
+invite installs the manager's PIN hash, so the manager can unlock a cashier
+device.
 
 ---
 
@@ -423,5 +427,3 @@ derivation or scanning logic.
 - Electrum port check and `verify_peer`: deferred.
 - `postMessage(…, "*")` and a few remaining raw selectors (`core.js`,
   `payments.js`, `#` + id sites): not yet tightened.
-- `correction_confirmations` (monitors.js ~1105) is dead — `conf_correct`
-  is the used twin. Safe to remove.
