@@ -1896,6 +1896,130 @@ function get_cached_tokens(check) {
     return false;
 }
 
+// Manages URL shortening with multiple service fallbacks
+function shorten_url(shared_title, shared_url, site_thumb, unguessable, url_hash) {
+    set_loader_text(tl("generatelink"));
+    const url_shorten_settings = $("#url_shorten_settings"),
+        is_url_shorten_active = url_shorten_settings.data("us_active") === "active";
+    if (is_url_shorten_active) {
+        const url_service = url_shorten_settings.data("selected"),
+            is_custom_service = url_service.indexOf("https://") >= 0;
+        if (url_hash) {
+            const cache_prefix = is_custom_service ? "custom" : url_service,
+                cached_short_url = br_get_session(cache_prefix + "_shorturl_" + url_hash) || br_get_session("custom_shorturl_" + url_hash);
+            if (cached_short_url) {
+                share_request(cached_short_url, shared_title);
+                return;
+            }
+        }
+        if (url_service === "bitly") {
+            bitly_shorten(shared_url, shared_title, url_hash, url_service, site_thumb);
+            return;
+        }
+        if (is_custom_service) {
+            custom_shorten(url_service, shared_url, shared_title, site_thumb, url_hash);
+            return;
+        }
+    }
+    share_request(shared_url, shared_title);
+}
+
+// Processes Bitly API URL shortening
+function bitly_shorten(shared_url, shared_title, url_hash, service, site_thumb) {
+    api_proxy({
+        "api": "bitly",
+        "search": "bitlinks",
+        "cachetime": 84600,
+        "cachefolder": "1d",
+        "bearer": true,
+        "params": {
+            "method": "POST",
+            "contentType": "application/json",
+            "data": {
+                "long_url": shared_url
+            }
+        }
+    }).done(function(response) {
+        const data = br_result(response).result;
+        if (data.error) {
+            custom_shorten(service, shared_url, shared_title, site_thumb, url_hash);
+            return;
+        }
+        if (data.id) {
+            const link_id = data.id.split("/").pop(),
+                short_url = glob_const.approot + "?i=4bR" + link_id;
+            share_request(short_url, shared_title);
+            if (url_hash) {
+                br_set_session("bitly_shorturl_" + url_hash, short_url);
+            }
+            return;
+        }
+        custom_shorten(service, shared_url, shared_title, site_thumb, url_hash);
+    }).fail(function() {
+        custom_shorten(service, shared_url, shared_title, site_thumb, url_hash);
+    });
+}
+
+// Manages custom proxy server URL shortening
+function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash) {
+    const is_custom_service = service && String(service).indexOf("http") === 0,
+        server = is_custom_service ? service : d_proxy(),
+        request_data = btoa(JSON.stringify({
+            "sharedurl": shared_url,
+            "sitethumb": site_thumb
+        })),
+        short_url_id = sha_sub(shared_url, 16),
+        payload = {
+            "function": "post",
+            "longurl": request_data,
+            "shorturl": short_url_id
+        };
+    $.ajax({
+        "method": "POST",
+        "cache": false,
+        "timeout": 5000,
+        "url": server + "/proxy/v1/inv/api/",
+        "data": payload
+    }).done(function(response) {
+        const data = br_result(response).result;
+        if (data) {
+            if (data.error) {
+                notify(escape_html(server + ": " + data.error), 500000, "yes");
+                share_request(shared_url, shared_title);
+                return;
+            }
+            const request_id = data.shorturl;
+            if (request_id) {
+                const server_index = find_object_index(glob_const.proxy_list, "proxy", server),
+                    is_default_server = objectkey_in_array(glob_const.proxy_list, "proxy", server),
+                    short_url = is_default_server ?
+                    glob_const.approot + "?i=" + server_index.toString() + request_id :
+                    server + "/proxy/v1/inv/4bR" + request_id;
+                share_request(short_url, shared_title);
+                if (url_hash) {
+                    br_set_session("custom_shorturl_" + url_hash, short_url);
+                }
+                return;
+            }
+        }
+        share_request(shared_url, shared_title);
+    }).fail(function() {
+        share_request(shared_url, shared_title);
+    });
+}
+
+// Get short url from local storage
+function get_saved_shorturl(hash) {
+    try {
+        const url_service = $("#url_shorten_settings").data("selected"),
+            is_custom_service = url_service.indexOf("https://") >= 0,
+            cache_prefix = is_custom_service ? "custom" : url_service;
+        return br_get_session(cache_prefix + "_shorturl_" + hash) || br_get_session("custom_shorturl_" + hash);
+    } catch (e) {
+        return false;
+    }
+}
+
 // ** Sanitizing URLS: **
 
 // Strips key from ws_url

@@ -477,7 +477,7 @@ function sync_drive_data(auth_state) {
                 "headers": {
                     "Authorization": "Bearer " + access_token
                 },
-                "data": compile_backup_data()
+                "data": compile_backup_data()?.blob
             }
         };
         api_proxy(request_data).done(function(response) {
@@ -513,39 +513,41 @@ function sync_drive_data(auth_state) {
 function create_drive_file(access_token) {
     const token_data = get_auth_status(),
         token_valid = token_data.pass,
-        final_token = access_token || (token_valid ? token_data.token : false),
-        backup_content = compile_backup_data();
+        final_token = access_token || (token_valid ? token_data.token : false);
     if (final_token) {
-        const file_blob = new Blob([backup_content], {
-                "type": "text/plain"
-            }),
-            file_meta = {
-                "modified": now_utc(),
-                "device": detect_device_type(),
-                "deviceid": glob_const.deviceid
-            },
-            file_config = {
-                "name": generate_backup_filename(),
-                "parents": ["appDataFolder"],
-                "mimeType": "text/plain",
-                "description": JSON.stringify(file_meta)
-            },
-            form_data = new FormData(),
-            request = new XMLHttpRequest();
-        form_data.append("metadata", new Blob([JSON.stringify(file_config)], {
-            "type": "application/json"
-        }));
-        form_data.append("file", file_blob);
-        request.open("post", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id");
-        request.setRequestHeader("Authorization", "Bearer " + final_token);
-        request.responseType = "json";
-        request.onload = function() {
-            const file_id = request.response.id;
-            if (file_id) {
-                br_set_local("backupfile_id", file_id.toString());
-            }
-        };
-        request.send(form_data);
+        const backup_content = compile_backup_data()?.blob;
+        if (backup_content) {
+            const file_blob = new Blob([backup_content], {
+                    "type": "text/plain"
+                }),
+                file_meta = {
+                    "modified": now_utc(),
+                    "device": detect_device_type(),
+                    "deviceid": glob_const.deviceid
+                },
+                file_config = {
+                    "name": generate_backup_filename(),
+                    "parents": ["appDataFolder"],
+                    "mimeType": "text/plain",
+                    "description": JSON.stringify(file_meta)
+                },
+                form_data = new FormData(),
+                request = new XMLHttpRequest();
+            form_data.append("metadata", new Blob([JSON.stringify(file_config)], {
+                "type": "application/json"
+            }));
+            form_data.append("file", file_blob);
+            request.open("post", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id");
+            request.setRequestHeader("Authorization", "Bearer " + final_token);
+            request.responseType = "json";
+            request.onload = function() {
+                const file_id = request.response.id;
+                if (file_id) {
+                    br_set_local("backupfile_id", file_id.toString());
+                }
+            };
+            request.send(form_data);
+        }
     }
 }
 

@@ -718,27 +718,28 @@ function share_backup_file() {
 function share_bu() {
     loader(true);
     set_loader_text(tl("generatebu"));
-    const account = $("#accountsettings").data("selected"),
-        acc_b64 = b64encode_url(account),
-        time_format = new Date(now_utc()).toLocaleString(langcode),
-        title = tl("systembackup") + " " + account + " (" + time_format + ")",
-        json = compile_backup_data();
+    const json = compile_backup_data();
     if (!json) {
         closeloader();
         return;
     }
-    const url_hash = sha_sub(json, 10),
+    const account = $("#accountsettings").data("selected"),
+        time_format = new Date(now_utc()).toLocaleString(langcode),
+        title = tl("systembackup") + " " + account + " (" + time_format + ")",
+        url_hash = json.fp,
         cached_short_url = get_saved_shorturl(url_hash);
     if (cached_short_url) {
         share_request(cached_short_url, title);
         return;
     }
+    const blob = json.blob,
+        acc_b64 = b64encode_url(account);
     api_proxy({
         "custom": "system_bu",
         "api_url": "x", // dummy value, don't remove
         "proxy": true,
         "params": {
-            "url": json,
+            "url": blob,
             "account": acc_b64,
         }
     }).done(function(e) {
@@ -962,7 +963,11 @@ function compile_backup_data() {
             lock,
             encr
         },
-        blob = JSON.stringify(json);
+        fingerprint = sha_sub(JSON.stringify(bu_dat), 10);
+        blob = {
+            "blob": JSON.stringify(json),
+            "fp": fingerprint
+        }
     return blob;
 }
 
@@ -1016,23 +1021,20 @@ function backup(args) {
     notify(tl("downloaded", {
         "file": last_backup
     }));
-    start_blob(node);
-}
-
-// Reliable way to download a blob URL
-function start_blob(node) {
-    const blob = node.attr("data-blob") || compile_backup_data(),
-        href = "data:application/json;charset=utf-8;base64," + btoa(bu_text(blob)),
-        download = node.attr("download") || node.attr("title") || "backup",
-        temp = $("<a>")
-        .attr({
-            href,
-            download
-        })
-        .css("display", "none")
-        .appendTo("body");
-    temp[0].click();
-    temp.remove();
+    const blob = node.attr("data-blob") || compile_backup_data()?.blob;
+    if (blob) {
+        const href = "data:application/json;charset=utf-8;base64," + btoa(bu_text(blob)),
+            download = node.attr("download") || node.attr("title") || "backup",
+            temp = $("<a>")
+            .attr({
+                href,
+                download
+            })
+            .css("display", "none")
+            .appendTo("body");
+        temp[0].click();
+        temp.remove();
+    }
 }
 
 // ** Restore app data: **
@@ -2023,11 +2025,17 @@ function encode_rd_payload(data) {
         random_salt = Object.values(crypto_utils_const)[r_pick],
         lock_trail = r_pick + String(now_utc()).slice(-3),
         lock = "rd" + lock_trail,
-        encr = aes_encode(data, random_salt);
-    return btoa(JSON.stringify({
-        lock,
-        encr
-    }));
+        encr = aes_encode(data, random_salt),
+        json = {
+            lock,
+            encr
+        },
+        fingerprint = sha_sub(JSON.stringify(data), 10);
+        blob = {
+            "blob": JSON.stringify(json),
+            "fp": fingerprint
+        };
+    return blob;
 }
 
 // Decrypts an rd-locked shared payload (team invites, shared CSV exports)
@@ -2052,38 +2060,44 @@ function share_csv() {
             set_loader_text(tl("generatebu"));
             const account = $("#accountsettings").data("selected"),
                 acc_b64 = b64encode_url(account),
-                csv_hash = sha_sub(csv, 10),
-                time_format = new Date(now_utc()).toLocaleString(langcode),
-                title = "CSV Export " + account + " (" + time_format + ")",
-                cached_short_url = get_saved_shorturl(csv_hash);
-            if (cached_short_url) {
-                share_request(cached_short_url, title);
-                return;
+                rd_payload = encode_rd_payload({
+                    csv
+                });
+            if (rd_payload) {
+                const csv_hash = rd_payload.fp,
+                    time_format = new Date(now_utc()).toLocaleString(langcode),
+                    title = "CSV Export " + account + " (" + time_format + ")",
+                    cached_short_url = get_saved_shorturl(csv_hash);
+                if (cached_short_url) {
+                    share_request(cached_short_url, title);
+                    return;
+                }
+                const url = rd_payload.blob;
+                if (url) {
+                    api_proxy({
+                        "custom": "system_bu",
+                        "api_url": "x", // dummy value, don't remove
+                        "proxy": true,
+                        "params": {
+                            "url": btoa(url),
+                            "account": acc_b64
+                        }
+                    }).done(function(e) {
+                        const ro = q_obj(e, "ping.br_cache.filename");
+                        if (ro) {
+                            const proxy = c_proxy(),
+                                data = btoa(JSON.stringify({
+                                    ro,
+                                    proxy
+                                })),
+                                app_root = glob_const.approot;
+                            shorten_url(title, app_root + "?csv=" + data, fetch_aws("img_system_backup.png"), true, csv_hash);
+                        }
+                    }).fail(function(xhr, stat, err) {
+                        closeloader();
+                    });
+                }
             }
-            api_proxy({
-                "custom": "system_bu",
-                "api_url": "x", // dummy value, don't remove
-                "proxy": true,
-                "params": {
-                    "url": encode_rd_payload({
-                        "csv": csv
-                    }),
-                    "account": acc_b64
-                }
-            }).done(function(e) {
-                const ro = q_obj(e, "ping.br_cache.filename");
-                if (ro) {
-                    const proxy = c_proxy(),
-                        data = btoa(JSON.stringify({
-                            ro,
-                            proxy
-                        })),
-                        app_root = glob_const.approot;
-                    shorten_url(title, app_root + "?csv=" + data, fetch_aws("img_system_backup.png"), true, csv_hash);
-                }
-            }).fail(function(xhr, stat, err) {
-                closeloader();
-            });
         }
     });
 }
@@ -3428,28 +3442,35 @@ function team_invite_trigger() {
 
 // Creates team invite dialog with sharing options
 function team_invite() {
-    const jsonencode = compile_teaminvite(),
-        ddat = [{
-            "div": {
-                "class": "popform",
-                "content": "<div id='ti_intro'><p><strong>" + tl("inviteteammembers") + "</strong><br/>" + tl("teaminviteexplainer") + "<br/>" + tl("teaminviteaccess") + "</p></div>\
-            <div id='ti_qr_container' data-url='" + jsonencode + "' >\
-                <div class='qrwrap flex'>\
-                   <div id='qrcode' class='qrcode'></div>\
-                </div>\
-            </div>\
-           <div id='ti_buttons'>\
-                <div id='send_invite' class='button'><span class='icon-share2'></span>" + tl("sendinvite") + "</div><div id='qr_invite' class='button' title='" + tl("showqr") + "'><span class='icon-qrcode'></span></div>\
-            </div>"
-            }
-        }],
-        content = template_dialog({
-            "id": "team_invite",
-            "icon": "icon-users",
-            "title": tl("teaminvite"),
-            "elements": ddat
-        }) + "<div id='backupactions'><div id='backupcd'>" + cancelbttn + "</div></div>";
-    popdialog(content, "triggersubmit");
+    const jsonencode = compile_teaminvite();
+    if (jsonencode) {
+        const blob = jsonencode.blob;
+        if (blob) {
+            const url = btoa(blob),
+                fingerprint = jsonencode.fp,
+                ddat = [{
+                    "div": {
+                        "class": "popform",
+                        "content": "<div id='ti_intro'><p><strong>" + tl("inviteteammembers") + "</strong><br/>" + tl("teaminviteexplainer") + "<br/>" + tl("teaminviteaccess") + "</p></div>\
+                            <div id='ti_qr_container' data-url='" + url + "' data-fp='" + fingerprint + "' >\
+                                <div class='qrwrap flex'>\
+                                   <div id='qrcode' class='qrcode'></div>\
+                                </div>\
+                            </div>\
+                           <div id='ti_buttons'>\
+                                <div id='send_invite' class='button'><span class='icon-share2'></span>" + tl("sendinvite") + "</div><div id='qr_invite' class='button' title='" + tl("showqr") + "'><span class='icon-qrcode'></span></div>\
+                            </div>"
+                    }
+                }],
+                content = template_dialog({
+                    "id": "team_invite",
+                    "icon": "icon-users",
+                    "title": tl("teaminvite"),
+                    "elements": ddat
+                }) + "<div id='backupactions'><div id='backupcd'>" + cancelbttn + "</div></div>";
+            popdialog(content, "triggersubmit");
+        }
+    }
 }
 
 // Generates secure team configuration data package
@@ -3585,7 +3606,7 @@ function share_teaminvite() {
             const account = $("#accountsettings").data("selected"),
                 acc_b64 = b64encode_url(account),
                 url = $("#ti_qr_container").attr("data-url"),
-                url_hash = sha_sub(url, 10),
+                url_hash = $("#ti_qr_container").attr("data-fp"),
                 title = tl("teaminviteharetitle", {
                     "accountname": account
                 }),
@@ -3629,7 +3650,7 @@ function share_teaminvite_qr() {
         if (result) {
             const account = btoa($("#accountsettings").data("selected")),
                 url = $("#ti_qr_container").attr("data-url"),
-                url_hash = sha_sub(url, 10),
+                url_hash = $("#ti_qr_container").attr("data-fp"),
                 cached_short_url = get_saved_shorturl(url_hash);
             if (cached_short_url) {
                 toggle_ti_qr(cached_short_url);
