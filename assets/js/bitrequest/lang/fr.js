@@ -75,6 +75,7 @@ const lang_fr_obj = {
         "archiverequest": "Archiver paiement?",
         "unarchiverequest": "Désarchiver paiement?",
         "failedtofetchrequest": "Impossible d'obtenir paiement",
+        "corruptedrequest": "Demande de paiement corrompue",
         "downloadwallet": "Télécharger le portefeuille {currency}",
 
         // ADD ADDRESS

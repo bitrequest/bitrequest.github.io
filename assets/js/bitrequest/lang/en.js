@@ -75,6 +75,7 @@ const lang_en_obj = {
         "archiverequest": "Archive request?",
         "unarchiverequest": "Unarchive request?",
         "failedtofetchrequest": "Failed to fetch request",
+        "corruptedrequest": "Corrupted payment request",
         "downloadwallet": "Download {currency} wallet",
 
         // ADD ADDRESS

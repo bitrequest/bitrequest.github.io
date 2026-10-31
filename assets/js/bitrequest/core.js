@@ -4479,6 +4479,11 @@ function expand_shorturl(input_param) {
                         if (status === "file exists") {
                             const long_url = parsed_data.sharedurl;
                             if (long_url && is_own_app_url(long_url)) {
+                                if (short_id.length > 8 && sha_sub(long_url, 16) !== short_id) {
+                                    popdialog("<h2 class='icon-warning'>" + tl("corruptedrequest") + "</h2>", "canceldialog");
+                                    closeloader();
+                                    return;
+                                }
                                 const local_url = make_local(long_url);
                                 ios_redirections(local_url, true);
                                 br_set_session("longurl_" + input_param, local_url);

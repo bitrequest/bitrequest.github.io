@@ -2727,14 +2727,14 @@ function bitly_shorten(shared_url, shared_title, url_hash, service, site_thumb) 
 }
 
 // Manages custom proxy server URL shortening
-function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, retried) {
+function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash) {
     const is_custom_service = service && String(service).indexOf("http") === 0,
         server = is_custom_service ? service : d_proxy(),
         request_data = btoa(JSON.stringify({
             "sharedurl": shared_url,
             "sitethumb": site_thumb
         })),
-        short_url_id = random_id(),
+        short_url_id = sha_sub(shared_url, 16),
         payload = {
             "function": "post",
             "longurl": request_data,
@@ -2752,14 +2752,6 @@ function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash,
             if (data.error) {
                 notify(escape_html(server + ": " + data.error), 500000, "yes");
                 share_request(shared_url, shared_title);
-                return;
-            }
-            if (data.status === "file exists") { // id collision: the stored link belongs to another request
-                if (retried) {
-                    share_request(shared_url, shared_title);
-                    return;
-                }
-                custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, true);
                 return;
             }
             const request_id = data.shorturl;
@@ -2792,12 +2784,6 @@ function get_saved_shorturl(hash) {
     } catch (e) {
         return false;
     }
-}
-
-// Generates cryptographically secure random ID for URL shortening
-function random_id() {
-    const random_value = crypto.getRandomValues(new Uint32Array(1))[0];
-    return random_value.toString(16);
 }
 
 // Initiates request sharing with platform-specific handlers

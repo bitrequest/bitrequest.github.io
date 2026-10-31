@@ -75,6 +75,7 @@ const lang_ja_obj = {
         "archiverequest": "リクエストをアーカイブしますか？",
         "unarchiverequest": "アーカイブを解除しますか？",
         "failedtofetchrequest": "リクエストの取得に失敗しました",
+        "corruptedrequest": "破損した支払いリクエスト",
         "downloadwallet": "{currency}ウォレットをダウンロード",
 
         // ADD ADDRESS

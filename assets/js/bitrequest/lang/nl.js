@@ -75,6 +75,7 @@ const lang_nl_obj = {
         "archiverequest": "Archiveer betaalverzoek?",
         "unarchiverequest": "Zet betaalverzoek terug?",
         "failedtofetchrequest": "Kan request niet ophalen",
+        "corruptedrequest": "Beschadigd betaalverzoek",
         "downloadwallet": "Download {currency} wallet",
 
         // ADD ADDRESS

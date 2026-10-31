@@ -75,6 +75,7 @@ const lang_es_obj = {
         "archiverequest": "¿Archivar solicitud?",
         "unarchiverequest": "¿Desarchivar solicitud?",
         "failedtofetchrequest": "Error al obtener la solicitud",
+        "corruptedrequest": "Solicitud de pago dañada",
         "downloadwallet": "Descargar monedero {currency}",
 
         // ADD ADDRESS

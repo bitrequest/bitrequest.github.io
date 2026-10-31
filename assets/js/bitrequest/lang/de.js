@@ -75,6 +75,7 @@ const lang_de_obj = {
         "archiverequest": "Anfrage archivieren?",
         "unarchiverequest": "Anfrage wiederherstellen?",
         "failedtofetchrequest": "Anfrage konnte nicht abgerufen werden",
+        "corruptedrequest": "Beschädigte Zahlungsanfrage",
         "downloadwallet": "{currency}-Wallet herunterladen",
 
         // ADD ADDRESS

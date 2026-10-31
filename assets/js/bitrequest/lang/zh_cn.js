@@ -75,6 +75,7 @@ const lang_zh_cn_obj = {
         "archiverequest": "存档请求？",
         "unarchiverequest": "取消存档？",
         "failedtofetchrequest": "无法获取请求",
+        "corruptedrequest": "收款请求已损坏",
         "downloadwallet": "下载{currency}钱包",
 
         // ADD ADDRESS

@@ -75,6 +75,7 @@ const lang_hi_obj = {
         "archiverequest": "अनुरोध आर्काइव करें?",
         "unarchiverequest": "अनुरोध अनआर्काइव करें?",
         "failedtofetchrequest": "अनुरोध प्राप्त करने में विफल",
+        "corruptedrequest": "दूषित भुगतान अनुरोध",
         "downloadwallet": "{currency} वॉलेट डाउनलोड करें",
 
         // ADD ADDRESS
