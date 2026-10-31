@@ -264,7 +264,9 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                         }
                     }
                 });
+                return;
             }
+            rpc_list.addClass("show_select");
         });
     }
 }

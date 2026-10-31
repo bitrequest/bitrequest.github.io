@@ -1919,11 +1919,11 @@ function strip_key_from_url(url) {
     return url; // Return original if <= 20 chars
 }
 
-// Normalizes URL format with protocol and trailing slash
+// Normalizes URL format with protocol and without trailing slash
 function complete_url(url) {
     const trimmed_url = String(url).trim(),
         withProtocol = trimmed_url.indexOf("://") > -1 ? trimmed_url : "https://" + trimmed_url;
-    return withProtocol.slice(-1) === "/" ? withProtocol : withProtocol + "/";
+    return strip_slash(withProtocol);
 }
 
 // Retrieves active proxy configuration from DOM data

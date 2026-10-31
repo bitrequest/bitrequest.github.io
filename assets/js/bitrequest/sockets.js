@@ -1134,7 +1134,7 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
     const network_type = socket_node.network,
         base_url = complete_url(socket_node.url),
         infura_key = get_infura_apikey(base_url),
-        ws_endpoint = base_url + infura_key,
+        ws_endpoint = infura_key ? base_url + "/" + infura_key : base_url,
         transfer_topic = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
         socket = glob_let.sockets[socket_id] = new WebSocket(ws_endpoint);
     socket.onopen = function(e) {
