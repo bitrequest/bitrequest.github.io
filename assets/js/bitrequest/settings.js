@@ -964,10 +964,10 @@ function compile_backup_data() {
             encr
         },
         fingerprint = sha_sub(JSON.stringify(bu_dat), 10);
-        blob = {
-            "blob": JSON.stringify(json),
-            "fp": fingerprint
-        }
+    blob = {
+        "blob": JSON.stringify(json),
+        "fp": fingerprint
+    }
     return blob;
 }
 
@@ -2031,10 +2031,10 @@ function encode_rd_payload(data) {
             encr
         },
         fingerprint = sha_sub(JSON.stringify(data), 10);
-        blob = {
-            "blob": JSON.stringify(json),
-            "fp": fingerprint
-        };
+    blob = {
+        "blob": JSON.stringify(json),
+        "fp": fingerprint
+    };
     return blob;
 }
 
