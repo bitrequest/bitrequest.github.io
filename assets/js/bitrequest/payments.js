@@ -2672,7 +2672,7 @@ function shorten_url(shared_title, shared_url, site_thumb, unguessable, url_hash
             is_custom_service = url_service.indexOf("https://") >= 0;
         if (url_hash) {
             const cache_prefix = is_custom_service ? "custom" : url_service,
-                cached_short_url = br_get_session(cache_prefix + "_shorturl_" + url_hash);
+                cached_short_url = br_get_session(cache_prefix + "_shorturl_" + url_hash) || br_get_session("custom_shorturl_" + url_hash);
             if (cached_short_url) {
                 share_request(cached_short_url, shared_title);
                 return;
