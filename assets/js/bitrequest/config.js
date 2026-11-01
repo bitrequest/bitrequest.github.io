@@ -1410,7 +1410,7 @@ const glob_config = {
                         "name": "kastle",
                         "website": "https://kastle.cc",
                         "appstore": "https://apps.apple.com/app/id6745494363",
-                        "playstore": "https://https://play.google.com/store/apps/details?id=cc.kastle",
+                        "playstore": "https://play.google.com/store/apps/details?id=cc.kastle",
                         "desktop": "https://kastle.cc",
                         "seed": true
                     },
@@ -1419,7 +1419,7 @@ const glob_config = {
                         "website": "https://kaskeeper.vercel.app",
                         "appstore": null,
                         "playstore": null,
-                        "desktop": "ttps://kaskeeper.vercel.app",
+                        "desktop": "https://kaskeeper.vercel.app",
                         "seed": true
                     }
                 ]
