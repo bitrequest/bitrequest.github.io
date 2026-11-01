@@ -2643,7 +2643,7 @@ function share(current_button) {
             return;
         }
         const url_hash = sha_sub(url_id + shared_title, 10);
-        shorten_url(shared_title, shared_url, share_icon, null, url_hash);
+        shorten_url(shared_title, shared_url, share_icon, url_hash);
         set_locales();
         return;
     }
@@ -2663,8 +2663,11 @@ function share(current_button) {
 }
 
 // Initiates request sharing with platform-specific handlers
-function share_request(shared_url, shared_title) {
+function share_request(shared_url, shared_title, url_hash, cache) {
     closeloader();
+    if (url_hash && cache) {
+        br_set_session("longurl_" + url_hash, shared_url);
+    }
     if (shared_title === "qr") {
         toggle_ti_qr(shared_url);
         return;

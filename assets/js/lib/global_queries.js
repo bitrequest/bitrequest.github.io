@@ -1897,35 +1897,35 @@ function get_cached_tokens(check) {
 }
 
 // Manages URL shortening with multiple service fallbacks
-function shorten_url(shared_title, shared_url, site_thumb, unguessable, url_hash) {
+function shorten_url(shared_title, shared_url, site_thumb, url_hash, cache) {
     set_loader_text(tl("generatelink"));
     const url_shorten_settings = $("#url_shorten_settings"),
         is_url_shorten_active = url_shorten_settings.data("us_active") === "active";
     if (is_url_shorten_active) {
-        const url_service = url_shorten_settings.data("selected"),
-            is_custom_service = url_service.indexOf("https://") >= 0;
+        const service = url_shorten_settings.data("selected"),
+            is_custom_service = service.indexOf("https://") >= 0;
         if (url_hash) {
-            const cache_prefix = is_custom_service ? "custom" : url_service,
-                cached_short_url = br_get_session(cache_prefix + "_shorturl_" + url_hash) || br_get_session("custom_shorturl_" + url_hash);
+            const cache_prefix = is_custom_service ? "custom" : service,
+                cached_short_url = br_get_session(cache_prefix + "_shorturl_" + url_hash) || br_get_session("custom_shorturl_" + url_hash) || br_get_session("longurl_" + url_hash);
             if (cached_short_url) {
                 share_request(cached_short_url, shared_title);
                 return;
             }
         }
-        if (url_service === "bitly") {
-            bitly_shorten(shared_url, shared_title, url_hash, url_service, site_thumb);
+        if (service === "bitly") {
+            bitly_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
             return;
         }
         if (is_custom_service) {
-            custom_shorten(url_service, shared_url, shared_title, site_thumb, url_hash);
+            custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
             return;
         }
     }
-    share_request(shared_url, shared_title);
+    share_request(shared_url, shared_title, url_hash, cache);
 }
 
 // Processes Bitly API URL shortening
-function bitly_shorten(shared_url, shared_title, url_hash, service, site_thumb) {
+function bitly_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache) {
     api_proxy({
         "api": "bitly",
         "search": "bitlinks",
@@ -1942,7 +1942,7 @@ function bitly_shorten(shared_url, shared_title, url_hash, service, site_thumb) 
     }).done(function(response) {
         const data = br_result(response).result;
         if (data.error) {
-            custom_shorten(service, shared_url, shared_title, site_thumb, url_hash);
+            custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
             return;
         }
         if (data.id) {
@@ -1954,14 +1954,14 @@ function bitly_shorten(shared_url, shared_title, url_hash, service, site_thumb) 
             }
             return;
         }
-        custom_shorten(service, shared_url, shared_title, site_thumb, url_hash);
+        custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
     }).fail(function() {
-        custom_shorten(service, shared_url, shared_title, site_thumb, url_hash);
+        custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
     });
 }
 
 // Manages custom proxy server URL shortening
-function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash) {
+function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache) {
     const is_custom_service = service && String(service).indexOf("http") === 0,
         server = is_custom_service ? service : d_proxy(),
         request_data = btoa(JSON.stringify({
@@ -1985,7 +1985,7 @@ function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash)
         if (data) {
             if (data.error) {
                 notify(escape_html(server + ": " + data.error), 500000, "yes");
-                share_request(shared_url, shared_title);
+                share_request(shared_url, shared_title, url_hash, cache);
                 return;
             }
             const request_id = data.shorturl;
@@ -2002,19 +2002,19 @@ function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash)
                 return;
             }
         }
-        share_request(shared_url, shared_title);
+        share_request(shared_url, shared_title, url_hash, cache);
     }).fail(function() {
-        share_request(shared_url, shared_title);
+        share_request(shared_url, shared_title, url_hash, cache);
     });
 }
 
 // Get short url from local storage
 function get_saved_shorturl(hash) {
     try {
-        const url_service = $("#url_shorten_settings").data("selected"),
-            is_custom_service = url_service.indexOf("https://") >= 0,
-            cache_prefix = is_custom_service ? "custom" : url_service;
-        return br_get_session(cache_prefix + "_shorturl_" + hash) || br_get_session("custom_shorturl_" + hash);
+        const service = $("#url_shorten_settings").data("selected"),
+            is_custom_service = service.indexOf("https://") >= 0,
+            cache_prefix = is_custom_service ? "custom" : service;
+        return br_get_session(cache_prefix + "_shorturl_" + hash) || br_get_session("custom_shorturl_" + hash) || br_get_session("longurl_" + hash);
     } catch (e) {
         return false;
     }

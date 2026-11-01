@@ -649,8 +649,7 @@ function backup_database() {
                                         "attr": {
                                             "href": "#",
                                             "title": filename,
-                                            "data-date": new Date(now_utc()).toLocaleString(langcode)
-                                                .replace(/\s+/g, "_").replace(/\:/g, "_"),
+                                            "data-date": new Date(now_utc()).toLocaleString(langcode).replace(/\s+/g, "_").replace(/\:/g, "_"),
                                             "data-lastbackup": filename,
                                             "download": filename
                                         },
@@ -751,7 +750,7 @@ function share_bu() {
                     proxy
                 })),
                 app_root = glob_const.approot;
-            shorten_url(title, app_root + "?sbu=" + data, app_root + "assets/img/icons/apple-touch-icon.png", true, url_hash);
+            shorten_url(title, app_root + "?sbu=" + data, app_root + "assets/img/icons/apple-touch-icon.png", url_hash, true);
         }
     }).fail(function(xhr, stat, err) {
         console.error("API proxy error:", xhr, stat, err);
@@ -776,22 +775,28 @@ function check_systembu(sbu) {
     }, ro_proxy).done(function(e) {
         const ping = e.ping;
         if (ping) {
-            const cache = ping.br_cache,
+            const result = ping.br_result,
+                base64 = result.base64,
+                account = result.account,
+                check_fp = md5_check(base64, account, ro_id);
+            if (!check_fp) { // check if file has been tampered
+                popdialog("<h2 class='icon-warning'>" + tl("corruptedrequest") + "</h2>", "canceldialog");
+                return;
+            };
+            const acc = b64decode_url(account) || "",
+                cb64 = strip_quotes(base64),
+                safe_account = escape_html(acc),
+                cache = ping.br_cache,
                 server_time = cache.utc_timestamp,
                 file_time = cache.created_utc,
                 time_ms = file_time ? file_time * 1000 : now_utc(),
                 time_format = new Date(time_ms).toLocaleString(langcode),
-                result = ping.br_result,
-                base64 = result.base64,
-                cb64 = strip_quotes(base64),
-                account = b64decode_url(result.account) || "",
-                safe_account = escape_html(account),
                 title = "Bitrequest " + tl("systembackup") + " " + safe_account + " (" + time_format + ")",
-                title_attr = "Bitrequest " + tl("systembackup") + " " + account + " (" + time_format + ")",
+                title_attr = "Bitrequest " + tl("systembackup") + " " + acc + " (" + time_format + ")",
                 bu_date = safe_file_part(time_format),
                 cache_time = cache.cache_time,
                 expires = (file_time + cache_time) - server_time,
-                filename = "bitrequest_system_backup_" + safe_file_part(account) + "_" + langcode + "_" + bu_date + ".json",
+                filename = "bitrequest_system_backup_" + safe_file_part(acc) + "_" + langcode + "_" + bu_date + ".json",
                 cd = countdown(expires * 1000),
                 cd_format = countdown_format(cd),
                 exp_class = cd_format ? "" : "expired",
@@ -2091,7 +2096,7 @@ function share_csv() {
                                     proxy
                                 })),
                                 app_root = glob_const.approot;
-                            shorten_url(title, app_root + "?csv=" + data, fetch_aws("img_system_backup.png"), true, csv_hash);
+                            shorten_url(title, app_root + "?csv=" + data, fetch_aws("img_system_backup.png"), csv_hash, true);
                         }
                     }).fail(function(xhr, stat, err) {
                         closeloader();
@@ -2120,34 +2125,41 @@ function check_csvexport(csv) {
         systembu_expired();
         return;
     }
-    const roid = rdata.ro,
+    const ro_id = rdata.ro,
         rproxy = rdata.proxy;
     api_proxy({
         "custom": "get_system_bu",
         "api_url": "x", // dummy value, don't remove
         "proxy": true,
-        "params": roid
+        "params": ro_id
     }, rproxy).done(function(e) {
         const ping = e.ping;
         if (ping) {
-            const cache = ping.br_cache,
-                servertime = cache.utc_timestamp,
-                filetime = cache.created_utc,
-                timestamp = filetime ? filetime * 1000 : now_utc(),
-                timestr = new Date(timestamp).toLocaleString(langcode),
-                result = ping.br_result,
-                csv_b64 = decode_shared_csv(result.base64);
+            const result = ping.br_result,
+                base64 = result.base64,
+                account = result.account,
+                check_fp = md5_check(base64, account, ro_id);
+            if (!check_fp) { // check if file has been tampered
+                popdialog("<h2 class='icon-warning'>" + tl("corruptedrequest") + "</h2>", "canceldialog");
+                return;
+            }
+            const csv_b64 = decode_shared_csv(base64);
             if (!csv_b64) {
                 systembu_expired();
                 return;
             }
-            const account = b64decode_url(result.account),
-                safe_account = escape_html(account),
+            const acc = b64decode_url(account),
+                safe_account = escape_html(acc),
+                cache = ping.br_cache,
+                servertime = cache.utc_timestamp,
+                filetime = cache.created_utc,
+                timestamp = filetime ? filetime * 1000 : now_utc(),
+                timestr = new Date(timestamp).toLocaleString(langcode),
                 title = "CSV Export " + safe_account + " (" + timestr + ")",
                 budate = timestr.replace(/\s+/g, "_").replace(/\:/g, "_"),
                 cachetime = cache.cache_time,
                 expires = (filetime + cachetime) - servertime,
-                filename = "bitrequest_csv_export_" + safe_file_part(account) + "_" + budate + ".csv",
+                filename = "bitrequest_csv_export_" + safe_file_part(acc) + "_" + budate + ".csv",
                 cd = countdown(expires * 1000),
                 cdstr = countdown_format(cd),
                 expstr = cdstr ? tl("expiresin") + " " + cdstr : tl("fileexpired"),
@@ -3632,7 +3644,7 @@ function share_teaminvite() {
                             proxy
                         })),
                         app_root = glob_const.approot;
-                    shorten_url(title, app_root + "?ro=" + data, app_root + "assets/img/icons/apple-touch-icon.png", true, url_hash);
+                    shorten_url(title, app_root + "?ro=" + data, app_root + "assets/img/icons/apple-touch-icon.png", url_hash, true);
                 }
             }).fail(function(xhr, stat, err) {
                 closeloader();
@@ -3675,7 +3687,7 @@ function share_teaminvite_qr() {
                             proxy
                         })),
                         app_root = glob_const.approot;
-                    shorten_url("qr", app_root + "?ro=" + data, app_root + "assets/img/icons/apple-touch-icon.png", true, url_hash);
+                    shorten_url("qr", app_root + "?ro=" + data, app_root + "assets/img/icons/apple-touch-icon.png", url_hash, true);
                 }
             }).fail(function(xhr, stat, err) {
                 closeloader();
@@ -3729,21 +3741,26 @@ function check_teaminvite(ro) {
                     systembu_expired();
                     return;
                 }
-                const cache = ping.br_cache,
+                const base64 = br_result.base64,
+                    account = br_result.account,
+                    check_fp = md5_check(base64, account, ro_id);
+                if (!check_fp) { // check if file has been tampered
+                    popdialog("<h2 class='icon-warning'>" + tl("corruptedrequest") + "</h2>", "canceldialog");
+                    return;
+                }
+                const acc = safe_atob(account) || "",
+                    cb64 = strip_quotes(base64),
+                    safe_account = escape_html(acc),
+                    cache = ping.br_cache,
                     server_time = cache.utc_timestamp,
                     filetime = cache.created_utc,
                     filetimesec = filetime ? filetime * 1000 : now_utc(),
                     filetime_format = new Date(filetimesec).toLocaleString(langcode),
-                    base64 = br_result.base64,
-                    cb64 = strip_quotes(base64),
-                    br_dat = invite_dat,
-                    br_plain = br_dat.lock ? decrypt_rd_payload(br_dat) : br_dat,
-                    account = safe_atob(br_result.account) || "",
-                    safe_account = escape_html(account),
+                    br_plain = invite_dat.lock ? decrypt_rd_payload(invite_dat) : invite_dat,
                     bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
                     cache_time = cache.cache_time,
                     expires_in = (filetime + cache_time) - server_time,
-                    filename = "bitrequest_team_invite" + encodeURIComponent(account) + "_" + bu_date + ".json",
+                    filename = "bitrequest_team_invite" + encodeURIComponent(acc) + "_" + bu_date + ".json",
                     cd = countdown(expires_in * 1000),
                     cd_format = countdown_format(cd),
                     bpdat_seedid = q_obj(br_plain, "bitrequest_cashier.seedid"),
@@ -3918,6 +3935,22 @@ function check_useragent() {
             });
         popdialog(content, "canceldialog");
     })
+}
+
+// check if file has been tampered
+function md5_check(base64, account, hash) {
+    try {
+        const check_fp = JSON.stringify({
+            base64,
+            account
+        }).replace(/\//g, "\\/");
+        if (md5(check_fp) === hash) {
+            return true;
+        }
+    } catch (e) {
+        return false;
+    }
+    return false;
 }
 
 // Formats a "now" timestamp safe for filenames (replaces spaces and colons with underscores).

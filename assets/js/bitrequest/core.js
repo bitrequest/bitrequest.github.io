@@ -3902,7 +3902,7 @@ function share_receipt() {
             set_loader_text(tl("generatereceipt"));
             const shared_title = "bitrequest_receipt_" + request_id + ".pdf",
                 url_hash = sha_sub(request_id + shared_title, 10);
-            shorten_url(shared_title, pdf_url, fetch_aws("img_receipt_icon.png"), true, url_hash);
+            shorten_url(shared_title, pdf_url, fetch_aws("img_receipt_icon.png"), url_hash);
             closeloader();
         }
     })
