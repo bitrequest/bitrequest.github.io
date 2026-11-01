@@ -326,6 +326,7 @@
                 <option value="keccak256">Keccak-256 (hex input)</option>
                 <option value="blake2b-256">Blake2b-256 (hex input)</option>
                 <option value="blake2b-512">Blake2b-512 (hex input)</option>
+                <option value="md5">MD5 (text)</option>
             </select>
             <button onclick="testHash()">Hash</button>
         </div>
@@ -1039,7 +1040,39 @@
             const result = CryptoUtils.hmac_bits("deadbeef", CryptoUtils.to_bits("key"), "hex");
             assertEqual(result.length, 128, "SHA512 HMAC is 64 bytes = 128 hex");
         });
-        
+
+        test("md5: RFC 1321 test suite", () => {
+            const vectors = [
+                ["", "d41d8cd98f00b204e9800998ecf8427e"],
+                ["a", "0cc175b9c0f1b6a831c399e269772661"],
+                ["abc", "900150983cd24fb0d6963f7d28e17f72"],
+                ["message digest", "f96b697d7cb7938d525a2f31aaf161d0"],
+                ["abcdefghijklmnopqrstuvwxyz", "c3fcd3d76192e4007dfb496cca67e13b"],
+                ["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "d174ab98d277d9f5a5611c2c9f419d9f"],
+                ["1234567890".repeat(8), "57edf4a22be3c955ac49da2e2107b67a"]
+            ];
+            vectors.forEach(([input, expected]) => {
+                assertEqual(CryptoUtils.md5(input), expected, "RFC 1321 '" + input + "'");
+            });
+        });
+
+        test("md5: padding block boundaries", () => {
+            const vectors = [
+                [55, "ef1772b6dff9a122358552954ad0df65"],
+                [56, "3b0c8ac703f828b04c6c197006d17218"],
+                [63, "b06521f39153d618550606be297466d5"],
+                [64, "014842d480b571495a4a0363793f7367"],
+                [65, "c743a45e0d2e6a95cb859adae0248435"]
+            ];
+            vectors.forEach(([len, expected]) => {
+                assertEqual(CryptoUtils.md5("a".repeat(len)), expected, len + " bytes");
+            });
+        });
+
+        test("md5: UTF-8 input matches PHP md5()", () => {
+            assertEqual(CryptoUtils.md5("€uro 🚀"), "7a861acc7ade2a1e6dd3516ac741805d", "Multi-byte UTF-8");
+        });
+
         // === Address Generation Tests ===
         
         test("pub_to_address: legacy Bitcoin address", () => {
@@ -1836,6 +1869,10 @@
                         algo = "Blake2b-512 (hex input)";
                         break;
                     }
+                    case "md5":
+                        result = CryptoUtils.md5(input);
+                        algo = "MD5 (text input)";
+                        break;
                 }
                 output.innerHTML = msg +
                     "<span class='info'>Input:</span> " + input +
