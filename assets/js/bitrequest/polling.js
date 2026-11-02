@@ -21,8 +21,8 @@ function route_transaction_monitor(tx_data, api_dat, retry) {
     if (tx_data) {
         if (is_openrequest()) {
             if (request) {
-                const tx_hash = tx_data.txhash;
-                if (tx_hash) {
+                const txhash = tx_data.txhash;
+                if (txhash) {
                     const zero_conf = (tx_data.setconfirmations) ? false : true,
                         status = validate_confirmations(tx_data, zero_conf);
                     if (status === "paid") {
@@ -30,7 +30,7 @@ function route_transaction_monitor(tx_data, api_dat, retry) {
                     }
                     const is_layer2 = tx_data.eth_layer2;
                     if (is_layer2) {
-                        request.txhash = tx_hash;
+                        request.txhash = txhash;
                         monitor_layer2(is_layer2, api_dat, retry);
                         return;
                     }
@@ -594,7 +594,7 @@ function filter_incoming_transactions(rpc_data, view_key, spend_pubkey) {
 // Polls the Monero RPC for a specific transaction hash to confirm its details.
 function poll_monero_rpc(rd, api_data, rdo) {
     const vk_object = rd.viewkey,
-        tx_hash = rd.txhash,
+        txhash = rd.txhash,
         vk = vk_object.vk,
         spk = get_spend_pubkey_from_address(rd.address),
         api_rpc_url = api_data.url,
@@ -605,7 +605,7 @@ function poll_monero_rpc(rd, api_data, rdo) {
         "params": {
             "method": "POST",
             "data": {
-                "txs_hashes": [tx_hash]
+                "txs_hashes": [txhash]
             },
             "headers": {
                 "Content-Type": "application/json"
@@ -617,7 +617,7 @@ function poll_monero_rpc(rd, api_data, rdo) {
         if (rpc_result && rpc_result.txs) {
             const incoming = filter_incoming_transactions(rpc_result, vk, spk),
                 parsed_tx = incoming.length ? xmr_tx_data(incoming[0], rdo.setconfirmations) : false;
-            if (parsed_tx && parsed_tx.txhash === tx_hash && parsed_tx.ccval) {
+            if (parsed_tx && parsed_tx.txhash === txhash && parsed_tx.ccval) {
                 matched_tx = parsed_tx;
                 if (rdo.source === "requests") {
                     const tx_item = create_transaction_item(parsed_tx);
@@ -746,7 +746,7 @@ function validate_confirmations(tx_data, direct, ln) {
                     confirm_box.addClass("blob");
                     confirm_span.text(confirmations).attr("data-conf", confirmations);
                 }, 500);
-                const tx_hash = tx_data.txhash,
+                const txhash = tx_data.txhash,
                     eth_layer2 = tx_data.eth_layer2,
                     amount_rel = $("#open_wallet").attr("data-rel"),
                     crypto_amount = amount_rel && amount_rel.length ? parseFloat(amount_rel) : 0,
@@ -756,16 +756,16 @@ function validate_confirmations(tx_data, direct, ln) {
                     current_currency = request.uoa,
                     request_type = request.requesttype,
                     is_crypto = current_currency === crypto_symbol,
-                    fiat_value = is_crypto ? null : (received_formatted / parseFloat(get_crypto_xrate())) * parseFloat(get_xrate(current_currency)), // calculate fiat value from helper.xrates
-                    fiat_rounded = is_crypto ? null : fiat_value.toFixed(2),
+                    fiatvalue = is_crypto ? null : (received_formatted / parseFloat(get_crypto_xrate())) * parseFloat(get_xrate(current_currency)), // calculate fiat value from helper.xrates
+                    fiat_rounded = is_crypto ? null : fiatvalue.toFixed(2),
                     received_amount = is_crypto ? received_crypto : fiat_rounded;
                 // extend global request object
                 $.extend(request, {
                     "received": true,
                     "inout": request_type,
                     "receivedamount": received_formatted,
-                    "fiatvalue": fiat_value,
-                    "txhash": tx_hash,
+                    fiatvalue,
+                    txhash,
                     confirmations,
                     set_confirmations,
                     eth_layer2
@@ -807,7 +807,7 @@ function validate_confirmations(tx_data, direct, ln) {
                     save_payment_request(direct, ln);
                     $("span#ibstatus").fadeOut(500);
                     closenotify();
-                    status_panel.find("#view_tx").attr("data-txhash", tx_hash);
+                    status_panel.find("#view_tx").attr("data-txhash", txhash);
                     return new_status;
                 }
                 if (decision.transition === "pending") {
@@ -819,7 +819,7 @@ function validate_confirmations(tx_data, direct, ln) {
                             request.pending = decision.request_pending;
                         save_payment_request(direct, ln);
                     }
-                    status_panel.find("#view_tx").attr("data-txhash", tx_hash);
+                    status_panel.find("#view_tx").attr("data-txhash", txhash);
                     return new_status;
                 }
                 if (decision.transition === "insufficient") {
@@ -828,7 +828,7 @@ function validate_confirmations(tx_data, direct, ln) {
                     request.status = decision.request_status,
                         request.pending = decision.request_pending;
                     save_payment_request(direct, ln);
-                    status_panel.find("#view_tx").attr("data-txhash", tx_hash);
+                    status_panel.find("#view_tx").attr("data-txhash", txhash);
                 }
                 play_audio("funk");
             }

@@ -206,10 +206,10 @@ function socket_info(socket_node, is_connected, is_polling) {
     let node_url = socket_node.url;
     const node_name = socket_node.name,
         custom = socket_node.custom;
-    if (custom && (node_name == "alchemy" || node_name == "infura")) {
+    if (custom && (node_name === "alchemy" || node_name === "infura")) {
         node_url = strip_key_from_url(node_url);
     }
-    const node_identifier = node_url || node_name,
+    const node_identifier = node_name || node_url,
         status_icon = is_connected ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
         connection_type = is_polling ? "polling" : "websocket",
         status_text = connection_type + ": " + node_identifier + status_icon;
