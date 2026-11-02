@@ -1,19 +1,27 @@
 const root_html = document.documentElement,
     b_url = (function() {
-        const here = document.currentScript && document.currentScript.src;
-        if (here) {
+        // App origin: the script's data-origin attribute (for a self-hosted copy of this file), else where it's served from.
+        const script_origin = function(script) {
             try {
-                return new URL(here).origin;
-            } catch (e) {}
+                const origin = new URL(script.getAttribute("data-origin") || script.src).origin;
+                return origin !== "null" ? origin : null;
+            } catch (e) {
+                return null;
+            }
+        };
+        const here = document.currentScript && script_origin(document.currentScript);
+        if (here) {
+            return here;
         }
         // Fallback: locate this helper by filename in the script tag list.
         const scripts = document.getElementsByTagName("script");
         for (let i = 0; i < scripts.length; i++) {
             const src = scripts[i].src || "";
             if (src.indexOf("assets_js_lib_bitrequest_checkout.js") !== -1) {
-                try {
-                    return new URL(src).origin;
-                } catch (e) {}
+                const origin = script_origin(scripts[i]);
+                if (origin) {
+                    return origin;
+                }
             }
         }
         return "https://bitrequest.github.io";
@@ -21,10 +29,11 @@ const root_html = document.documentElement,
 
 function checkout_init() {
     document.addEventListener("click", function(e) {
-        // Logic for checkout button clicks
-        if (e.target.matches(".br_checkout")) {
+        // Logic for checkout button clicks (also when the click lands on a child element)
+        const checkout_button = e.target instanceof Element ? e.target.closest(".br_checkout") : null;
+        if (checkout_button) {
             e.preventDefault();
-            checkout(e.target);
+            checkout(checkout_button);
         }
         // Logic for closing the loader
         if (e.target.matches("#br_loadbox")) {
@@ -80,7 +89,7 @@ function iframe_loaded() {
     const payment_frame = document.querySelector("#br_framebox iframe");
     payment_frame.addEventListener("load", () => {
         const frame_url = payment_frame.getAttribute("src");
-        if (frame_url && frame_url !== b_url) {
+        if (frame_url && frame_url !== "about:blank") {
             showframe();
         }
     });
@@ -116,10 +125,13 @@ function crossframe(e) {
 // The result is a UX signal (close the dialog, show a thank-you), NOT proof of payment: any script on your
 // page, including the customer's own browser console, can call this callback with made-up data.
 // Before fulfilling an order, verify the payment server-side (txhash, receiving address, amount, confirmations).
-function result_callback(post_data) {
-    // Overwrite this function for your callback.
-    console.log("Overwrite this function for your callback");
-    console.log(post_data);
+// Only defined when the page hasn't defined one, so loading this script async/defer can't replace yours.
+if (typeof window.result_callback !== "function") {
+    window.result_callback = function(post_data) {
+        // Overwrite this function for your callback.
+        console.log("Overwrite this function for your callback");
+        console.log(post_data);
+    };
 }
 
 // Shows the iframe by adding CSS classes to the root HTML element.
@@ -142,7 +154,7 @@ function closeframe() {
             root_html.classList.remove("showframe");
             const payment_frame = document.querySelector("#br_framebox iframe");
             if (payment_frame) {
-                payment_frame.setAttribute("src", b_url);
+                payment_frame.setAttribute("src", "about:blank");
             }
         }, 400);
     }

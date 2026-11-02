@@ -3180,15 +3180,14 @@ function save_payment_request(direct, lightning_url) {
     }
 }
 
-// Decodes the checkout meta param; a malformed value must not abort the post-payment flow
+// Decodes the checkout meta param (UTF-8 / URL-safe, like the d param); a malformed value must not abort the post-payment flow
 function decode_meta_param(meta_hash) {
     if (!meta_hash) return null;
-    try {
-        return JSON.parse(atob(meta_hash));
-    } catch (e) {
-        console.warn("invalid meta param ignored", e);
-        return null;
+    const meta = parse_b64_json(meta_hash);
+    if (meta === null) {
+        console.warn("invalid meta param ignored");
     }
+    return meta;
 }
 
 // Updates request UI elements and metadata with transaction status

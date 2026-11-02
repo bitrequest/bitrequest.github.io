@@ -9,7 +9,7 @@
   height: 100vh;
   margin-left: -100%;
   opacity: 0;
-  z-index: 999;
+  z-index: 2147483646;
   pointer-events: none;
   touch-action: none;
   transition: opacity 400ms linear;
@@ -45,7 +45,7 @@ html.zoomframe #br_framebox {
   width: 100vw;
   height: 100vh;
   margin-left: -100%;
-  z-index: 1000;
+  z-index: 2147483647;
   display: flex;
   align-items: center;
   justify-content: center;
