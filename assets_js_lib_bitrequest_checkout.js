@@ -44,6 +44,16 @@ function checkout_init() {
     keyup();
 }
 
+// UTF-8 safe, URL-safe base64 (same encoding as the app's b64encode_url)
+function b64encode_json(obj) {
+    const bytes = new TextEncoder().encode(JSON.stringify(obj));
+    let binary = "";
+    for (const byte of bytes) {
+        binary += String.fromCharCode(byte);
+    }
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_");
+}
+
 // Also works when the script is loaded async or injected after DOMContentLoaded
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", checkout_init);
