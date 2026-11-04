@@ -4466,16 +4466,17 @@ function expand_shorturl(input_param) {
                 "url": proxy_url + "/proxy/v1/inv/api/",
                 "data": request_payload
             }).done(function(response) {
-                const parsed_data = br_result(response).result;
+                const parsed_data = br_result(response).result,
+                    error = parsed_data.error;
+                if (error) {
+                    const error_message = (error === "Invalid cache data") ? tl("corruptedrequest") : tl("failedtofetchrequest");
+                    popdialog("<h2 class='icon-warning'>" + error_message + "</h2>", "canceldialog");
+                    closeloader();
+                    return;
+                }
                 if (parsed_data) {
                     const status = parsed_data.status;
                     if (status) {
-                        if (status === "file not found") {
-                            const error_content = "<h2 class='icon-warning'>" + tl("shorturlnotfound") + "</h2>";
-                            popdialog(error_content, "canceldialog");
-                            closeloader();
-                            return;
-                        }
                         if (status === "file exists") {
                             const long_url = parsed_data.sharedurl;
                             if (long_url && is_own_app_url(long_url)) {
@@ -4487,16 +4488,18 @@ function expand_shorturl(input_param) {
                                 const local_url = make_local(long_url);
                                 ios_redirections(local_url, true);
                                 br_set_session("longurl_" + input_param, local_url);
-                                return;
                             }
+                            return;
                         }
+                        const error_content = "<h2 class='icon-warning'>" + tl("shorturlnotfound") + "</h2>";
+                        popdialog(error_content, "canceldialog");
+                        closeloader();
                     }
                 }
             }).fail(function(xhr, status, error) {
                 const error_content = "<h2 class='icon-warning'>" + tl("failedtofetchrequest") + "</h2>";
                 popdialog(error_content, "canceldialog");
                 closeloader();
-                return;
             });
         }
     }
