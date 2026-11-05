@@ -986,9 +986,9 @@ function secret_to_key(secret) {
     return sjcl.codec.base64.fromBits(sjcl.hash.sha256.hash(secret));
 }
 
-function aes_encode(data, secret) {
+function aes_encode(data, secret, siv) {
     const payload = typeof data === "string" ? data : JSON.stringify(data);
-    return aes_enc(btoa(unescape(encodeURIComponent(payload))), secret_to_key(secret));
+    return aes_enc(btoa(unescape(encodeURIComponent(payload))), secret_to_key(secret), siv);
 }
 
 function aes_decode(encrypted, secret) {
@@ -1432,12 +1432,12 @@ function mnemonic_to_binary_string(mnemonic) {
 // ============================================
 
 // Encrypts data using AES-GCM
-function aes_enc(params, keyString) {
-    const buffer = uint_8array(16),
-        iv = byte_array_to_word_array(crypto.getRandomValues(buffer)),
-        key = sjcl.codec.base64.toBits(keyString),
-        cipher = new sjcl.cipher.aes(key),
+function aes_enc(params, keyString, siv) {
+    const key = sjcl.codec.base64.toBits(keyString),
         data = to_bits(params),
+        iv = siv ? sjcl.bitArray.bitSlice(new sjcl.misc.hmac(new sjcl.misc.hmac(key).encrypt("siv")).encrypt(data), 0, 128) :
+        byte_array_to_word_array(crypto.getRandomValues(uint_8array(16))),
+        cipher = new sjcl.cipher.aes(key),
         enc = sjcl.mode.gcm.encrypt(cipher, data, iv, {}, 128),
         concatbitArray = concat_array(iv, enc),
         conString = sjcl.codec.base64.fromBits(concatbitArray);

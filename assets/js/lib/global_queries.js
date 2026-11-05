@@ -1638,12 +1638,21 @@ function all_global_proxies(filter) {
     return proxy_list;
 }
 
+// Return custom proxies
+function custom_proxies() {
+    return proxy_dat()?.custom_proxies;
+}
+
 // Concatenates default and custom proxy lists
 function all_proxies(filter) {
-    const proxy_data = proxy_dat(),
-        custom_proxies = proxy_data.custom_proxies,
+    const c_proxies = custom_proxies() || [],
         proxy_list = all_global_proxies(filter);
-    return proxy_list.concat(custom_proxies);
+    return proxy_list.concat(c_proxies);
+}
+
+// Check if proxy is custom
+function is_custom_proxy() {
+    return objectkey_in_array(custom_proxies(), "proxy", d_proxy());
 }
 
 // Filters array by object key value
@@ -1926,38 +1935,44 @@ function shorten_url(shared_title, shared_url, site_thumb, url_hash, cache) {
 
 // Processes Bitly API URL shortening
 function bitly_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache) {
-    api_proxy({
-        "api": "bitly",
-        "search": "bitlinks",
-        "cachetime": 84600,
-        "cachefolder": "1d",
-        "bearer": true,
-        "params": {
-            "method": "POST",
-            "contentType": "application/json",
-            "data": {
-                "long_url": shared_url
+    const is_cp = is_custom_proxy(),
+        bitly_key = get_setting("apikeys", "bitly");
+    if (is_cp || bitly_key) { // only use bitly on custom proxy or when apikey is set
+        api_proxy({
+            "api": "bitly",
+            "search": "bitlinks",
+            "cachetime": 84600,
+            "cachefolder": "1d",
+            "bearer": true,
+            "params": {
+                "method": "POST",
+                "contentType": "application/json",
+                "data": {
+                    "long_url": shared_url
+                }
             }
-        }
-    }).done(function(response) {
-        const data = br_result(response).result;
-        if (data.error) {
+        }).done(function(response) {
+            const data = br_result(response).result;
+            if (data.error) {
+                custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
+                return;
+            }
+            if (data.id) {
+                const link_id = data.id.split("/").pop(),
+                    short_url = glob_const.approot + "?i=4bR" + link_id;
+                share_request(short_url, shared_title);
+                if (url_hash) {
+                    br_set_session("bitly_shorturl_" + url_hash, short_url);
+                }
+                return;
+            }
             custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
-            return;
-        }
-        if (data.id) {
-            const link_id = data.id.split("/").pop(),
-                short_url = glob_const.approot + "?i=4bR" + link_id;
-            share_request(short_url, shared_title);
-            if (url_hash) {
-                br_set_session("bitly_shorturl_" + url_hash, short_url);
-            }
-            return;
-        }
-        custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
-    }).fail(function() {
-        custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
-    });
+        }).fail(function() {
+            custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
+        });
+        return;
+    }
+    custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
 }
 
 // Manages custom proxy server URL shortening

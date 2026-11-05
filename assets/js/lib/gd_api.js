@@ -477,7 +477,7 @@ function sync_drive_data(auth_state) {
                 "headers": {
                     "Authorization": "Bearer " + access_token
                 },
-                "data": compile_backup_data()?.blob
+                "data": compile_backup_data("gd")?.blob
             }
         };
         api_proxy(request_data).done(function(response) {
@@ -515,7 +515,7 @@ function create_drive_file(access_token) {
         token_valid = token_data.pass,
         final_token = access_token || (token_valid ? token_data.token : false);
     if (final_token) {
-        const backup_content = compile_backup_data()?.blob;
+        const backup_content = compile_backup_data("gd")?.blob;
         if (backup_content) {
             const file_blob = new Blob([backup_content], {
                     "type": "text/plain"

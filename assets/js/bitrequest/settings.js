@@ -717,7 +717,7 @@ function share_backup_file() {
 function share_bu() {
     loader(true);
     set_loader_text(tl("generatebu"));
-    const json = compile_backup_data();
+    const json = compile_backup_data("bu");
     if (!json) {
         closeloader();
         return;
@@ -725,8 +725,8 @@ function share_bu() {
     const account = $("#accountsettings").data("selected"),
         time_format = new Date(now_utc()).toLocaleString(langcode),
         title = tl("systembackup") + " " + account + " (" + time_format + ")",
-        url_hash = json.fp,
-        cached_short_url = get_saved_shorturl(url_hash);
+        fingerprint = json.fp,
+        cached_short_url = get_saved_shorturl(fingerprint);
     if (cached_short_url) {
         share_request(cached_short_url, title);
         return;
@@ -750,7 +750,7 @@ function share_bu() {
                     proxy
                 })),
                 app_root = glob_const.approot;
-            shorten_url(title, app_root + "?sbu=" + data, app_root + "assets/img/icons/apple-touch-icon.png", url_hash, true);
+            shorten_url(title, app_root + "?sbu=" + data, app_root + "assets/img/icons/apple-touch-icon.png", fingerprint, true);
         }
     }).fail(function(xhr, stat, err) {
         console.error("API proxy error:", xhr, stat, err);
@@ -935,10 +935,10 @@ function cancel_backup_dialog() {
 }
 
 // Serializes localStorage data into base64 encoded backup excluding specific keys
-function compile_backup_data() {
+function compile_backup_data(type) {
     const bu_dat = {},
         skip_keys = [
-            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens_init",
+            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens_init", "bitrequest_bufp", "bitrequest_gdfp", "bitrequest_tifp", "bitrequest_csvfp",
             "bitrequest_erc20tokens", "bitrequest_editurl", "bitrequest_recent_requests",
             "bitrequest_backupfile_id", "bitrequest_appstore_dialog", "bitrequest_init",
             "bitrequest_eth_l2_contracts", "bitrequest_k", "bitrequest_awl", "bitrequest_dat", "bitrequest_rt", "bitrequest_tp", "bitrequest_bpdat", "sameseed"
@@ -955,20 +955,33 @@ function compile_backup_data() {
             bu_dat[key] = value;
         }
     }
+    const fingerprint = sha_sub(JSON.stringify(bu_dat), 10),
+        ls_type = type + "fp",
+        bufp = br_get_local(ls_type, true);
+    let random = Math.floor(Math.random() * 9) + 1,
+        r_utc = String(now_utc()).slice(-3);
+    if (bufp && bufp.fingerprint === fingerprint) {
+        random = bufp.random;
+        r_utc = bufp.r_utc;
+    } else {
+        br_set_local(ls_type, {
+            fingerprint,
+            random,
+            r_utc
+        }, true);
+    }
     const phrase_obj = ls_phrase_obj(),
         pin_hash = get_setting("pinsettings", "pinhash"),
         lock_id = phrase_obj ? "b39" : pin_hash ? "pn" : "rd",
-        r_pick = Math.floor(Math.random() * 9) + 1,
-        random_salt = Object.values(crypto_utils_const)[r_pick],
+        random_salt = Object.values(crypto_utils_const)[random],
         secret = (lock_id === "b39") ? JSON.stringify(phrase_obj.pob) : (lock_id === "pn") ? pin_to_encryption_key(pin_hash, random_salt) : random_salt,
-        lock_trail = (lock_id === "b39") ? phrase_obj.pid : r_pick + String(now_utc()).slice(-3),
+        lock_trail = (lock_id === "b39") ? phrase_obj.pid : random + r_utc,
         lock = lock_id + lock_trail,
-        encr = aes_encode(bu_dat, secret),
+        encr = aes_encode(bu_dat, secret, true),
         json = {
             lock,
             encr
         },
-        fingerprint = sha_sub(JSON.stringify(bu_dat), 10),
         blob = {
             "blob": JSON.stringify(json),
             "fp": fingerprint
@@ -1026,7 +1039,7 @@ function backup(args) {
     notify(tl("downloaded", {
         "file": last_backup
     }));
-    const blob = node.attr("data-blob") || compile_backup_data()?.blob;
+    const blob = node.attr("data-blob") || compile_backup_data("bu")?.blob;
     if (blob) {
         const href = "data:application/json;charset=utf-8;base64," + btoa(bu_text(blob)),
             download = node.attr("download") || node.attr("title") || "backup",
@@ -1317,13 +1330,13 @@ function decrypt_json_bu(json, meta) {
     } else if (type === "pn") {
         const current_pin_hash = get_setting("pinsettings", "pinhash");
         if (current_pin_hash) {
-            const r_pick = lock[2],
-                random_salt = Object.values(crypto_utils_const)[r_pick];
+            const random = lock[2],
+                random_salt = Object.values(crypto_utils_const)[random];
             secr = pin_to_encryption_key(current_pin_hash, random_salt);
         }
     } else if (type === "rd") {
-        const r_pick = lock[2];
-        secr = Object.values(crypto_utils_const)[r_pick];
+        const random = lock[2];
+        secr = Object.values(crypto_utils_const)[random];
     }
     if (secr) {
         const restored = aes_decode(json.encr, secr);
@@ -1539,8 +1552,8 @@ function submit_pin_dialog() {
             const pin_length = value.length;
             if (pin_length === 4) {
                 const pin_hash = generate_hash(value),
-                    r_pick = lock[2],
-                    random_salt = Object.values(crypto_utils_const)[r_pick],
+                    random = lock[2],
+                    random_salt = Object.values(crypto_utils_const)[random],
                     secr = pin_to_encryption_key(pin_hash, random_salt),
                     restored = aes_decode(json.encr, secr);
                 if (restored) {
@@ -2025,17 +2038,30 @@ function render_csv(arr) {
 }
 
 // Encrypts a payload with a random-salt (rd) lock for proxy sharing
-function encode_rd_payload(data) {
-    const r_pick = Math.floor(Math.random() * 9) + 1,
-        random_salt = Object.values(crypto_utils_const)[r_pick],
-        lock_trail = r_pick + String(now_utc()).slice(-3),
+function encode_rd_payload(data, type) {
+    const fingerprint = sha_sub(JSON.stringify(data), 10),
+        ls_type = type + "fp",
+        bufp = br_get_local(ls_type, true);
+    let random = Math.floor(Math.random() * 9) + 1,
+        r_utc = String(now_utc()).slice(-3);
+    if (bufp && bufp.fingerprint === fingerprint) {
+        random = bufp.random;
+        r_utc = bufp.r_utc;
+    } else {
+        br_set_local(ls_type, {
+            fingerprint,
+            random,
+            r_utc
+        }, true);
+    }
+    const random_salt = Object.values(crypto_utils_const)[random],
+        lock_trail = random + r_utc,
         lock = "rd" + lock_trail,
-        encr = aes_encode(data, random_salt),
+        encr = aes_encode(data, random_salt, true),
         json = {
             lock,
             encr
         },
-        fingerprint = sha_sub(JSON.stringify(data), 10),
         blob = {
             "blob": JSON.stringify(json),
             "fp": fingerprint
@@ -2046,8 +2072,8 @@ function encode_rd_payload(data) {
 // Decrypts an rd-locked shared payload (team invites, shared CSV exports)
 function decrypt_rd_payload(json) {
     const lock = json.lock,
-        r_pick = lock[2],
-        secr = Object.values(crypto_utils_const)[r_pick],
+        random = lock[2],
+        secr = Object.values(crypto_utils_const)[random],
         restored = aes_decode(json.encr, secr);
     if (restored) {
         return restored;
@@ -2067,7 +2093,7 @@ function share_csv() {
                 acc_b64 = b64encode_url(account),
                 rd_payload = encode_rd_payload({
                     csv
-                });
+                }, "csv");
             if (rd_payload) {
                 const csv_hash = rd_payload.fp,
                     time_format = new Date(now_utc()).toLocaleString(langcode),
@@ -3489,7 +3515,7 @@ function team_invite() {
 function compile_teaminvite() {
     const jsonfile = {},
         skip_keys = [
-            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens_init",
+            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens_init", "bitrequest_bufp", "bitrequest_gdfp", "bitrequest_tifp", "bitrequest_csvfp",
             "bitrequest_erc20tokens", "bitrequest_editurl", "bitrequest_recent_requests",
             "bitrequest_backupfile_id", "bitrequest_appstore_dialog", "bitrequest_init",
             "bitrequest_eth_l2_contracts", "bitrequest_k", "bitrequest_awl", "bitrequest_dat", "bitrequest_rt", "bitrequest_tp", "bitrequest_bpdat",
@@ -3539,7 +3565,7 @@ function compile_teaminvite() {
             "pob": false
         },
         adjusted = adjust_object(jsonfile, seedobj, checked);
-    return encode_rd_payload(adjusted);
+    return encode_rd_payload(adjusted, "ti");
 }
 
 // Modifies configuration data for team member access
@@ -3618,11 +3644,11 @@ function share_teaminvite() {
             const account = $("#accountsettings").data("selected"),
                 acc_b64 = b64encode_url(account),
                 url = $("#ti_qr_container").attr("data-url"),
-                url_hash = $("#ti_qr_container").attr("data-fp"),
+                fingerprint = $("#ti_qr_container").attr("data-fp"),
                 title = tl("teaminviteharetitle", {
                     "accountname": account
                 }),
-                cached_short_url = get_saved_shorturl(url_hash);
+                cached_short_url = get_saved_shorturl(fingerprint);
             if (cached_short_url) {
                 share_request(cached_short_url, title);
                 return;
@@ -3644,7 +3670,7 @@ function share_teaminvite() {
                             proxy
                         })),
                         app_root = glob_const.approot;
-                    shorten_url(title, app_root + "?ro=" + data, app_root + "assets/img/icons/apple-touch-icon.png", url_hash, true);
+                    shorten_url(title, app_root + "?ro=" + data, app_root + "assets/img/icons/apple-touch-icon.png", fingerprint, true);
                 }
             }).fail(function(xhr, stat, err) {
                 closeloader();
@@ -3662,8 +3688,8 @@ function share_teaminvite_qr() {
         if (result) {
             const account = btoa($("#accountsettings").data("selected")),
                 url = $("#ti_qr_container").attr("data-url"),
-                url_hash = $("#ti_qr_container").attr("data-fp"),
-                cached_short_url = get_saved_shorturl(url_hash);
+                fingerprint = $("#ti_qr_container").attr("data-fp"),
+                cached_short_url = get_saved_shorturl(fingerprint);
             if (cached_short_url) {
                 toggle_ti_qr(cached_short_url);
                 return;
@@ -3687,7 +3713,7 @@ function share_teaminvite_qr() {
                             proxy
                         })),
                         app_root = glob_const.approot;
-                    shorten_url("qr", app_root + "?ro=" + data, app_root + "assets/img/icons/apple-touch-icon.png", url_hash, true);
+                    shorten_url("qr", app_root + "?ro=" + data, app_root + "assets/img/icons/apple-touch-icon.png", fingerprint, true);
                 }
             }).fail(function(xhr, stat, err) {
                 closeloader();
