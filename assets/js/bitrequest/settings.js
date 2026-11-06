@@ -938,7 +938,7 @@ function cancel_backup_dialog() {
 function compile_backup_data(type) {
     const bu_dat = {},
         skip_keys = [
-            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens_init", "bitrequest_bufp", "bitrequest_gdfp", "bitrequest_tifp", "bitrequest_csvfp",
+            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens_init", "bitrequest_bufp",
             "bitrequest_erc20tokens", "bitrequest_editurl", "bitrequest_recent_requests",
             "bitrequest_backupfile_id", "bitrequest_appstore_dialog", "bitrequest_init",
             "bitrequest_eth_l2_contracts", "bitrequest_k", "bitrequest_awl", "bitrequest_dat", "bitrequest_rt", "bitrequest_tp", "bitrequest_bpdat", "sameseed"
@@ -956,21 +956,10 @@ function compile_backup_data(type) {
         }
     }
     const fingerprint = sha_sub(JSON.stringify(bu_dat), 10),
-        ls_type = type + "fp",
-        bufp = br_get_local(ls_type, true);
-    let random = Math.floor(Math.random() * 9) + 1,
-        r_utc = String(now_utc()).slice(-3);
-    if (bufp && bufp.fingerprint === fingerprint) {
-        random = bufp.random;
-        r_utc = bufp.r_utc;
-    } else {
-        br_set_local(ls_type, {
-            fingerprint,
-            random,
-            r_utc
-        }, true);
-    }
-    const phrase_obj = ls_phrase_obj(),
+        fp_dat = cache_backup_fingerprint(fingerprint, type),
+        random = fp_dat.random,
+        r_utc = fp_dat.r_utc,
+        phrase_obj = ls_phrase_obj(),
         pin_hash = get_setting("pinsettings", "pinhash"),
         lock_id = phrase_obj ? "b39" : pin_hash ? "pn" : "rd",
         random_salt = Object.values(crypto_utils_const)[random],
@@ -987,6 +976,34 @@ function compile_backup_data(type) {
             "fp": fingerprint
         }
     return blob;
+}
+
+// Cache backup fingerprint
+function cache_backup_fingerprint(fingerprint, type) {
+    const bufp = br_get_local("bufp", true),
+        random = Math.floor(Math.random() * 9) + 1,
+        r_utc = String(now_utc()).slice(-3),
+        tc = {
+            fingerprint,
+            random,
+            r_utc
+        };
+    if (bufp) {
+        const tp = bufp[type];
+        if (tp) {
+            const fp = tp.fingerprint;
+            if (fp === fingerprint) {
+                return tp;
+            }
+        }
+        bufp[type] = tc;
+        br_set_local("bufp", bufp, true);
+        return tc;
+    }
+    const bufpc = {};
+    bufpc[type] = tc;
+    br_set_local("bufp", bufpc, true);
+    return tc;
 }
 
 // Generates timestamped JSON backup filename with current locale
@@ -1023,21 +1040,21 @@ function submit_backup() {
 
 function backup(args) {
     const node = args.node,
-        last_saved = "last backup: " + node.attr("data-date"),
-        last_backup = node.attr("data-lastbackup"),
+        titlebackup = "last backup: " + node.attr("data-date"),
+        lastbackup = node.attr("data-lastbackup"),
         restore = node.attr("data-restore");
     if (!restore) {
         set_setting("backup", {
-            "titlebackup": last_saved,
-            "lastbackup": last_backup,
+            titlebackup,
+            lastbackup,
             "device": "folder-open"
-        }, last_saved);
+        }, titlebackup);
         save_settings("noalert");
         reset_changes();
     }
     canceldialog();
     notify(tl("downloaded", {
-        "file": last_backup
+        "file": lastbackup
     }));
     const blob = node.attr("data-blob") || compile_backup_data("bu")?.blob;
     if (blob) {
@@ -2040,21 +2057,10 @@ function render_csv(arr) {
 // Encrypts a payload with a random-salt (rd) lock for proxy sharing
 function encode_rd_payload(data, type) {
     const fingerprint = sha_sub(JSON.stringify(data), 10),
-        ls_type = type + "fp",
-        bufp = br_get_local(ls_type, true);
-    let random = Math.floor(Math.random() * 9) + 1,
-        r_utc = String(now_utc()).slice(-3);
-    if (bufp && bufp.fingerprint === fingerprint) {
-        random = bufp.random;
-        r_utc = bufp.r_utc;
-    } else {
-        br_set_local(ls_type, {
-            fingerprint,
-            random,
-            r_utc
-        }, true);
-    }
-    const random_salt = Object.values(crypto_utils_const)[random],
+        fp_dat = cache_backup_fingerprint(fingerprint, type),
+        random = fp_dat.random,
+        r_utc = fp_dat.r_utc,
+        random_salt = Object.values(crypto_utils_const)[random],
         lock_trail = random + r_utc,
         lock = "rd" + lock_trail,
         encr = aes_encode(data, random_salt, true),
@@ -3515,7 +3521,7 @@ function team_invite() {
 function compile_teaminvite() {
     const jsonfile = {},
         skip_keys = [
-            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens_init", "bitrequest_bufp", "bitrequest_gdfp", "bitrequest_tifp", "bitrequest_csvfp",
+            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens_init", "bitrequest_bufp",
             "bitrequest_erc20tokens", "bitrequest_editurl", "bitrequest_recent_requests",
             "bitrequest_backupfile_id", "bitrequest_appstore_dialog", "bitrequest_init",
             "bitrequest_eth_l2_contracts", "bitrequest_k", "bitrequest_awl", "bitrequest_dat", "bitrequest_rt", "bitrequest_tp", "bitrequest_bpdat",
