@@ -2171,7 +2171,7 @@ const glob_config = {
     "apilists": {
         "crypto_price_apis": ["coinmarketcap", "coinpaprika", "coingecko"],
         "fiat_price_apis": ["fixer", "coingecko", "exchangeratesapi", "currencylayer", "coinbase"],
-        "historic_crypto_price_apis": ["coingecko", "coincodex", "coindesk", "coinmarketcap", "coinpaprika"],
+        "historic_crypto_price_apis": ["coinmarketcap", "coingecko", "coincodex", "coindesk", "coinpaprika"],
         "historic_fiat_price_apis": ["fixer", "exchangeratesapi", "currencylayer"]
     },
     "blockexplorers": [{

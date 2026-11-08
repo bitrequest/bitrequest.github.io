@@ -1703,8 +1703,8 @@ function get_requestli(data_key, data_value) {
 }
 
 // Detects existing pending transaction requests by matching multiple attributes
-function ch_pending(request_data) {
-    return $("#requestlist li.rqli[data-address='" + request_data.address + "'][data-pending='scanning'][data-cmcid='" + request_data.cmcid + "']").length > 0;
+function ch_pending(longurl) {
+    return $("#requestlist li.rqli[data-address='" + longurl.address + "'][data-pending='scanning'][data-cmcid='" + longurl.cmcid + "']").length > 0;
 }
 
 // Retrieves DOM container for currency-specific address listings
@@ -1906,7 +1906,7 @@ function get_cached_tokens(check) {
 }
 
 // Manages URL shortening with multiple service fallbacks
-function shorten_url(shared_title, shared_url, site_thumb, url_hash, cache) {
+function shorten_url(sharedtitle, sharedurl, sitethumb, url_hash, cache) {
     set_loader_text(tl("generatelink"));
     const url_shorten_settings = $("#url_shorten_settings"),
         is_url_shorten_active = url_shorten_settings.data("us_active") === "active";
@@ -1917,24 +1917,24 @@ function shorten_url(shared_title, shared_url, site_thumb, url_hash, cache) {
             const cache_prefix = is_custom_service ? "custom" : service,
                 cached_short_url = br_get_session(cache_prefix + "_shorturl_" + url_hash) || br_get_session("custom_shorturl_" + url_hash) || br_get_session("longurl_" + url_hash);
             if (cached_short_url) {
-                share_request(cached_short_url, shared_title);
+                share_request(cached_short_url, sharedtitle);
                 return;
             }
         }
         if (service === "bitly") {
-            bitly_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
+            bitly_shorten(service, sharedurl, sharedtitle, sitethumb, url_hash, cache);
             return;
         }
         if (is_custom_service) {
-            custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
+            custom_shorten(service, sharedurl, sharedtitle, sitethumb, url_hash, cache);
             return;
         }
     }
-    share_request(shared_url, shared_title, url_hash, cache);
+    share_request(sharedurl, sharedtitle, url_hash, cache);
 }
 
 // Processes Bitly API URL shortening
-function bitly_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache) {
+function bitly_shorten(service, sharedurl, sharedtitle, sitethumb, url_hash, cache) {
     const is_cp = is_custom_proxy(),
         bitly_key = get_setting("apikeys", "bitly");
     if (is_cp || bitly_key) { // only use bitly on custom proxy or when apikey is set
@@ -1948,46 +1948,46 @@ function bitly_shorten(service, shared_url, shared_title, site_thumb, url_hash, 
                 "method": "POST",
                 "contentType": "application/json",
                 "data": {
-                    "long_url": shared_url
+                    "long_url": sharedurl
                 }
             }
         }).done(function(response) {
             const data = br_result(response).result;
             if (data.error) {
-                custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
+                custom_shorten(service, sharedurl, sharedtitle, sitethumb, url_hash, cache);
                 return;
             }
             if (data.id) {
                 const link_id = data.id.split("/").pop(),
                     short_url = glob_const.approot + "?i=4bR" + link_id;
-                share_request(short_url, shared_title);
+                share_request(short_url, sharedtitle);
                 if (url_hash) {
                     br_set_session("bitly_shorturl_" + url_hash, short_url);
                 }
                 return;
             }
-            custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
+            custom_shorten(service, sharedurl, sharedtitle, sitethumb, url_hash, cache);
         }).fail(function() {
-            custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
+            custom_shorten(service, sharedurl, sharedtitle, sitethumb, url_hash, cache);
         });
         return;
     }
-    custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache);
+    custom_shorten(service, sharedurl, sharedtitle, sitethumb, url_hash, cache);
 }
 
 // Manages custom proxy server URL shortening
-function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash, cache) {
+function custom_shorten(service, sharedurl, sharedtitle, sitethumb, url_hash, cache) {
     const is_custom_service = service && String(service).indexOf("http") === 0,
         server = is_custom_service ? service : d_proxy(),
-        request_data = btoa(JSON.stringify({
-            "sharedurl": shared_url,
-            "sitethumb": site_thumb
+        longurl = btoa(JSON.stringify({
+            sharedurl,
+            sitethumb
         })),
-        short_url_id = sha_sub(shared_url, 16),
+        shorturl = sha_sub(sharedurl, 16),
         payload = {
             "function": "post",
-            "longurl": request_data,
-            "shorturl": short_url_id
+            longurl,
+            shorturl
         };
     $.ajax({
         "method": "POST",
@@ -2000,7 +2000,7 @@ function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash,
         if (data) {
             if (data.error) {
                 notify(escape_html(server + ": " + data.error), 500000, "yes");
-                share_request(shared_url, shared_title, url_hash, cache);
+                share_request(sharedurl, sharedtitle, url_hash, cache);
                 return;
             }
             const request_id = data.shorturl;
@@ -2010,16 +2010,16 @@ function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash,
                     short_url = is_default_server ?
                     glob_const.approot + "?i=" + server_index.toString() + request_id :
                     server + "/proxy/v1/inv/4bR" + request_id;
-                share_request(short_url, shared_title);
+                share_request(short_url, sharedtitle);
                 if (url_hash) {
                     br_set_session("custom_shorturl_" + url_hash, short_url);
                 }
                 return;
             }
         }
-        share_request(shared_url, shared_title, url_hash, cache);
+        share_request(sharedurl, sharedtitle, url_hash, cache);
     }).fail(function() {
-        share_request(shared_url, shared_title, url_hash, cache);
+        share_request(sharedurl, sharedtitle, url_hash, cache);
     });
 }
 

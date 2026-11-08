@@ -752,7 +752,10 @@ function validate_payment_amounts(rd, rdo) {
                 last_time_offset = parseInt(now_utc() - latest_transaction_time),
                 is_recent = (first_time_offset < 300000 && last_time_offset < 300000),
                 crypto_amount = parseFloat(rd.cc_amount),
-                amount_margin = 0.97;
+                amount_margin = is_crypto ? 0.995 : 0.97,
+                xrates = is_crypto ? null : br_get_session("xrates_" + rd.currencysymbol, true),
+                cc_rate = xrates ? xrates.ccrate : null,
+                min_accept_cc = cc_rate ? Math.max(0, Math.min(crypto_amount * amount_margin, crypto_amount - 0.10 / cc_rate)) : crypto_amount * amount_margin; // fiat: same 3% / 10¢ rule as the historic path
             let recent_data = false,
                 transaction_counter = 0,
                 crypto_status = "pending",
@@ -762,7 +765,8 @@ function validate_payment_amounts(rd, rdo) {
                 paymenttimestamp,
                 crypto_transaction_hash,
                 total_crypto_amount = 0,
-                fiat_value = rd.fiatvalue;
+                fiat_value = rd.fiatvalue,
+                all_confirmed = true;
             if (is_crypto || is_recent) {
                 const transaction_reverse = transaction_count > 1 ? transaction_items.get().reverse() : transaction_items;
                 $(transaction_reverse).each(function(index) {
@@ -772,11 +776,12 @@ function validate_payment_amounts(rd, rdo) {
                         correction_confirmations = transaction_data.instant_lock ? 0 : set_confirmations; // correction if dash instant_lock
                     crypto_confirmations = transaction_data.confirmations,
                         paymenttimestamp = transaction_data.transactiontime,
-                        crypto_transaction_hash = transaction_data.txhash,
-                        total_crypto_amount += parseFloat(transaction_data.ccval) || 0; // sum of outputs
-                    if (total_crypto_amount >= crypto_amount * amount_margin) { // compensation for small fluctuations in rounding amount
+                        crypto_transaction_hash = transaction_data.txhash;
+                    total_crypto_amount += parseFloat(transaction_data.ccval) || 0, // sum of outputs
+                        all_confirmed = all_confirmed && (crypto_confirmations >= correction_confirmations || no_conf || transaction_data.setconfirmations === false); // check all confirmations + whitelist for currencies unable to fetch confirmations
+                    if (total_crypto_amount >= min_accept_cc) { // compensation for small fluctuations in rounding amount
                         current_transaction.prevAll().remove();
-                        is_crypto_confirmed = Boolean(crypto_confirmations >= correction_confirmations || no_conf || transaction_data.setconfirmations === false); // check all confirmations + whitelist for currencies unable to fetch confirmations
+                        is_crypto_confirmed = Boolean(all_confirmed);
                         return false;
                     }
                 });
@@ -789,7 +794,7 @@ function validate_payment_amounts(rd, rdo) {
                         animate_confbar($(this), i);
                     });
                 };
-                if (total_crypto_amount >= crypto_amount * amount_margin) { // compensation for small fluctuations in rounding amount
+                if (total_crypto_amount >= min_accept_cc) { // compensation for small fluctuations in rounding amount
                     if (is_crypto_confirmed === false) { // check confirmations outside the loop
                         crypto_status = "pending",
                             crypto_pending = transaction_count === 1 && crypto_transaction_hash ? "polling" : pending_status; // switch to tx polling if there's only one transaction and txhash is known
@@ -871,7 +876,7 @@ function init_fiat_history(rd, rdo, latestconf, latest_input, firstinput) {
         latestinput = latest_input_conf > historic_cache ? latest_input_conf : historic_cache;
     if (latestinput > historic_cache) { //new input detected; call historic api
         br_remove_session(cache_prefix); // remove historic price cache
-        const historic_payload = $.extend(rd, {
+        const historic_payload = $.extend({}, rd, {
                 "latestinput": latest_time,
                 "historic_key": latestinput,
                 firstinput
@@ -882,6 +887,13 @@ function init_fiat_history(rd, rdo, latestconf, latest_input, firstinput) {
         glob_let.api_attempt[api_list] = {}; // reset global historic fiat price api attempt
         fetch_fiat_rates(historic_payload, rdo, api_list, fiat_api_default);
         return;
+    }
+    const historic_tx = br_get_session("historic_tx_" + rd.requestid, true); // re-attach cached historic data for tooltips
+    if (historic_tx) {
+        rdo.transactionlist.children("li").each(function() {
+            const historic_object = historic_tx[$(this).data("txhash")];
+            if (historic_object) $(this).data("historic", historic_object);
+        });
     }
     finalize_request_state(rdo);
 }
@@ -965,7 +977,7 @@ function fetch_fiat_rates(rd, rdo, api_list, fiat_api) {
                     const currency_rate = currency_symbol === "EUR" ? 1 : local_rate,
                         init_api_list = "historic_crypto_price_apis";
                     glob_let.api_attempt[init_api_list] = {};
-                    fetch_crypto_rates(rd, rdo, fiat_api, init_api_list, "coingecko", currency_rate, usd_rate, currency_symbol); // kick of with coingecko API
+                    fetch_crypto_rates(rd, rdo, fiat_api, init_api_list, "coinmarketcap", currency_rate, usd_rate, currency_symbol); // kick off with coinmarketcap API
                     return;
                 }
                 const next_historic = try_next_api(api_list, fiat_api);
@@ -1030,7 +1042,7 @@ const HISTORIC_CRYPTO_API = {
     "coinmarketcap": {
         "coin_id": (rd) => rd.cmcid,
         "payload": (coin_id, start, end) => get_payload_historic_coinmarketcap(coin_id, start, end),
-        "extract": (api_result) => api_result?.data?.quotes,
+        "extract": (api_result) => Object.values(api_result?.data || {})[0]?.quotes,
         "parse": get_historic_object_coinmarketcap,
         "proxy": true
     },
@@ -1057,9 +1069,24 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
         latest_input = rd.latestinput,
         first_input = rd.firstinput,
         coin_id = cfg.coin_id(rd),
-        start_time_sec = parseInt(first_input) / 1000,
-        end_time_sec = parseInt(latest_input) / 1000,
-        search = cfg.payload(coin_id, start_time_sec, end_time_sec, rd);
+        start_time_sec = Math.floor(parseInt(first_input) / 1000),
+        end_time_sec = Math.floor(parseInt(latest_input) / 1000),
+        search = cfg.payload(coin_id, start_time_sec, end_time_sec, rd),
+        next_or_fail = () => {
+            const next_historic = try_next_api(api_list, api);
+            if (next_historic) {
+                fetch_crypto_rates(rd, rdo, fiat_api, api_list, next_historic, currency_rate, usd_rate, currency_symbol);
+                return;
+            }
+            fail_dialogs(api, {
+                "error": "error retrieving historical price data"
+            });
+            finalize_request_state(rdo);
+        };
+    if (!coin_id) {
+        next_or_fail();
+        return;
+    }
     api_proxy({
         "api": api,
         "search": search,
@@ -1090,7 +1117,10 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                 received_usd = 0,
                 confirmed = false,
                 status = "pending",
-                pending = rd.pending;
+                pending = rd.pending,
+                used_fallback = false,
+                all_confirmed = true,
+                historic_map = {};
             $(transaction_reverse).each(function(i) {
                 transaction_counter++;
                 const current_transaction = $(this),
@@ -1109,16 +1139,19 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                     historic_price = historic_object.price,
                     conf_correct = transaction_data.instant_lock ? 0 : set_confirmations; // correction if dash instant_lock
                 current_transaction.data("historic", historic_object);
+                if (!historic_object.fetched) used_fallback = true;
+                historic_map[transaction_data.txhash] = historic_object;
                 confirmations = transaction_data.confirmations, // check confirmations
                     paymenttimestamp = transaction_timestamp,
-                    txhash = transaction_data.txhash,
-                    receivedamount += parseFloat(transaction_value) || 0; // sum of outputs CC
+                    txhash = transaction_data.txhash;
+                receivedamount += parseFloat(transaction_value) || 0; // sum of outputs CC
+                all_confirmed = all_confirmed && (confirmations >= conf_correct || rd.no_conf === true || transaction_data.setconfirmations === false); // check all confirmations + whitelist for currencies unable to fetch confirmations
                 let current_usd_sum = received_usd += parseFloat(historic_price * transaction_value) || 0;
                 if (current_usd_sum >= min_accept_usd) {
                     current_transaction.prevAll().remove();
                     // historic_object.fetched === false is a stale fallback price (no data point after the tx timestamp):
                     // let it accumulate toward the amount for display, but never confirm on it — the next scan re-fetches. See DECISIONS.md.
-                    confirmed = Boolean(historic_object.fetched && (confirmations >= conf_correct || rd.no_conf === true || transaction_data.setconfirmations === false)); // check all confirmations + whitelist for currencies unable to fetch confirmations
+                    confirmed = Boolean(historic_object.fetched && all_confirmed);
                     return false;
                 }
             });
@@ -1142,7 +1175,7 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                             pending = "no";
                     }
                 } else {
-                    status = received_usd === 0 ? status : "insufficient",
+                    status = "insufficient",
                         pending = "scanning";
                 }
                 update_request({
@@ -1156,22 +1189,15 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                     pending,
                     "lightning": rd.lightning
                 }, false);
-                if (pending !== "no") {
+                if (pending !== "no" && !used_fallback) {
                     br_set_session("historic_" + requestid, rd.historic_key); // 'cache' historic data
+                    br_set_session("historic_tx_" + requestid, historic_map, true);
                 }
                 finalize_request_state(rdo);
                 return;
             }
         }
-        const next_historic = try_next_api(api_list, api);
-        if (next_historic) {
-            fetch_crypto_rates(rd, rdo, fiat_api, api_list, next_historic, currency_rate, usd_rate, currency_symbol);
-            return;
-        }
-        fail_dialogs(api, {
-            "error": "error retrieving historical price data"
-        });
-        finalize_request_state(rdo);
+        next_or_fail();
     }).fail(historic_fail_chain({
         api_list,
         "current_api": api,
@@ -1197,15 +1223,20 @@ function get_payload_historic_coindesk(coin_id, start_time, end_time) {
         interval = get_historical_interval(start_time, end_time),
         scale = (interval.indexOf("m") > -1) ? "minutes" : "hours",
         integerval = Number(interval.slice(0, -1)),
-        limit = 2000 / integerval;
-    return "index/cc/v1/historical/" + scale + "?market=cadli&instrument=" + coin_upper + "-USD&limit=" + limit + "&aggregate=" + integerval + "&fill=true&to_ts=" + end_time;
+        limit = Math.floor(2000 / integerval);
+    return "index/cc/v1/historical/" + scale + "?market=cadli&instrument=" + coin_upper + "-USD&limit=" + limit + "&aggregate=" + integerval + "&fill=true&to_ts=" + historic_end_sec(end_time);
 }
 
-// Builds Coinmarketcap API request URL for historical price data (endpoint not supported at the moment)
+// Padded end timestamp (sec) for historic queries, capped at now in 5-minute buckets
+function historic_end_sec(end_time) {
+    return Math.min(end_time + 36000, Math.floor(now_utc() / 300000) * 300);
+}
+
+// Builds Coinmarketcap API request URL for historical price data
 function get_payload_historic_coinmarketcap(coin_id, start_time, end_time) {
     const timestamp_start = start_time - 36000,
         interval = get_historical_interval(start_time, end_time);
-    return "v2/cryptocurrency/quotes/historical?id=" + coin_id + "&time_start=" + timestamp_start + "&time_end=" + end_time + "&interval=" + interval;
+    return "v3/cryptocurrency/quotes/historical?id=" + coin_id + "&time_start=" + timestamp_start + "&time_end=" + historic_end_sec(end_time) + "&interval=" + interval;
 }
 
 // Builds CoinGecko API request URL for historical price data
@@ -1221,11 +1252,8 @@ function get_payload_historic_coingecko(coin_id, start_time, end_time, erc20_con
 // Builds CoinPaprika API request URL with dynamic time intervals
 function get_payload_historic_coinpaprika(coin_id, start_time, end_time) {
     const timestamp_start = start_time - 36000,
-        interval = get_historical_interval(start_time, end_time),
-        coinpaprika_query_string = start_time === end_time ?
-        start_time - 300 + "&limit=1" :
-        timestamp_start + "&end=" + end_time + "&interval=" + interval; // query for one or multiple dates (-300 seconds for instant update)
-    return coin_id + "/historical?start=" + coinpaprika_query_string;
+        interval = get_historical_interval(start_time, end_time);
+    return coin_id + "/historical?start=" + timestamp_start + "&end=" + historic_end_sec(end_time) + "&interval=" + interval;
 }
 
 // Return interval for coinpaprika and coinmarketcap parameters
@@ -1260,7 +1288,7 @@ function match_price_timestamps(api, values, price_array, transaction_timestamp)
     const parse_item = (HISTORIC_CRYPTO_API[api] || HISTORIC_CRYPTO_API["coinpaprika"]).parse;
     for (let i = 0; i < price_array.length; i++) {
         const historic_object = parse_item(price_array[i]);
-        if (historic_object && historic_object.timestamp > transaction_timestamp) {
+        if (historic_object && historic_object.timestamp + 60000 > transaction_timestamp) { // 1 minute compensation margin
             values.timestamp = historic_object.timestamp;
             values.price = historic_object.price;
             values.fetched = true;
@@ -1282,7 +1310,7 @@ function match_price_timestamps(api, values, price_array, transaction_timestamp)
 function get_historic_object_coincodex(value) {
     if (value) {
         return {
-            "timestamp": (value[0] * 1000) + 60000, // add 1 minute for compensation margin
+            "timestamp": value[0] * 1000,
             "price": value[1]
         };
     }
@@ -1327,7 +1355,7 @@ function get_historic_object_coinmarketcap(value) {
 function get_historic_object_coingecko(value) {
     if (value) {
         return {
-            "timestamp": value[0] + 60000, // add 1 minute for compensation margin
+            "timestamp": value[0],
             "price": value[1]
         };
     }
