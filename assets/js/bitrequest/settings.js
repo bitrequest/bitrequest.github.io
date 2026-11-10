@@ -2282,7 +2282,8 @@ function urlshortener() {
         const settings = $("#url_shorten_settings"),
             data = settings.data(),
             source = data.selected,
-            val = source == "inactive" ? "bitly" : source,
+            dproxy = d_proxy(),
+            val = source == "inactive" ? dproxy : source,
             bitly_token = data.bitly_at || "",
             active = data.us_active,
             is_active = active === "active",
@@ -2303,7 +2304,7 @@ function urlshortener() {
                             "data-currentapi": val
                         },
                         "content": [{
-                                "div": selectbox_data(val, tl("choose") + " " + tl("url_shorten_settings"), "<span data-pe='none'>bitly</span><span data-pe='none'>" + d_proxy() + "</span>")
+                                "div": selectbox_data(val, tl("choose") + " " + tl("url_shorten_settings"), "<span data-pe='none'>bitly</span><span data-pe='none'>" + dproxy + "</span>")
                             },
                             {
                                 "input": {
@@ -2396,6 +2397,16 @@ function submit_urlshortener_select() {
         if (inj(val)) return;
         const bitly_input = form.find("input.bitly_api_input"),
             bitly_val = bitly_input.val();
+        if (val === "bitly") {
+            if (is_custom_proxy()) {
+                // assuming bitly key is set in custom proxy
+            } else {
+                if (!bitly_val) {
+                    popnotify("error", tl("validateapikey"));
+                    return;
+                }
+            }
+        }
         if (inj(bitly_val)) return;
         const bitly_check = bitly_input.attr("data-checkchange"),
             toggle = $("#toggle_urlshortener .switchpanel");

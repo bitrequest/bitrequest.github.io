@@ -1890,7 +1890,7 @@ const glob_config = {
         {
             "id": "url_shorten_settings",
             "heading": "Url shortener",
-            "selected": "bitly",
+            "selected": br_hosted_proxy.proxy,
             "icon": "icon-link",
             "us_active": "active",
             "bitly_at": null
