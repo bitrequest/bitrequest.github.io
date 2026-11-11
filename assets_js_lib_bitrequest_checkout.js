@@ -86,7 +86,7 @@ function append_iframe(frame_url) {
     const framebox = document.createElement("div"),
         frame = document.createElement("iframe");
     framebox.id = "br_framebox";
-    frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups");
+    frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-modals");
     frame.src = frame_url;
     framebox.appendChild(frame);
     document.body.appendChild(framebox);

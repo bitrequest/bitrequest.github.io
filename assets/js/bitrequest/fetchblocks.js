@@ -249,7 +249,7 @@ function process_ethereum_transactions(rd, api_data, rdo, contract) {
                         "method": "GET"
                     }
                 },
-                "parse": (api_result, rd, rdo) => ethplorer_poll_data(api_result, rdo.setconfirmations, rd.currencysymbol, network, contract_addr),
+                "parse": (api_result, rd, rdo) => ethplorer_poll_data(api_result, rdo.setconfirmations, rd.currencysymbol, network, contract_addr, rd.address),
                 "display_on_match": true,
                 network
             });
@@ -2264,9 +2264,9 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2, contr
 // Poll twin of ethplorer_scan_data for ethplorer/binplorer getTxInfo responses
 // (same provider, same structure). Token amount + decimals come from operations[0];
 // hash, confirmations and timestamp from the top level.
-function ethplorer_poll_data(data, setconfirmations, ccsymbol, eth_layer2, contract) {
-    const op = q_obj(data, "operations.0") || {};
-    if (addr_eq(q_obj(op, "tokenInfo.address"), contract) !== true) return {
+function ethplorer_poll_data(data, setconfirmations, ccsymbol, eth_layer2, contract, address) {
+    const op = (data.operations || []).find(o => addr_eq(o.to, address) === true && addr_eq(q_obj(o, "tokenInfo.address"), contract) === true);
+    if (!op) return {
         "ccval": null
     };
     const raw_value = op.value,
@@ -2436,7 +2436,7 @@ function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) {
         "ccval": total_output ? total_output / 1e8 : null,
         "transactiontime": normalize_timestamp(data.blockTime),
         "txhash": data.transactionId,
-        "confirmations": data.isAccepted || data.confirmations || 0,
+        "confirmations": data.confirmations || 0,
         setconfirmations,
         "ccsymbol": "kas"
     };

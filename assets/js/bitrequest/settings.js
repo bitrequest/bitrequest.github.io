@@ -775,8 +775,12 @@ function check_systembu(sbu) {
     }, ro_proxy).done(function(e) {
         const ping = e.ping;
         if (ping) {
-            const result = ping.br_result,
-                base64 = result.base64,
+            const result = ping.br_result;
+            if (!result || result.error) {
+                systembu_expired();
+                return;
+            }
+            const base64 = result.base64,
                 account = result.account,
                 check_fp = md5_check(base64, account, ro_id);
             if (!check_fp) { // check if file has been tampered
@@ -1417,7 +1421,11 @@ function restore_algo(meta) {
 // Routes restoration process to appropriate handler based on backup source
 function restore_callback(data, ns) {
     const type = data.type,
-        newseed = ns || !glob_let.hasbip;
+        legacy = glob_let.resd.bpdat;
+    if (ns && legacy) {
+        glob_let.phrasearray = ls_phrase_obj_parsed(legacy).pob;
+    }
+    const newseed = (ns || !glob_let.hasbip) && Array.isArray(glob_let.phrasearray);
     if (newseed) {
         const phrase_obj = phrase_object(),
             init_data = br_get_local("init", true),
@@ -2167,8 +2175,12 @@ function check_csvexport(csv) {
     }, rproxy).done(function(e) {
         const ping = e.ping;
         if (ping) {
-            const result = ping.br_result,
-                base64 = result.base64,
+            const result = ping.br_result;
+            if (!result || result.error) {
+                systembu_expired();
+                return;
+            }
+            const base64 = result.base64,
                 account = result.account,
                 check_fp = md5_check(base64, account, ro_id);
             if (!check_fp) { // check if file has been tampered
@@ -2599,58 +2611,6 @@ function configure_fiat_api() {
     })
 }
 
-// Toggles Fixer API key input visibility based on provider selection
-function select_fiat_api() {
-    $(document).on("mousedown", "#fiatxrapiformbox .selectbox > .options span", function() {
-        const select = $(this),
-            val = select.text(),
-            form = select.closest(".popform"),
-            input = form.find("input:nth-child(2)");
-        if (val === "fixer") {
-            input.removeClass("hide");
-        } else {
-            input.addClass("hide");
-        }
-    })
-}
-
-// Validates and persists fiat exchange rate API settings with key verification
-function save_fiat_api_settings() {
-    $(document).on("click", "#fiatxrapiformbox input.submit", function(e) {
-        e.preventDefault();
-        const form = $(this).closest(".popform"),
-            curapi = form.attr("data-currentapi"),
-            input = form.find("input:first"),
-            val = input.val();
-        if (inj(val)) return;
-        const api_input = form.find("input:nth-child(2)"),
-            apival = api_input.val();
-        if (inj(apival)) return;
-        const check = api_input.attr("data-checkchange");
-        if (val === curapi && check === apival) {
-            canceldialog();
-            return;
-        }
-        if (val !== curapi) {
-            set_setting("fiatapisettings", {
-                "selected": val
-            }, val);
-        }
-        if (apival !== api_input.attr("data-apikey")) {
-            if (check === apival) {
-                popnotify("error", tl("validateapikey"));
-                return false;
-            }
-            api_input.attr("data-checkchange", apival);
-            validate_api_key("fixer", apival, true);
-            return;
-        }
-        canceldialog();
-        notify(tl("datasaved"));
-        save_settings();
-    })
-}
-
 // ** API Proxy: **
 
 // Redirects to API proxy configuration dialog
@@ -2714,32 +2674,31 @@ function pick_api_proxy() {
         }
         const options = $("#proxyformbox").find(".options");
         $.each(proxies, function(key, value) {
-            const selected = (value === proxy),
-                dfault = objectkey_in_array(glob_const.proxy_list, "proxy", value.proxy);
-            test_append_proxy(options, key, value, selected, dfault);
+            const dfault = objectkey_in_array(glob_const.proxy_list, "proxy", value.proxy);
+            test_append_proxy(options, key, value, dfault);
         });
     })
 }
 
 // Validates proxy endpoint availability via API ping test
-function test_append_proxy(options, key, value, selected, dfault) {
+function test_append_proxy(options, key, value, dfault) {
     const proxy = value.proxy;
     ln_api(proxy, {
         "ping": true
     }).done(function(e) {
         const result = br_result(e);
         if (result.result === "pong") {
-            proxy_option_li(options, true, key, value, selected, dfault);
+            proxy_option_li(options, true, key, value, dfault);
             return;
         }
-        proxy_option_li(options, false, key, value, selected, dfault);
+        proxy_option_li(options, false, key, value, dfault);
     }).fail(function(xhr, stat, err) {
-        proxy_option_li(options, false, key, value, selected, dfault);
+        proxy_option_li(options, false, key, value, dfault);
     });
 }
 
 // Renders proxy option with online status indicator and delete button  
-function proxy_option_li(options, live, key, value, selected, dfault) {
+function proxy_option_li(options, live, key, value, dfault) {
     const proxy = value.proxy,
         status = live ? " live" : " offline",
         tor = value.tor ? "<div class='opt_icon c_stat icon-tor' title='TOR support' data-pe='none'></div>" : "",
@@ -3703,7 +3662,7 @@ function share_teaminvite_qr() {
             qr_loaded = qr_container.hasClass("ti_qr"),
             result = qr_loaded || confirm(tl("showqr") + "?");
         if (result) {
-            const account = btoa($("#accountsettings").data("selected")),
+            const account = b64encode_url($("#accountsettings").data("selected")),
                 url = $("#ti_qr_container").attr("data-url"),
                 fingerprint = $("#ti_qr_container").attr("data-fp"),
                 cached_short_url = get_saved_shorturl(fingerprint);
@@ -3791,7 +3750,7 @@ function check_teaminvite(ro) {
                     popdialog("<h2 class='icon-warning'>" + tl("corruptedrequest") + "</h2>", "canceldialog");
                     return;
                 }
-                const acc = safe_atob(account) || "",
+                const acc = b64decode_url(account) || "",
                     cb64 = strip_quotes(base64),
                     safe_account = escape_html(acc),
                     cache = ping.br_cache,

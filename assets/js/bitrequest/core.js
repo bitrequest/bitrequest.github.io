@@ -495,7 +495,7 @@ function check_pin_lock() {
         last_lock = br_get_local("locktime"),
         time_since_lock = now_utc() - last_lock,
         lock_seconds = parseFloat(lock_duration);
-    return url_params.payment ? false : (check_pin_enabled() === true && time_since_lock > lock_seconds);
+    return url_params.payment && ishome() ? false : (check_pin_enabled() === true && time_since_lock > lock_seconds);
 }
 
 // Binds keyboard number inputs to PIN pad for numeric entry
@@ -3983,7 +3983,7 @@ function get_pdf_url(request_data) {
         invoice_data[pdf_tl("network")] = network;
     }
     const proxy_url = d_proxy();
-    return proxy_url + "/proxy/v1/receipt/?data=" + btoa(unescape(encodeURIComponent(JSON.stringify(invoice_data))));
+    return proxy_url + "/proxy/v1/receipt/?data=" + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(invoice_data)))));
 }
 
 // ** Archive Management: **

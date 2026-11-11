@@ -801,8 +801,7 @@ function test_xmr_node(rpc_url) {
             }
         }
     }).done(function(response) {
-        const txs_hashes = br_result(response)?.result?.tx_hashes,
-            is_live = !!(txs_hashes && txs_hashes.length > 0);
+        const is_live = br_result(response)?.result?.status === "OK";
         deferred.resolve({
             "is_live": is_live
         });

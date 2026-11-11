@@ -1516,7 +1516,7 @@ function get_payment(ccrateeuro, ccapi) {
         "</div>\
         <div class='qrwrap flex' id='main_qrwrap'>" + qr_html + lightning_qr + status_panel +
         "</div>\
-        <div id='popform' data-payment='" + request.payment + "' data-currency='" + request.uoa + "' data-address='" + CSS.escape(request.address) + "' data-lcrate='" + fiat_rate + "'>\
+        <div id='popform' data-payment='" + request.payment + "' data-currency='" + request.uoa + "' data-address='" + escape_attr(request.address) + "' data-lcrate='" + fiat_rate + "'>\
             <div id='rf_wrap'>\
                 <div id='amountbreak' class='inputbreak'>\
                     <span id='mainccinputmirror' class='ccmirror mirrordiv'>\
@@ -2224,7 +2224,7 @@ function pending_request() {
     if (has_available_addresses) {
         address_list = non_pending_addresses.map(function() {
             const address_data = $(this).data();
-            return "<span data-address='" + CSS.escape(address_data.address) + "' data-pe='none'>" + address_data.label + " | " + address_data.address + "</span>";
+            return "<span data-address='" + escape_attr(address_data.address) + "' data-pe='none'>" + address_data.label + " | " + address_data.address + "</span>";
         }).get().join("");
         const first_address = non_pending_addresses.first(),
             first_address_data = first_address.data();
@@ -2481,9 +2481,9 @@ function pick_address_from_dialog() {
             if (url_params.xss) {
                 return;
             }
-            const picked_value = thisinputvalue.split(" | "),
-                picked_label = picked_value[0],
-                picked_address = picked_value[1],
+            const split_at = thisinputvalue.lastIndexOf(" | "),
+                picked_label = thisinputvalue.slice(0, split_at),
+                picked_address = thisinputvalue.slice(split_at + 3),
                 page = url_params.p,
                 payment = url_params.payment,
                 currency = url_params.uoa,
@@ -3211,7 +3211,7 @@ function update_request(update_args, should_save) {
             const meta_status = meta_list.find("li.meta_status"),
                 set_confirmations = request_data.set_confirmations || 1,
                 conf_text = (update_args.confirmations == 0) ? tl("unconfirmedtx") : update_args.confirmations + " / " + set_confirmations + " " + tl("confirmations");
-            meta_status.attr("data-conf", update_args.confirmations).find(".txli_conf > span").text(tl(conf_text));
+            meta_status.attr("data-conf", update_args.confirmations).find(".txli_conf > span").text(conf_text);
             const conf_bar = meta_status.find(".txli_conf > .confbar");
             if (conf_bar.length) {
                 conf_bar.each(function(i) {

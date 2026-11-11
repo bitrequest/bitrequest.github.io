@@ -622,6 +622,10 @@ function parse_xmr_tx_hex(tx_hex) {
                         amount
                     });
                 }
+                tx.rct_signatures.outPk = [];
+                for (let i = 0; i < vout_count; i++) {
+                    tx.rct_signatures.outPk.push(bytes_to_hex(read_bytes(32)));
+                }
             }
         }
     }
@@ -766,7 +770,11 @@ function decode_rct_amount(rct, output_idx, shared_secret_hex) {
     for (let i = 0; i < 8; i++) {
         decrypted_bytes[i] = encrypted_bytes[i] ^ key_bytes[i];
     }
-    return ed_bytes_to_number_le(decrypted_bytes);
+    const amount = ed_bytes_to_number_le(decrypted_bytes);
+    if (amount <= 0n) return null;
+    const mask = ed_bytes_to_number_le(sc_reduce32(fasthash(bytes_to_hex(concat_bytes(str_to_bin("commitment_mask"), hex_to_bytes(scalar)))))),
+        commitment = EdPoint.BASE.multiply(mask).add(EdPoint.fromHex("8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94").multiply(amount)).toHex();
+    return commitment === rct.outPk?.[output_idx] ? amount : null;
 }
 
 // ============================================

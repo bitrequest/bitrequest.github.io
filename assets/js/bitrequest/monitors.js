@@ -527,7 +527,7 @@ function extract_error_details(error_obj, string) {
         error_obj.error?.statusText ??
         error_obj.error ?? null,
         api_key_check = (errormessage && typeof errormessage === "string") ? (errormessage.indexOf("API Key") > -1 || errormessage.indexOf("API calls limits have been reached") > -1 || errormessage.indexOf("Limits reached") > -1) : false,
-        api_key = (
+        apikey = (
             errorcode === 101 || // fixer
             errorcode === 402 || // blockchair
             errorcode === 403 || errorcode === 1 || // ethplorer => invalid or missing API key
@@ -538,7 +538,7 @@ function extract_error_details(error_obj, string) {
         error_details = {
             errorcode,
             errormessage,
-            api_key
+            apikey
         },
         is_proxy = (error_obj.is_proxy) ? "proxy " : "";
     console.error("API " + is_proxy + "error:", error_details);
