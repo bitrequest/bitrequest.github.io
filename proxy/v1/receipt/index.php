@@ -100,13 +100,13 @@ try {
         throw new Exception("No data provided");
     }
     
-    // Optimized decoding process
-    $decoded = base64_decode($dataparam);
+    // A "+" in the base64 arrives as a space when the link wasn't URL-encoded
+    $decoded = base64_decode(str_replace(" ", "+", (string) $dataparam), true);
     if ($decoded === false) {
         throw new Exception("Invalid base64 data");
     }
     
-    // Try to handle encoding without mb_* functions
+    // Fallbacks for data that isn't valid UTF-8 JSON
     $data = null;
     
     // First try direct JSON decode (if already UTF-8)

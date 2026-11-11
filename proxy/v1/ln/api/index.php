@@ -59,7 +59,7 @@ $get_nid = ($get_id && strlen($get_id) > 15) ? substr($get_id, 11) : false;
 // POST data
 $post_pid = safe_filename($pdat["id"] ?? false);
 $post_nid = $pdat["nid"] ?? false;
-$p_expiry = $pdat["expiry"] ?? 60;
+$p_expiry = $imp === "spark" ? 3000 : ($pdat["expiry"] ?? 60);
 
 // Lightning GET request validation
 $lnget = $imp && $get_pid && $requested_amount > -1 && $specified_amount;
@@ -71,7 +71,7 @@ $remote_tracking = $setup["remote_tracking"] === "yes" ? "yes" : "no";
 $fn = $pdat["fn"] ?? false;
 
 // Check if API key is required and validate it
-if ($api_key && !($lnget && !$fn)) {
+if ($api_key && !($lnget && !$pdat)) {
 	if ($provided_api_key === "false") {
 		echo json_encode(r_err($key_error, 1));
 		return;
@@ -278,6 +278,8 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 			$key = false;
 		}
 
+		$GLOBALS["trusted_host"] = ($host && $host === ($cred["host"] ?? "")) ? $host : "";
+
 		// Tracking-bound calls may only use the node that was bound to this payment id at put time
 		$rq_pid = $lnget ? $get_pid : $post_pid;
 		$track = ($rq_pid && is_file("cache/tx/" . $rq_pid)) ? json_decode((string) file_get_contents("cache/tx/" . $rq_pid), true) : null;
@@ -308,11 +310,11 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 			$amount = $pdat["amount"];
 			$lnurl_id = $type === "lnurl" ? " (LNURL)" : "";
 			$memo = ($pdat["memo"] ?? "") . $lnurl_id;
-			$invoice = create_invoice($imp, $post_pid, $host, $key, $amount, $memo, $type, $pingtest, "test", null, null, $p_expiry);
+			$invoice = create_invoice($imp, $post_pid, $host, $key, $amount, $memo, $type, $pingtest, null, $p_expiry);
 			
 			if ($invoice) {
 				// Store invoice tracking data if bolt11 is requested
-				if (!empty($pdat["b11"])) {
+				if (!empty($pdat["b11"]) && !empty($invoice["bolt11"])) {
 					$path = "cache/tx/" . $post_pid;
 					if (file_exists($path)) {
 						$s_content = [
@@ -419,7 +421,6 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 					$meta_arr[] = ["image/png;base64", $logo];
 				}
 				$desc_hash = d_hash($meta_arr);
-				$meta = bin2hex(json_encode($meta_arr));
 				
 				// Create a new invoice
 				if ($lnget) {
@@ -430,14 +431,11 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 							"status" => "generate",
 							"rqtype" => $type_text
 						]);
-						$postheaders = [
-							"post: " . $status,
-							"tls_wildcard" => true
-						];
+						$postheaders = ["post: " . $status];
 						curl_get(TOR_PROXY . ":8030/", $status, $postheaders);
 					}
 				}
-				$result = create_invoice($imp, $get_pid, $host, $key, $specified_amount, $memo, $type, null, "lnurl", $desc_hash, $meta, $p_expiry);
+				$result = create_invoice($imp, $get_pid, $host, $key, $specified_amount, $memo, $type, null, $desc_hash, $p_expiry);
 				if ($result) {
 					$inv_error = $result["error"] ?? false;
 					if ($inv_error) {
@@ -492,7 +490,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 							spark_flush_response();
 						}
 
-						$postheaders = ["post: " . $tx_content, "tls_wildcard" => true];
+						$postheaders = ["post: " . $tx_content];
 						curl_get(TOR_PROXY . ":8030/", $tx_content, $postheaders);
 
 						// Trigger callback if configured
@@ -540,7 +538,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 	}
 	
 	// Create a new Lightning Network invoice based on implementation type and parameters
-	function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtest, $src, $desc_hash, $meta, $expiry) {
+	function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtest, $desc_hash, $expiry) {
 		if ($imp === "lnd") {
 			// LND implementation
 			$rpcurl = $host . "/v1/invoices";
@@ -555,7 +553,6 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 			$data = json_encode($pl);
 			$headers = [
 				"tls_wildcard" => true,
-				"Content-Length: " . strlen($data),
 				"Grpc-Metadata-macaroon: " . $key
 			];
 			$inv = curl_get($rpcurl, $data, $headers);
@@ -579,7 +576,6 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 			$headers = [
 				"tls_wildcard" => true
 			];
-			$headers[] = "Content-Length: " . strlen($payload);
 			$headers[] = "Content-Type: application/json";
 			$headers[] = "Rune: " . $key;
 			$inv = curl_get($rpcurl, $payload, $headers);
@@ -602,7 +598,6 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 			$data = json_encode($pl);
 			$headers = [
 				"tls_wildcard" => true,
-				"Content-Length: " . strlen($data),
 				"Content-Type: application/json",
 				"X-Api-Key: " . $key
 			];

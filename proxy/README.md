@@ -34,6 +34,15 @@ Team invites, shared backups and CSV exports are stored encrypted on the proxy a
 
 (For Nginx) you might have to chmod the following api folders to 755 (or 775 if the web server group needs write access) in order to cache files: "v1" (or pre-create "v1/cache"), "ln/api" and "inv/api".
 
+(For Nginx) the cache folders hold Lightning node credentials and must not be served. Apache is covered by `v1/.htaccess`; Nginx ignores that file, so add this to your server block:
+
+```nginx
+location ~ /cache/ {
+    deny all;
+    return 403;
+}
+```
+
 ## Lightning Setup:
 
 ### Connect:

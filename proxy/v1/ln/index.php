@@ -73,10 +73,7 @@ if ($pid && file_exists($path)) {
             ]);
             if (file_put_contents($path, $status) !== false) {
                 // Notify payment server about the confirmed payment
-                $postheaders = [
-                    "post: " . $status,
-                    "tls_wildcard" => true
-                ];
+                $postheaders = ["post: " . $status];
                 curl_get(TOR_PROXY . ":8030/", $status, $postheaders);
             }
         }

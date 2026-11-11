@@ -37,8 +37,8 @@ function fetch_tor($url, $data, $headers) {
 		while ($retry_count < $max_retries) {
 			$response = curl_get_tor($plo);
 			
-			// Check if we got a valid response
-			if ($response && !is_error_response($response)) {
+			// Only a failed connection is retried, anything else is the node's answer
+			if (!is_tor_connect_error($response)) {
 				return $response;
 			}
 			
@@ -62,18 +62,10 @@ function fetch_tor($url, $data, $headers) {
 	return $result ?: error_object($error[0], $error[1]);
 }
 
-//Check if response is an error response
-function is_error_response($response) {
-	if (!is_string($response)) {
-		return true;
-	}
-	
-	$data = json_decode($response, true);
-	if (json_last_error() !== JSON_ERROR_NONE) {
-		return true;
-	}
-	
-	return isset($data["error"]);
+// True when curl could not reach the onion host at all (proxy / resolve / connect), so the request was never sent
+function is_tor_connect_error($response) {
+	$error = is_string($response) ? (json_decode($response, true)["error"] ?? null) : null;
+	return is_array($error) && preg_match("/^cURL error \\((5|6|7|97)\\)/", (string) ($error["message"] ?? "")) === 1;
 }
 
 //Makes a cURL request through Tor's SOCKS5 proxy with comprehensive error handling
@@ -121,15 +113,7 @@ function curl_get_tor($pl) {
 				}
 			}
 		} else {
-			// For GET requests - use multiple methods to ensure it's really GET
-			curl_setopt($ch, CURLOPT_HTTPGET, 1);
-			curl_setopt($ch, CURLOPT_POST, 0);
-			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
-			
-			// IMPORTANT: Clear any POSTFIELDS to ensure a clean GET request
-			curl_setopt($ch, CURLOPT_POSTFIELDS, "");
-			
-			// Append data to URL for GET requests if needed
+			// GET is curl's default; append data to the URL if needed
 			if (!empty($data) && is_array($data)) {
 				$query = http_build_query($data);
 				if (!empty($query)) {

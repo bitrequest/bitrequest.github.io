@@ -40,6 +40,12 @@ function main_nano($pl) {
     return $result;
 }
 
+// Sends one RPC call to the Nano node and returns its answer as an array (null when there is none)
+function nano_rpc($node, $payload, $headers) {
+    $result = json_decode(json_encode(api($node, json_encode($payload), $headers, null, null, null, null)), true);
+    return $result["br_result"] ?? null;
+}
+
 // Fetches transaction history for a Nano account and merges with related block info
 function get_account_history($node, $account, $headers) {
     $history_payload = [
@@ -48,9 +54,7 @@ function get_account_history($node, $account, $headers) {
         "count" => MAX_HISTORY_COUNT,
         "raw" => true
     ];
-    $history_result = api($node, json_encode($history_payload), $headers, null, null, null, null);
-    $history_data = json_decode(json_encode($history_result), true); // Consistent conversion
-    $history_data = isset($history_data["br_result"]) ? $history_data["br_result"] : null;
+    $history_data = nano_rpc($node, $history_payload, $headers);
     if (isset($history_data["error"])) {
         return $history_data;
     }
@@ -78,9 +82,7 @@ function get_account_history($node, $account, $headers) {
         "source" => true,
         "hashes" => array_filter($historic_hashes)
     ];
-    $history_block_result = api($node, json_encode($history_blockInfo_payload), $headers, null, null, null, null);
-    $historyInfo_data = json_decode(json_encode($history_block_result), true);
-    $historyInfo_data = isset($historyInfo_data["br_result"]) ? $historyInfo_data["br_result"] : null;
+    $historyInfo_data = nano_rpc($node, $history_blockInfo_payload, $headers);
     if (!$historyInfo_data || !empty($historyInfo_data["error"]) || !is_array($historyInfo_data)) {
         return $history_blocks;
     }
@@ -97,9 +99,7 @@ function get_account_pending($node, $account, $headers) {
         "count" => MAX_PENDING_COUNT,
     ];
     sleep(1); // wait one second before next call to not exceed api proxy limits
-    $receivable_result = api($node, json_encode($pending_payload), $headers, null, null, null, null);
-    $pending_data = json_decode(json_encode($receivable_result), true);
-    $pending_data = isset($pending_data["br_result"]) ? $pending_data["br_result"] : null;
+    $pending_data = nano_rpc($node, $pending_payload, $headers);
     if (isset($pending_data["error"])) {
         return $pending_data;
     }
@@ -118,9 +118,7 @@ function get_account_pending($node, $account, $headers) {
         "source" => true,
         "hashes" => array_values($pending_blocks)
     ];
-    $pending_result = api($node, json_encode($pendingblockinfo_payload), $headers, null, null, null, null);
-    $pending_blockinfo_data = json_decode(json_encode($pending_result), true);
-    $pending_blockinfo_data = isset($pending_blockinfo_data["br_result"]) ? $pending_blockinfo_data["br_result"] : null;
+    $pending_blockinfo_data = nano_rpc($node, $pendingblockinfo_payload, $headers);
     return transform_object($pending_blockinfo_data);
 }
 

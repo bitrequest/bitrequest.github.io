@@ -1,6 +1,6 @@
 <?php	
 // PROXY
-const VERSION = "0.045";
+const VERSION = "0.046";
 const CACHE_DURATIONS = [
 	"2m" => 6220800,  // 2 months in seconds
 	"1w" => 604800,   // 1 week in seconds
@@ -248,6 +248,10 @@ function curl_get($url, $data, $headers) {
 			}
 			return error_object("404", "Nano file not found: " . $file_path);
 		}
+		// Strip the tls_wildcard control flag out of the headers array before
+		// sending the rest to the remote endpoint.
+		[$headers, $tls_wildcard] = extract_tls_wildcard($headers);
+
 		// Handle .onion URL requests via Tor (host-based: a ".onion" anywhere else
 		// in the URL must not turn this proxy into a Tor exit for clearnet hosts)
 		if (is_onion_url($url)) {
@@ -258,10 +262,6 @@ function curl_get($url, $data, $headers) {
 			}
 			return error_object("404", "Tor file not found");
 		}
-
-		// Strip the tls_wildcard control flag out of the headers array before
-		// sending the rest to the remote endpoint.
-		[$headers, $tls_wildcard] = extract_tls_wildcard($headers);
 
 		// Follow redirects manually so EVERY hop is re-validated. curl's own
 		// CURLOPT_FOLLOWLOCATION only DNS-pins the first host: a public URL could
@@ -274,7 +274,9 @@ function curl_get($url, $data, $headers) {
 		for ($hop = 0; $hop <= $max_redirects; $hop++) {
 			// Resolve and validate this hop. resolve_safe_url returns the IP we
 			// pin via CURLOPT_RESOLVE so curl can't do its own DNS lookup.
-			$resolved = resolve_safe_url($current_url);
+			// A node host set in config.php is the operator's own choice and may be on a private network (first hop only)
+			$trusted_host = rtrim((string) ($GLOBALS["trusted_host"] ?? ""), "/");
+			$resolved = resolve_safe_url($current_url, $hop === 0 && $trusted_host !== "" && str_starts_with($current_url, $trusted_host . "/"));
 			if (!$resolved) {
 				return error_object("403", "URL not allowed");
 			}

@@ -67,12 +67,6 @@ function socket_fetch_tor_stream($pl) {
 	}
 	
 	// Try raw socket connection through Tor's SOCKS proxy
-	$context = @stream_context_create([
-		"ssl" => [
-			"verify_peer" => true, 
-			"verify_peer_name" => true
-		]
-	]);
 	$errno = 0;
 	$errstr = "";
 	
@@ -159,6 +153,18 @@ function socket_fetch_ssl($pl) {
 		return ["error" => "Missing required node parameter", "error_code" => $ERROR_MISSING_PARAMS];
 	}
 
+	// Follow-up lookups (complement_tx) reuse the connection the scan opened
+	$open = $GLOBALS["electrum_socket"] ?? null;
+	if ($open && $open["node"] === $pl["node"] && is_resource($open["socket"])) {
+		fwrite($open["socket"], json_encode(request_data($pl)) . "\n");
+		$response = fgets($open["socket"]);
+		if (!empty($response)) {
+			return fetch_methods($response, $pl);
+		}
+		unset($GLOBALS["electrum_socket"]); // no answer: the remaining lookups open their own connection
+		return ["error" => "Failed to read response", "error_code" => $ERROR_NO_RESPONSE];
+	}
+
 	$node_host = $pl["node"];
 	$node_port = 50002;
 	$colon = strrpos($node_host, ":");
@@ -208,6 +214,7 @@ function socket_fetch_ssl($pl) {
 		
 		// Set timeout and send request
 		stream_set_timeout($socket, 20);
+		$GLOBALS["electrum_socket"] = ["node" => $pl["node"], "socket" => $socket];
 		fwrite($socket, $jsonRequest);
 		$response = fgets($socket);
 		
@@ -226,6 +233,7 @@ function socket_fetch_ssl($pl) {
 	} catch (Exception $e) {
 		return ["error" => $e->getMessage(), "error_code" => $e->getCode()];
 	} finally {
+		unset($GLOBALS["electrum_socket"]);
 		// Always close the socket resource if it exists
 		if (isset($socket) && is_resource($socket)) {
 			fclose($socket);
@@ -567,11 +575,6 @@ function decode_bitcoin_tx($hex_data) {
 	// Read locktime
 	$locktime = $read_uint32();
 
-	// Calculate sizes
-	$tx_size = strlen($hex_data) / 2;
-	$tx_weight = $has_witness ? ($position - strlen($data)) + ($tx_size - ($position - strlen($data))) * 4 : $tx_size * 4;
-	$vsize = (int)ceil($tx_weight / 4);
-
 	// Create hash for the transaction
 	$tx_hash = hash("sha256", hash("sha256", hex2bin($hex_data), true));
 	$tx_hash = $flip_endianness($tx_hash);
@@ -582,9 +585,6 @@ function decode_bitcoin_tx($hex_data) {
 		"outputs" => $outputs,
 		"witness" => $has_witness ? $witness : [],
 		"locktime" => $locktime,
-		"size" => $tx_size,
-		"vsize" => $vsize,
-		"weight" => $tx_weight,
 		"hasWitness" => $has_witness,
 		"tx_hash" => $tx_hash
 	];

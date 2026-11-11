@@ -139,9 +139,6 @@ try {
     $postheaders = [];
     if ($proxyheaders || $method == "POST" || $bearer) {
         $postheaders[] = "Content-Type: application/json";
-        if (isset($payload) && is_string($payload)) {
-            $postheaders[] = "Content-Length: " . strlen($payload);
-        }
         $allowed_headers = [
             "Content-Type",
             "contentType",

@@ -28,7 +28,7 @@
 	}
 
 	// Resolves a URL safely against SSRF, returning the data needed to pin curl's DNS lookup so the resolver can't be raced (DNS rebinding).
-	function resolve_safe_url($url) {
+	function resolve_safe_url($url, $allow_private = false) {
 		$parsed = parse_url($url);
 		if (!$parsed || !isset($parsed["scheme"], $parsed["host"])) {
 			return false;
@@ -64,13 +64,16 @@
 
 		// Literal IP in the URL — validate directly, no DNS needed.
 		if (filter_var($host_bare, FILTER_VALIDATE_IP)) {
-			return is_public_ip($host_bare)
+			return ($allow_private || is_public_ip($host_bare))
 				? ["host" => $host, "port" => $port, "ip" => $host_bare, "scheme" => $scheme]
 				: false;
 		}
 
 		// Enumerate ALL A and AAAA records for this hostname.
 		$records = @dns_get_record($host, DNS_A + DNS_AAAA);
+		if (!$records && $allow_private && ($local_ip = gethostbyname($host)) !== $host) {
+			$records = [["ip" => $local_ip]]; // localhost, /etc/hosts
+		}
 		if (!$records) {
 			return false;
 		}
@@ -89,7 +92,7 @@
 
 		// Every IP must be in a public range.
 		foreach ($ips as $ip) {
-			if (!is_public_ip($ip)) {
+			if (!$allow_private && !is_public_ip($ip)) {
 				return false;
 			}
 		}
