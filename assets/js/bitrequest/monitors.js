@@ -542,7 +542,7 @@ function extract_error_details(error_obj, string) {
         },
         is_proxy = (error_obj.is_proxy) ? "proxy " : "";
     console.error("API " + is_proxy + "error:", error_details);
-    if (api_key) {
+    if (apikey) {
         glob_let.apikey_fails = true;
     }
     if (errormessage) {
