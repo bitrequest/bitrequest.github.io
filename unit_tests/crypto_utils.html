@@ -1184,6 +1184,130 @@
             assertEqual(decrypted, plaintext, "Unicode roundtrip");
         });
         
+        // === Passkey Seed Encryption Tests ===
+        
+        const pk_prf = new Uint8Array(32).map((_, i) => i + 1),
+            pk_payload = btoa(JSON.stringify({
+                "pid": "abcd1234",
+                "pob": btoa(JSON.stringify(["abandon", "ability", "able"]))
+            }));
+        
+        test("pk_key: 32 byte PRF output gives a 256-bit base64 key", () => {
+            const key = CryptoUtils.pk_key(pk_prf);
+            assertEqual(atob(key).length, 32, "Key length");
+        });
+        
+        test("pk_key: rejects missing and wrong length input", () => {
+            assertEqual(CryptoUtils.pk_key(false), false, "false");
+            assertEqual(CryptoUtils.pk_key(0), false, "zero");
+            assertEqual(CryptoUtils.pk_key(new Uint8Array(31)), false, "31 bytes");
+            assertEqual(CryptoUtils.pk_key(new Uint8Array(33)), false, "33 bytes");
+        });
+        
+        test("pk_new_dek: 256-bit base64, different every call", () => {
+            const a = CryptoUtils.pk_new_dek(),
+                b = CryptoUtils.pk_new_dek();
+            assertEqual(atob(a).length, 32, "Length");
+            assertTrue(a !== b, "Unique");
+        });
+        
+        test("pk_wrap/pk_unwrap: roundtrip returns the data key", () => {
+            const dek = CryptoUtils.pk_new_dek(),
+                wk = CryptoUtils.pk_wrap(dek, pk_prf);
+            assertTrue(wk !== dek, "Wrapped differs from plain");
+            assertEqual(CryptoUtils.pk_unwrap({
+                wk
+            }, pk_prf), dek, "Unwrapped matches");
+        });
+        
+        test("pk_unwrap: a different PRF output fails", () => {
+            const dek = CryptoUtils.pk_new_dek(),
+                wk = CryptoUtils.pk_wrap(dek, pk_prf),
+                other = pk_prf.slice();
+            other[0] ^= 1;
+            assertEqual(CryptoUtils.pk_unwrap({
+                wk
+            }, other), false, "One flipped bit");
+        });
+        
+        test("pk_unwrap: tampered or malformed input fails", () => {
+            const dek = CryptoUtils.pk_new_dek(),
+                wk = CryptoUtils.pk_wrap(dek, pk_prf),
+                raw = atob(wk),
+                tampered = btoa(raw.slice(0, -1) + String.fromCharCode(raw.charCodeAt(raw.length - 1) ^ 1));
+            assertEqual(CryptoUtils.pk_unwrap({
+                "wk": tampered
+            }, pk_prf), false, "Tampered");
+            assertEqual(CryptoUtils.pk_unwrap({}, pk_prf), false, "No wk");
+            assertEqual(CryptoUtils.pk_unwrap(null, pk_prf), false, "No object");
+            assertEqual(CryptoUtils.pk_unwrap({
+                wk
+            }, new Uint8Array(8)), false, "Bad PRF length");
+        });
+        
+        test("pk_wrap: refuses missing data key or bad PRF", () => {
+            assertEqual(CryptoUtils.pk_wrap("", pk_prf), false, "No dek");
+            assertEqual(CryptoUtils.pk_wrap(CryptoUtils.pk_new_dek(), 0), false, "No PRF");
+        });
+        
+        test("pk_seal: plain id and ciphertext, no version or passkey marker", () => {
+            const sealed = CryptoUtils.pk_seal(pk_payload, "abcd1234", CryptoUtils.pk_new_dek());
+            assertEqual(sealed.id, "abcd1234", "Seed id");
+            assertEqual(typeof sealed.dat, "string", "Ciphertext");
+            assertTrue(!("v" in sealed) && !("pk" in sealed), "No v or pk field");
+            assertTrue(sealed.dat.indexOf(pk_payload) === -1, "Payload not in the clear");
+        });
+        
+        test("pk_seal: different ciphertext every call", () => {
+            const dek = CryptoUtils.pk_new_dek();
+            assertTrue(CryptoUtils.pk_seal(pk_payload, "abcd1234", dek).dat !== CryptoUtils.pk_seal(pk_payload, "abcd1234", dek).dat, "Random IV");
+        });
+        
+        test("pk_seal: refuses missing input", () => {
+            const dek = CryptoUtils.pk_new_dek();
+            assertEqual(CryptoUtils.pk_seal("", "abcd1234", dek), false, "No payload");
+            assertEqual(CryptoUtils.pk_seal(pk_payload, "", dek), false, "No id");
+            assertEqual(CryptoUtils.pk_seal(pk_payload, "abcd1234", ""), false, "No dek");
+        });
+        
+        test("pk_seal/pk_decrypt: roundtrip returns payload and seed id", () => {
+            const dek = CryptoUtils.pk_new_dek(),
+                result = CryptoUtils.pk_decrypt(CryptoUtils.pk_seal(pk_payload, "abcd1234", dek), dek);
+            assertEqual(result.dat, pk_payload, "Payload");
+            assertEqual(result.id, "abcd1234", "Seed id from payload");
+        });
+        
+        test("pk_decrypt: wrong data key fails", () => {
+            const sealed = CryptoUtils.pk_seal(pk_payload, "abcd1234", CryptoUtils.pk_new_dek());
+            assertEqual(CryptoUtils.pk_decrypt(sealed, CryptoUtils.pk_new_dek()), false, "Other key");
+        });
+        
+        test("pk_decrypt: malformed input fails", () => {
+            const dek = CryptoUtils.pk_new_dek(),
+                sealed = CryptoUtils.pk_seal(pk_payload, "abcd1234", dek),
+                no_pid = CryptoUtils.pk_seal(btoa(JSON.stringify({
+                    "pob": "x"
+                })), "abcd1234", dek),
+                not_json = CryptoUtils.pk_seal(btoa("not json"), "abcd1234", dek);
+            assertEqual(CryptoUtils.pk_decrypt(null, dek), false, "No object");
+            assertEqual(CryptoUtils.pk_decrypt(sealed, ""), false, "No key");
+            assertEqual(CryptoUtils.pk_decrypt({
+                "id": "abcd1234"
+            }, dek), false, "No ciphertext");
+            assertEqual(CryptoUtils.pk_decrypt(no_pid, dek), false, "Payload without pid");
+            assertEqual(CryptoUtils.pk_decrypt(not_json, dek), false, "Payload not JSON");
+        });
+        
+        test("pk_*: whole chain, PRF output to seed payload", () => {
+            const dek = CryptoUtils.pk_new_dek(),
+                pk = {
+                    "wk": CryptoUtils.pk_wrap(dek, pk_prf)
+                },
+                sealed = CryptoUtils.pk_seal(pk_payload, "abcd1234", dek),
+                unwrapped = CryptoUtils.pk_unwrap(pk, pk_prf);
+            assertEqual(CryptoUtils.pk_decrypt(sealed, unwrapped).dat, pk_payload, "Seed recovered");
+        });
+        
         // === Script Hash Tests ===
         
         test("address_to_scripthash: bech32 P2WPKH", () => {
