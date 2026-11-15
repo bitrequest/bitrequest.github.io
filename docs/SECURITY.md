@@ -74,6 +74,17 @@ understand:
   relied on to protect large balances. Bitrequest is intended for point-of-sale
   use with modest balances. For significant holdings, use a dedicated hardware
   wallet.
+
+  On Android devices with a platform authenticator (tested in Chrome and
+  Brave), the user can opt in to biometric seed encryption. The seed is then
+  encrypted under a random key that is wrapped with a secret from a passkey
+  (WebAuthn PRF) held by the device, so a copy of the browser storage alone no
+  longer decrypts it. The PIN stays as the app lock and is asked before any
+  screen that reveals the secret phrase or private keys. This does not protect
+  against someone who controls the unlocked device and can pass the biometric
+  check, and the passkey is not part of any backup: if it is lost or deleted,
+  the written seed phrase is the only way back in. Desktop and iOS keep the
+  PIN-based encryption. See `docs/seed_passkey.md`.
 - **Backups.** Backup files never contain the wallet seed or private keys. The
   only backup of a seed is the written seed phrase itself, which the app
   requires the user to verify. Backup files are always encrypted: with the seed

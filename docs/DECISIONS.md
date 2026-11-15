@@ -95,6 +95,32 @@ matching local pin/seed exists, otherwise prompts. Legacy `rd`-locked and
 seed-containing backups remain restorable — old backups are never orphaned
 by a scheme change.
 
+### Passkey (biometric) seed encryption — opt-in, Android only, PIN stays the base
+
+The hardening that was actually built is the passkey layer, not the PIN KDF
+v2 above. Where the device can do it well (Android with a platform
+authenticator and PRF support), the seed is encrypted under a random data
+key wrapped with a WebAuthn PRF secret, so the stored blob no longer
+depends on the stored `pinhash`. Everything else keeps the PIN encryption
+unchanged and backward compatible, and the PIN remains the app lock and the
+gate in front of every screen that reveals secrets. See `seed_passkey.md`.
+
+Constraints discovered while testing, do not "improve" these away:
+
+- **No desktop.** macOS asks for the computer account password on every
+  passkey unlock (Safari always, Brave after a while). That friction cannot
+  be removed from the app, so desktop stays on the PIN.
+- **No iOS for now.** Old iPhone and iPad returned no PRF output, so the
+  support gate is a platform allow-list plus a PRF proof at enrolment.
+  `seed_passkey.md` has the checklist for adding it.
+- **No vault password.** The earlier design (a user-chosen vault password)
+  was dropped for the reason given in the next entry.
+- **The paper phrase is the only recovery.** A lost or deleted passkey cannot
+  be recovered, by design. The app offers re-encrypting with the PIN after the
+  phrase is entered.
+- **Backups are untouched.** The seed is never in them and their lock scheme
+  stays seed phrase, then PIN, then `rd`.
+
 ### Custom password for seed encryption — rejected as a general mechanism
 
 Considered and explicitly rejected, not just left undone. It works against
@@ -397,7 +423,8 @@ derivation or scanning logic.
 
 ## Open / deferred items
 
-- PIN-KDF v2 hardening: scoped and agreed, not yet implemented (see above).
+- PIN-KDF v2 hardening: scoped and agreed, not yet implemented (see above). The passkey layer covers Android only; PIN wallets elsewhere still rely on it.
+- iOS and desktop passkey support: blocked on PRF output and the macOS password prompt (see `seed_passkey.md`).
 - Nano/Nimiq address-pool support for team invites: deferred until
   actually requested.
 - Trezor hardware wallet support: wishlist, not started.

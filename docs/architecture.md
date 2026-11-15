@@ -61,7 +61,7 @@ wrappers around the same PWA.
 |------|---------|
 | `jquery.js` | jQuery 3.x slim. DOM library. Used everywhere. |
 | `libraries.js` | Tiny shims (Bech32, base32, JSEncrypt loaders). |
-| `sjcl.js` | Stanford JS Crypto Library — AES used for seed encryption. |
+| `sjcl.js` | Stanford JS Crypto Library — AES used for seed encryption (PIN and passkey). |
 | `crypto_utils.js` | secp256k1 + Ed25519 + Blake2b + Keccak. Standalone, also published as [crypto-utils-js](https://github.com/bitrequest/crypto-utils-js). |
 | `xmr_utils.js` | Monero / Zano (CryptoNote curve) helpers. Standalone, also [xmr-utils-js](https://github.com/bitrequest/xmr-utils-js). |
 | `bip39_utils.js` | BIP39 mnemonic + BIP32/BIP44/SLIP-0010 derivation. Standalone, also [bip39-utils-js](https://github.com/bitrequest/bip39-utils-js). |
@@ -78,7 +78,7 @@ wrappers around the same PWA.
 | `core.js` | Boot sequence, navigation, dialog management, scanner, page lifecycle. Where `$(document).ready` lives. The largest file (~5,500 LOC). |
 | `settings.js` | Everything under `?p=settings` — currency picker, exchange-rate API selection, theme, backup/restore, PIN, team invites. |
 | `coin_settings.js` | Per-currency settings UI (the gear icon on each coin). |
-| `bip39.js` | Seed phrase generation, derivation, address management UI. |
+| `bip39.js` | Seed phrase generation, derivation, address management UI. Also the seed passkey (biometric) layer: see `seed_passkey.md`. |
 | `payments.js` | The payment dialog. Opens when you create or open a request. Handles amount entry, currency conversion, swipe gestures, the actual "show this address + monitor for payment" flow. |
 | `fetchblocks.js` | All blockchain RPC and block-explorer API integrations. One function per API per coin. Returns parsed `tx_data` objects. |
 | `rpcs.js` | RPC-flavored block height queries (Electrum, mempool.space, Infura, nano_rpc, etc.). Companion to `fetchblocks.js`. |
