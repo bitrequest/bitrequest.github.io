@@ -54,6 +54,7 @@ Integrate crypto checkout into your online store.
 - Real-time exchange rates (170+ fiat currencies)
 - 8 languages: English, Dutch, French, Spanish, German, Chinese, Hindi, Japanese
 - PIN protection with Admin/Cashier modes
+- Optional biometric seed encryption on Android (passkey), PIN stays the app lock
 - Team invites: set up cashier devices with your public keys only, never your seed or PIN
 - Encrypted backup to file or Google Drive
 - Connect your own nodes for full control
@@ -84,6 +85,7 @@ Integrate crypto checkout into your online store.
 - [Wiki & Documentation](https://github.com/bitrequest/bitrequest.github.io/wiki)
 - [Architecture](docs/architecture.md) and [design decisions](docs/DECISIONS.md)
 - [Adding a coin](docs/add_coin_guide.md) and [translating the app](docs/translate_prompt.md)
+- [Seed passkey (biometric) encryption](docs/seed_passkey.md)
 - [bip39-utils-js](https://github.com/bitrequest/bip39-utils-js) — HD wallet library
 - [crypto-utils-js](https://github.com/bitrequest/crypto-utils-js) — Crypto utilities
 - [xmr-utils-js](https://github.com/bitrequest/xmr-utils-js) — Monero utilities
