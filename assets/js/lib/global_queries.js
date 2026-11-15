@@ -182,6 +182,7 @@ const br_bipobj = br_get_local("bpdat", true),
 
         // --- UI behavior tunables ---
         "post_scan_timeout": 30000, // Perform extra tx lookup when closing paymentdialog after 30 seconds
+        "pk_timeout": 300000, // 300000 = 5 minutes — passkey seed stays unlocked in memory
         "zeroplaceholder": parseFloat((0.00).toLocaleString(langcode, {
             "minimumFractionDigits": 2,
             "maximumFractionDigits": 2
@@ -257,6 +258,12 @@ const br_bipobj = br_get_local("bpdat", true),
         "hasbip": br_hasbip, // owner: bip39.js    — a seed exists in storage
         "phrasearray": null, // owner: bip39.js    — in-progress mnemonic during setup
         "phraseverified": false, // owner: bip39.js
+        "pk_dek": null, // owner: bip39.js    — seed data key while the passkey seed is unlocked
+        "pk_timer": null, // owner: bip39.js    — passkey seed auto-lock timer
+        "options_timer": null, // owner: core.js    — pending clearoptions cleanup timer
+        "pk_offered": false, // owner: bip39.js    — biometric offer already shown this session
+        "pk_sync_queued": false, // owner: bip39.js    — backup sync skipped while the seed was locked
+        "pk_uvpaa": null, // owner: bip39.js    — platform authenticator with user verification available
         "changes": {}, // owner: bip39.js    — unsaved seed edits
         "test_derive": true, // owner: bip39.js    — run derivation self-tests on next op
 
@@ -972,6 +979,9 @@ function visibility_change() {
             "search": glob_search
         }));
         glob_let.in_background = true;
+        if (typeof pk_lock === "function") { // wipe the seed data key when the app is hidden
+            pk_lock();
+        }
         if (is_request) {
             glob_let.background_timeout = setTimeout(() => {
                 force_close_socket().then(() => {

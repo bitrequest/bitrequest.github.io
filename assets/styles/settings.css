@@ -1328,3 +1328,31 @@ body.seed_dialog #sd_panel {
 #l2_apibox .apibox_item.show_abi {
     display:block;
 }
+
+/* Seed passkey panel styles */
+#pkfloat {
+    position: relative;
+    width: 100%;
+    text-align: center;
+}
+
+#pkfloat p {
+    font-size: 150%;
+    font-weight: 600;
+    margin-bottom: 1em;
+}
+
+#pkfloat .pk_info {
+    font-size: 90%;
+    opacity: 0.8;
+    margin: 0.8em auto;
+    max-width: 30em;
+}
+
+#pkfloat #pkbio,
+#pkfloat #pkenable,
+#pkfloat #pkdisable {
+    display: block;
+    margin: 0.8em auto;
+    width: fit-content;
+}

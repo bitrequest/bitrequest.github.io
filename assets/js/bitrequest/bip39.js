@@ -367,8 +367,9 @@ function b39_input() {
 function restore_seed_verify() {
     $(document).on("click", "#restore_seed", function() {
         const this_node = $(this),
-            backup = this_node.hasClass("backup");
-        if (glob_let.hasbip && !backup) {
+            backup = this_node.hasClass("backup"),
+            pk_recover = this_node.hasClass("pkreset");
+        if (glob_let.hasbip && !backup && !pk_recover) {
             return false;
         }
         glob_let.phrasearray = null,
@@ -381,6 +382,15 @@ function restore_seed_verify() {
                 current_id = get_seedid(phrase_words);
             if (target_id === current_id) {
                 const seedsteps = $("#seed_steps");
+                if (pk_recover) {
+                    const callback = seedsteps.data("pkcb");
+                    hide_seed_panel();
+                    pk_reset({
+                        "words": phrase_words,
+                        callback
+                    });
+                    return;
+                }
                 if (backup) {
                     const ss_dat = seedsteps.data(),
                         dat = ss_dat.dat,
@@ -552,6 +562,13 @@ function submit_disclaimer() {
 
 // Sets up BIP39 seed generation UI with steps for backup, verification, and restoration
 function bip39(dat) {
+    if (pk_locked() && !dat?.pkreset) { // never render a fresh seed over a locked passkey seed
+        pk_gate({
+            "func": bip39,
+            "args": dat
+        });
+        return;
+    }
     glob_let.phraseverified = false;
     const dialog_data = get_default_object(dat, true),
         saved_phrase = ls_phrase_obj(),
@@ -560,7 +577,7 @@ function bip39(dat) {
         dialog_type = dialog_data.type || null,
         is_restore = dialog_type === "restore" && can_edit === true,
         restore_bu = dialog_data?.restore,
-        restore_bu_class = (is_restore && restore_bu) ? " backup" : "",
+        restore_bu_class = (is_restore && restore_bu) ? " backup" : (is_restore && dialog_data?.pkreset) ? " pkreset" : "",
         ui_state = (glob_let.hasbip === true) ? (glob_let.bipv === true) ? "bipsavedbu" : "bipsaved" : "nobip",
         nobip = ui_state === "nobip",
         current_step = nobip ? 1 : (ui_state === "bipsavedbu" ? 2 : 3),
@@ -817,6 +834,7 @@ function verify_words() {
                     glob_let.bipv = false;
                     glob_let.bipid = false;
                     glob_let.bipobj = false;
+                    pk_lock();
                     update_address_lists();
                     hide_seed_panel();
                     notify(tl("secretphrasedeleted"));
@@ -956,6 +974,7 @@ function seed_callback() {
             }
         }
         encrypt_seed_data(phrase_obj);
+        pk_offer();
     }
     if (glob_let.phraseverified === true) {
         // save as verified
@@ -1008,7 +1027,7 @@ function deactivate_xpubs() {
 
 // Encrypts seed data using PIN-derived key
 function encrypt_seed_data(data) {
-    if (glob_let.hasbip && glob_let.test_derive) {
+    if (glob_let.hasbip && glob_let.test_derive && (data || !pk_mode())) {
         const pin_hash = get_setting("pinsettings", "pinhash");
         if (pin_hash) {
             let seed_data;
@@ -1033,6 +1052,7 @@ function encrypt_seed_data(data) {
                 seed_obj.dat = null;
                 br_set_local("bpdat", seed_obj, true);
                 glob_let.bipobj = seed_obj;
+                pk_lock();
             }
         }
     }
@@ -1052,6 +1072,394 @@ function pin_to_encryption_key(pin, seed_id) {
             return wordlist[word_index - 1];
         });
     return hmacsha(word_mapping.join(" ") + seed_id, "sha256").slice(0, 32);
+}
+
+// ** Seed Passkey: **
+
+// True when the stored seed is encrypted with a passkey
+function pk_mode() {
+    return Boolean(glob_let.bipobj?.datenc?.pk);
+}
+
+// True when a passkey seed exists but is not unlocked
+function pk_locked() {
+    return pk_mode() && !glob_let.pk_dek;
+}
+
+// Starts a session that locks again after the configured timeout
+function pk_start_session(dek) {
+    clearTimeout(glob_let.pk_timer);
+    glob_let.pk_dek = dek;
+    glob_let.pk_timer = setTimeout(pk_lock, glob_const.pk_timeout);
+    if (glob_let.pk_sync_queued) { // run the backup sync that was skipped while locked
+        glob_let.pk_sync_queued = false;
+        const auth_state = get_auth_status();
+        if (auth_state.pass) {
+            sync_drive_data(auth_state);
+        }
+    }
+}
+
+// Wipes the seed data key from memory
+function pk_lock() {
+    clearTimeout(glob_let.pk_timer);
+    glob_let.pk_dek = null;
+    glob_let.pk_timer = null;
+}
+
+// Runs the callback when the passkey seed is open, otherwise asks for biometrics first
+function pk_gate(callback) {
+    if (!pk_mode() || glob_let.pk_dek) {
+        callback.func(callback.args);
+        return;
+    }
+    showoptions(pk_panel(callback), "pin ontop");
+    pk_try(false);
+}
+
+// Always asks the PIN first, then biometrics for passkey seeds, so an open unlock window never shows secrets unprompted
+function seed_gate(callback, show_top, pin_set) {
+    all_pinpanel({
+        "func": pk_after_pin,
+        "args": callback
+    }, show_top, pin_set);
+}
+
+// Continues after the PIN: biometrics for passkey seeds, otherwise the action plus a one time biometric offer
+function pk_after_pin(callback) {
+    if (pk_mode()) {
+        setTimeout(function() { // the PIN panel closes right after this callback returns
+            pk_gate(callback);
+        }, 50);
+        return;
+    }
+    callback.func(callback.args);
+    pk_offer();
+}
+
+// All conditions for biometric seed encryption: Android touch device (iOS has no PRF yet), platform authenticator, secure context, real hostname
+function pk_supported() {
+    return Boolean(["Android", "android-app"].includes(detect_device_type()) && glob_const.supportsTouch && glob_let.pk_uvpaa === true && window.PublicKeyCredential && navigator.credentials && window.isSecureContext && window.location.hostname && !/^[\d.]+$|:/.test(window.location.hostname));
+}
+
+// Encodes bytes as base64
+function pk_b64(bytes) {
+    return btoa(String.fromCharCode.apply(null, bytes));
+}
+
+// Decodes base64 to bytes
+function pk_bytes(b64) {
+    return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+}
+
+// Reads the 32 byte PRF output from a WebAuthn result, 0 when the authenticator has no PRF
+function pk_prf_result(cred) {
+    const first = cred?.getClientExtensionResults()?.prf?.results?.first;
+    return first && first.byteLength === 32 ? new Uint8Array(first) : 0;
+}
+
+// Asks the platform authenticator for the PRF output of the enrolled passkey, false when cancelled
+async function pk_prf(cid, salt) {
+    try {
+        return pk_prf_result(await navigator.credentials.get({
+            "publicKey": {
+                "challenge": crypto.getRandomValues(uint_8array(32)),
+                "rpId": window.location.hostname,
+                "allowCredentials": [{
+                    "type": "public-key",
+                    "id": pk_bytes(cid)
+                }],
+                "userVerification": "required",
+                "timeout": 60000,
+                "extensions": {
+                    "prf": {
+                        "eval": {
+                            "first": pk_bytes(salt)
+                        }
+                    }
+                }
+            }
+        }));
+    } catch (e) {
+        return false;
+    }
+}
+
+// Unwraps the seed data key with biometrics, false when cancelled or failed
+async function pk_unlock() {
+    const pk = glob_let.bipobj?.datenc?.pk;
+    if (!pk) {
+        return false;
+    }
+    const prf = await pk_prf(pk.cid, pk.s);
+    return prf ? pk_unwrap(pk, prf) : false;
+}
+
+// Moves a PIN encrypted seed to a passkey, the stored seed only changes after the passkey proved it can decrypt it
+async function pk_upgrade() {
+    const seed_obj = glob_let.bipobj,
+        current = seed_obj?.datenc?.pk ? false : s_decode(seed_obj?.datenc);
+    if (!pk_supported() || !current || current.id !== glob_let.bipid) {
+        return "unsupported:state";
+    }
+    const salt = pk_b64(crypto.getRandomValues(uint_8array(32)));
+    let cred;
+    try {
+        cred = await navigator.credentials.create({
+            "publicKey": {
+                "rp": {
+                    "name": "Bitrequest",
+                    "id": window.location.hostname
+                },
+                "user": {
+                    "id": crypto.getRandomValues(uint_8array(16)),
+                    "name": "Bitrequest biometrics",
+                    "displayName": "Bitrequest biometrics"
+                },
+                "challenge": crypto.getRandomValues(uint_8array(32)),
+                "pubKeyCredParams": [{
+                    "type": "public-key",
+                    "alg": -7
+                }, {
+                    "type": "public-key",
+                    "alg": -257
+                }],
+                "authenticatorSelection": {
+                    "residentKey": "preferred",
+                    "userVerification": "required"
+                },
+                "timeout": 60000,
+                "extensions": {
+                    "prf": {
+                        "eval": {
+                            "first": pk_bytes(salt)
+                        }
+                    }
+                }
+            }
+        });
+    } catch (e) {
+        return "cancel:create:" + (e?.name || "error");
+    }
+    const cid = pk_b64(new Uint8Array(cred.rawId)),
+        created = pk_prf_result(cred),
+        prf = created || await pk_prf(cid, salt);
+    if (prf === 0) {
+        return "unsupported:noprf";
+    }
+    if (!prf) {
+        return "cancel:get";
+    }
+    const dek = pk_new_dek(),
+        pk = {
+            cid,
+            "s": salt,
+            "wk": pk_wrap(dek, prf)
+        },
+        sealed = pk_seal(current.dat, seed_obj.id, dek);
+    if (!pk.wk || !sealed || pk_unwrap(pk, prf) !== dek || pk_decrypt(sealed, dek)?.dat !== current.dat) {
+        return "unsupported:verify";
+    }
+    sealed.pk = pk;
+    seed_obj.datenc = sealed;
+    seed_obj.dat = null;
+    delete seed_obj.pkd;
+    br_set_local("bpdat", seed_obj, true);
+    glob_let.bipobj = seed_obj;
+    pk_start_session(dek);
+    return created ? "ok:create" : "ok:get";
+}
+
+// Builds the biometric unlock panel
+function pk_panel(callback) {
+    return $("<div id='pkfloat' class='pkunlock'>\
+        <p>" + tl("pkunlock") + "</p>\
+        <div id='pkbio' class='button'>" + tl("pkbttn") + "</div>\
+        <div class='pk_info'><span id='pkphrase' class='ref linkcolor'>" + tl("pklost") + "</span></div>\
+    </div>").data("pkcb", callback);
+}
+
+// Runs the biometric prompt and continues the pending action on success
+function pk_try(manual) {
+    const panel = $("#pkfloat"),
+        callback = panel.data("pkcb");
+    pk_unlock().then(function(dek) {
+        if (!$.contains(document.documentElement, panel[0])) { // panel was dismissed meanwhile
+            return;
+        }
+        if (!dek) {
+            if (manual) {
+                topnotify(tl("biofailed"));
+            }
+            return;
+        }
+        pk_start_session(dek);
+        canceloptions(true);
+        if (callback) {
+            callback.func(callback.args);
+        }
+    });
+}
+
+// Offers biometrics for a PIN seed, force ignores an earlier decline
+function pk_offer(force) {
+    const seed_obj = glob_let.bipobj;
+    if (!glob_let.hasbip || !seed_obj || pk_mode() || (seed_obj.pkd && !force) || (glob_let.pk_offered && !force) || !pk_supported()) {
+        return;
+    }
+    glob_let.pk_offered = true;
+    setTimeout(function() {
+        if ($("#optionspop").hasClass("active")) { // never replace a dialog the user is working in
+            return;
+        }
+        showoptions($("<div id='pkfloat' class='pkoffer'>\
+            <p>" + tl("pkoffertitle") + "</p>\
+            <div class='pk_info'>" + tl("pkofferinfo") + "</div>\
+            <div id='pkenable' class='button'>" + tl("pkenable") + "</div>\
+            <div class='pk_info'><span id='pklater' class='ref linkcolor'>" + tl("pklater") + "</span></div>\
+        </div>"), "pin ontop");
+    }, 800);
+}
+
+// Stores that the biometric offer is not wanted
+function pk_decline() {
+    if (glob_let.bipobj && !pk_mode()) {
+        glob_let.bipobj.pkd = 1;
+        br_set_local("bpdat", glob_let.bipobj, true);
+    }
+}
+
+// Updates the biometrics status in the settings list
+function pk_setting_refresh() {
+    $("#biosettings p").text(tl(pk_mode() ? "bioon" : "biooff"));
+}
+
+// Builds the panel to turn biometrics off
+function pk_off_panel() {
+    return $("<div id='pkfloat' class='pkoff'>\
+        <p>" + tl("biooffinfo") + "</p>\
+        <div id='pkdisable' class='button'>" + tl("biodisable") + "</div>\
+    </div>");
+}
+
+// Moves the unlocked passkey seed back to PIN encryption
+function pk_disable() {
+    if (!get_setting("pinsettings", "pinhash")) { // PIN encryption needs a PIN
+        all_pinpanel({
+            "func": pk_disable
+        }, true, true);
+        return;
+    }
+    const current = ls_phrase_obj();
+    if (!current) {
+        return;
+    }
+    encrypt_seed_data({
+        "pid": current.pid,
+        "pob": btoa(JSON.stringify(current.pob))
+    });
+    if (pk_mode()) {
+        topnotify(tl("biofailed"));
+        return;
+    }
+    glob_let.bipobj.pkd = 1;
+    br_set_local("bpdat", glob_let.bipobj, true);
+    pk_setting_refresh();
+    topnotify(tl("biooffdone"));
+}
+
+// Opens the secret phrase restore panel to recover from a lost passkey
+function pk_lost() {
+    const callback = $("#pkfloat").data("pkcb");
+    canceloptions(true);
+    bip39({
+        "type": "restore",
+        "edit": true,
+        "pkreset": true,
+        "seedid": glob_let.bipid,
+        "pkcb": callback
+    });
+    $("#sd_panel").addClass("sp_top");
+    $("#seed_step2").addClass("restore");
+    seed_nav(2);
+    $("#bip39phrase").focus();
+}
+
+// Re-encrypts the verified secret phrase with the PIN and continues the pending action
+function pk_reset(args) {
+    if (!get_setting("pinsettings", "pinhash")) {
+        all_pinpanel({
+            "func": pk_reset,
+            args
+        }, true, true);
+        return;
+    }
+    encrypt_seed_data({
+        "pid": glob_let.bipid,
+        "pob": btoa(JSON.stringify(args.words))
+    });
+    pk_setting_refresh();
+    if (args.callback) {
+        args.callback.func(args.callback.args);
+    }
+}
+
+// Click handlers for the biometric panels
+function pk_events() {
+    if (window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable) {
+        PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(function(available) {
+            glob_let.pk_uvpaa = available;
+        }).catch(function() {
+            glob_let.pk_uvpaa = false;
+        });
+    }
+    $(document).on("click", "#biosettings", function() {
+        if (!glob_let.hasbip) {
+            topnotify(tl("bioneedsseed"));
+            return;
+        }
+        if (pk_mode()) {
+            showoptions(pk_off_panel(), "pin ontop");
+            return;
+        }
+        if (!pk_supported()) {
+            topnotify(tl("bionotsupported"));
+            return;
+        }
+        all_pinpanel({
+            "func": pk_offer,
+            "args": true
+        }, true, true);
+    });
+    $(document).on("click", "#pkdisable", function() {
+        canceloptions(true);
+        pk_gate({
+            "func": pk_disable
+        });
+    });
+    $(document).on("click", "#pkbio", function() {
+        pk_try(true);
+    });
+    $(document).on("click", "#pkphrase", pk_lost);
+    $(document).on("click", "#pkenable", function() {
+        pk_upgrade().then(function(result) {
+            canceloptions(true);
+            pk_setting_refresh();
+            if (result.indexOf("ok") === 0) {
+                topnotify(tl("biosaved"));
+                return;
+            }
+            const unsupported = result.indexOf("unsupported") === 0;
+            if (unsupported) {
+                pk_decline();
+            }
+            topnotify(tl(unsupported ? "bionotsupported" : "biofailed") + " (" + result + ")");
+        });
+    });
+    $(document).on("click", "#pklater", function() {
+        pk_decline();
+        canceloptions(true);
+    });
 }
 
 // Builds the seed-wallet download list markup for a coin
@@ -1182,12 +1590,25 @@ function xpub_prefix(coin) {
 
 // Derives and adds new address for specified currency
 function derive_new_address(coin, extra) {
+    if (derive_blocked(coin)) { // unlock first, then derive
+        pk_gate({
+            "func": function() {
+                derive_new_address(coin, extra);
+            }
+        });
+        return false;
+    }
     const derived_data = derive_data(coin, extra);
     if (derived_data) {
         derive_add_address(coin, derived_data);
         return true;
     }
     return false;
+}
+
+// True when deriving this coin needs the seed but the passkey seed is locked
+function derive_blocked(coin) {
+    return pk_locked() && glob_let.test_derive === true && Boolean(bip39_const.c_derive[coin]) && Boolean(get_bip32dat(coin)) && !active_xpub(coin);
 }
 
 // Returns highest derivation index from address list
@@ -1387,7 +1808,7 @@ function toggle_phrase_visibility() {
                 reveal_mnemonic();
                 return;
             }
-            all_pinpanel({
+            seed_gate({
                 "func": reveal_mnemonic
             }, null, true)
             return;

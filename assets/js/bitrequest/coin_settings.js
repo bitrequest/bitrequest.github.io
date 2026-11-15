@@ -265,8 +265,8 @@ function key_management() {
             return;
         }
         if (glob_let.hasbip === true) {
-            if (currency === "monero" && is_viewonly() === false) {
-                all_pinpanel({
+            if ((currency === "monero" && is_viewonly() === false) || pk_mode()) {
+                seed_gate({
                     "func": phrase_info_pu,
                     "args": currency
                 }, true, true);

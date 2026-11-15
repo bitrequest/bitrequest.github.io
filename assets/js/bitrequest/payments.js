@@ -2530,8 +2530,9 @@ function add_address_from_dialog() {
             qr_scanner = glob_let.hascam ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             viewkey_scanner = glob_let.hascam ? "<div class='qrscanner' data-currency='" + currency + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             viewkey_box = currency === "monero" ? "<div class='inputwrap'><input type='text' class='vk_input' value='' placeholder='View key'>" + viewkey_scanner + "</div>" : "",
-            derivation_source = dd ? (dd.xpubid ? " from Xpub" : " from seed") : "",
-            seed_message = dd ? "<div class='popnotify' style='display:block'><span id='addfromseed' class='address_option linkcolor'>Generate address" + derivation_source + "</span></div>" : "<div class='popnotify'></div>",
+            seed_locked = !dd && derive_blocked(currency),
+            derivation_source = dd ? (dd.xpubid ? " from Xpub" : " from seed") : (seed_locked ? " from seed" : ""),
+            seed_message = (dd || seed_locked) ? "<div class='popnotify' style='display:block'><span id='addfromseed' class='address_option linkcolor'>Generate address" + derivation_source + "</span></div>" : "<div class='popnotify'></div>",
             content = $("<div class='formbox form add' id='addressformbox'><h2>" + getcc_icon(cmcid, request.cpid, erc20) + " " + tl("addcoinaddress", {
                 currency
             }) + "</h2>" + seed_message + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' class='address' value='' placeholder='" + tl("nopub") + "'>" + qr_scanner + "</div>" + viewkey_box + "<input type='text' class='addresslabel' value='' placeholder='label'><div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + tl("pkownership") + "</span></div><input type='submit' class='submit' value='" + tl("okbttn") + "'></form></div>").data(address_data);
@@ -2545,6 +2546,15 @@ function add_from_seed() {
         const address_data = $("#addressformbox").data(),
             currency = address_data.currency,
             derived_data = address_data.dd;
+        if (currency && !derived_data && derive_blocked(currency)) {
+            pk_gate({
+                "func": function() {
+                    address_data.dd = derive_data(currency, true);
+                    $("#addfromseed").trigger("click");
+                }
+            });
+            return;
+        }
         if (currency && derived_data && derived_data.address) {
             const confirm_result = confirm(tl("generatenewaddress", {
                 currency

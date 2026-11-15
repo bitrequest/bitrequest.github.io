@@ -1862,6 +1862,12 @@ const glob_config = {
             "icon": "icon-eye"
         },
         {
+            "id": "biosettings",
+            "heading": "Biometrics",
+            "selected": "",
+            "icon": "icon-key"
+        },
+        {
             "id": "backup",
             "heading": "Backup App data",
             "selected": "",

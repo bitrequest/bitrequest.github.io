@@ -717,7 +717,9 @@ function pinvalidate(pin_button) {
                 pin_callback.func(args);
             }
             notify(tl("datasaved"));
-            encrypt_seed_data(seed_decrypt(old_pin));
+            if (!pk_mode()) {
+                encrypt_seed_data(seed_decrypt(old_pin));
+            }
         } else {
             topnotify(tl("pinmatch"));
             if (!navigator.vibrate) {
@@ -769,8 +771,7 @@ function phrase_login() {
     $(document).on("click", "#phrase_login", function() {
         const phrase_input = $("#lockscreen #bip39phrase"),
             phrase_text = phrase_input.text(),
-            seed_data = ls_phrase_obj(),
-            saved_seed = seed_data.pid,
+            saved_seed = glob_let.bipid,
             current_seed = get_seedid(phrase_text.split(" "));
         if (current_seed === saved_seed || current_seed === glob_let.cashier_seedid) {
             clearpinlock();
@@ -985,6 +986,13 @@ function triggertx_function(trigger_elem) {
         return;
     }
     const can_derive = derive_first_check(currency);
+    if (can_derive === "locked" && !get_addresslist(currency).children("li").length) { // no address to reuse
+        pk_gate({
+            "func": triggertx_function,
+            "args": trigger_elem
+        });
+        return;
+    }
     if (can_derive === true) {
         triggertx_function(trigger_elem);
         return;
@@ -2370,7 +2378,8 @@ function showoptions(content, add_class) {
         }
     }
     const extra_class = add_class ? " " + add_class : "";
-    $("#optionspop").addClass("showpu active" + extra_class);
+    clearTimeout(glob_let.options_timer); // a pending clearoptions must not wipe this content
+    $("#optionspop").removeClass("fadebg").addClass("showpu active" + extra_class);
     $("#optionsbox").html(content);
     glob_const.body.addClass("blurmain_options");
 }
@@ -2416,7 +2425,8 @@ function clearoptions() {
     options_popup.addClass("fadebg");
     options_popup.removeClass("active");
     glob_const.body.removeClass("blurmain_options");
-    setTimeout(function() {
+    clearTimeout(glob_let.options_timer);
+    glob_let.options_timer = setTimeout(function() {
         options_popup.removeClass("showpu pin fadebg ontop");
         $("#optionsbox").html("");
     }, 600);
@@ -2672,7 +2682,7 @@ function show_pk() {
             return;
         }
         $("#optionsbox").html("");
-        all_pinpanel(show_btn.attr("id") === "show_vk" ? {
+        seed_gate(show_btn.attr("id") === "show_vk" ? {
             "func": show_vk_cb,
             "args": show_btn.attr("data-vk")
         } : {
@@ -2924,6 +2934,13 @@ function addcurrency(coin_data) {
         return;
     }
     const can_derive = derive_first_check(currency);
+    if (can_derive === "locked") {
+        pk_gate({
+            "func": addcurrency,
+            "args": coin_data
+        });
+        return;
+    }
     if (can_derive === true) {
         loadpage("?p=" + currency);
         save_currencies(true);
@@ -2943,6 +2960,9 @@ function derive_first_check(currency) {
         if (derivation_types) {
             const has_active_derives = active_derives(currency, derivation_types);
             if (has_active_derives === false) {
+                if (derive_blocked(currency)) {
+                    return "locked";
+                }
                 return derive_new_address(currency);
             }
         }
@@ -3556,7 +3576,7 @@ function send_trigger() {
 // Opens BIP39 information panel
 function showbip39_trigger() {
     $(document).on("click", ".show_bip39", function() {
-        all_pinpanel({
+        seed_gate({
             "func": manage_bip32
         });
         canceldialog();
@@ -4861,6 +4881,7 @@ function render_settings(excludes) {
             }
         });
     }
+    pk_setting_refresh();
 }
 
 // Loads and displays cached requests

@@ -464,6 +464,10 @@ function sync_drive_data(auth_state) {
     if (!access_token) {
         return;
     }
+    if (pk_locked()) { // sync once the seed is unlocked again
+        glob_let.pk_sync_queued = true;
+        return;
+    }
     const backup_id = br_get_local("backupfile_id");
     if (backup_id) {
         br_set_session("gd_timer", now_utc());

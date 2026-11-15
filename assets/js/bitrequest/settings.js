@@ -45,6 +45,7 @@ $(document).ready(function() {
     submit_restore();
     select_gd_restore();
     submit_pin_dialog();
+    pk_events();
     submit_dphrase();
     compare_seeds();
 
@@ -543,7 +544,7 @@ function save_lock_timeout() {
 function manage_bip32_seedphrase() {
     $(document).on("click", "#bip39_seedphrase", function() {
         if (glob_let.hasbip) {
-            all_pinpanel({
+            seed_gate({
                 "func": manage_bip32
             }, null, true);
             return;
@@ -715,6 +716,12 @@ function share_backup_file() {
 
 // Check pin and share backup
 function share_bu() {
+    if (pk_locked()) {
+        pk_gate({
+            "func": share_bu
+        });
+        return;
+    }
     loader(true);
     set_loader_text(tl("generatebu"));
     const json = compile_backup_data("bu");
@@ -940,6 +947,9 @@ function cancel_backup_dialog() {
 
 // Serializes localStorage data into base64 encoded backup excluding specific keys
 function compile_backup_data(type) {
+    if (pk_locked()) { // locked seed: no silent fallback to a weaker backup lock
+        return false;
+    }
     const bu_dat = {},
         skip_keys = [
             "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens_init", "bitrequest_bufp",
@@ -1043,6 +1053,13 @@ function submit_backup() {
 }
 
 function backup(args) {
+    if (!args.node.attr("data-blob") && pk_locked()) {
+        pk_gate({
+            "func": backup,
+            "args": args
+        });
+        return;
+    }
     const node = args.node,
         titlebackup = "last backup: " + node.attr("data-date"),
         lastbackup = node.attr("data-lastbackup"),
@@ -1319,6 +1336,14 @@ function continue_restore(json, meta) {
 
 // Decrypt json backup
 function decrypt_json_bu(json, meta) {
+    if (pk_locked() && json.lock.startsWith("b39")) { // same-seed backups open with the seed
+        pk_gate({
+            "func": function() {
+                decrypt_json_bu(json, meta);
+            }
+        });
+        return;
+    }
     const lock = json.lock,
         type = (lock.startsWith("b39")) ? "b39" : (lock.startsWith("pn")) ? "pn" : "rd",
         filename = meta.filename;
@@ -1486,6 +1511,9 @@ function restore_callback_file(data) {
 
 // Decrypts AES-encoded data using PIN hash and validates JSON structure 
 function s_decode(pdat, phash) {
+    if (pdat?.pk) {
+        return glob_let.pk_dek ? pk_decrypt(pdat, glob_let.pk_dek) : false;
+    }
     const pin_hash = phash || $("#pinsettings").data("pinhash");
     if (!pin_hash || !pdat) {
         return false;
@@ -1740,6 +1768,13 @@ function restore_bu_seed() {
 
 // Manages seed replacement workflow with phrase verification
 function bu_oldseed(bu_dat) {
+    if (pk_locked()) {
+        pk_gate({
+            "func": bu_oldseed,
+            "args": bu_dat
+        });
+        return;
+    }
     canceldialog();
     manage_bip32({
         "type": "restore",
@@ -1774,17 +1809,24 @@ function compare_seeds() {
 function cs_callback() {
     const bpdat = glob_let?.resd?.bpdat;
     if (bpdat) {
-        const current = ls_phrase_obj(),
-            backup = ls_phrase_obj_parsed(bpdat),
-            compare = {
-                "s1": current.pob.slice(0, 3),
-                "s2": backup.pob.slice(0, 3)
-            };
-        all_pinpanel({
-            "func": compare_seeds_callback,
-            "args": compare
+        seed_gate({
+            "func": compare_seeds_prepare,
+            "args": bpdat
         }, true)
     }
+}
+
+// Builds the truncated phrase comparison once the seed is accessible
+function compare_seeds_prepare(bpdat) {
+    const current = ls_phrase_obj(),
+        backup = ls_phrase_obj_parsed(bpdat);
+    if (!current || !backup) {
+        return;
+    }
+    compare_seeds_callback({
+        "s1": current.pob.slice(0, 3),
+        "s2": backup.pob.slice(0, 3)
+    });
 }
 
 // Renders truncated seed phrases comparison in UI
@@ -3376,7 +3418,7 @@ function submit_contactform() {
 // Launches PIN-protected permissions configuration dialog
 function permissions() {
     $(document).on("click", "#permissions", function() {
-        all_pinpanel({
+        seed_gate({
             "func": permissions_callback
         }, true, true)
     })

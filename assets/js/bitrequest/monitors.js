@@ -868,17 +868,17 @@ function update_transaction_count(status_panel, count) {
 
 // Triggers historical fiat data retrieval for transactions based on confirmation status
 function init_fiat_history(rd, rdo, latestconf, latest_input, firstinput) {
-    const latest_time = Number(latest_input),
-        latest_input_conf = latest_time + (Number(latestconf) || 0),
+    const latestinput = Number(latest_input),
+        latest_input_conf = latestinput + (Number(latestconf) || 0),
         cache_prefix = "historic_" + rd.requestid,
         cache_timestamp = br_get_session(cache_prefix), // set to small amount to trigger lookup exchange rates
         historic_cache = parseInt(cache_timestamp) || 1,
-        latestinput = latest_input_conf > historic_cache ? latest_input_conf : historic_cache;
-    if (latestinput > historic_cache) { //new input detected; call historic api
+        historic_key = latest_input_conf > historic_cache ? latest_input_conf : historic_cache;
+    if (historic_key > historic_cache) { //new input detected; call historic api
         br_remove_session(cache_prefix); // remove historic price cache
         const historic_payload = $.extend({}, rd, {
-                "latestinput": latest_time,
-                "historic_key": latestinput,
+                latestinput,
+                historic_key,
                 firstinput
             }),
             api_list = "historic_fiat_price_apis",

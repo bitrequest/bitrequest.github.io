@@ -1461,6 +1461,63 @@ function aes_dec(content, keyst) {
     }
 }
 
+// Derives the passkey wrapping key (base64) from a 32 byte WebAuthn PRF output
+function pk_key(prf) {
+    return prf && prf.length === 32 ? sjcl.codec.base64.fromBits(byte_array_to_word_array(prf)) : false;
+}
+
+// Generates a random 256-bit data key (base64)
+function pk_new_dek() {
+    return sjcl.codec.base64.fromBits(byte_array_to_word_array(crypto.getRandomValues(uint_8array(32))));
+}
+
+// Wraps the data key with the passkey PRF output
+function pk_wrap(dek, prf) {
+    const key = pk_key(prf);
+    return dek && key ? aes_enc(dek, key) : false;
+}
+
+// Unwraps the data key with the passkey PRF output, returns false on a mismatch
+function pk_unwrap(pk, prf) {
+    const key = pk_key(prf);
+    if (!key || typeof pk?.wk !== "string") {
+        return false;
+    }
+    return aes_dec(pk.wk, key) || false;
+}
+
+// Encrypts the seed payload under the data key, the caller adds the pk wrapper that marks it as a passkey blob
+function pk_seal(cb64, seed_id, dek) {
+    if (!cb64 || !seed_id || !dek) {
+        return false;
+    }
+    return {
+        "id": seed_id,
+        "dat": aes_enc(JSON.stringify(cb64), dek)
+    };
+}
+
+// Decrypts the seed payload of a passkey datenc object, same output shape as s_decode
+function pk_decrypt(datenc, dek) {
+    if (!datenc || !dek || typeof datenc.dat !== "string") {
+        return false;
+    }
+    const decrypted = aes_dec(datenc.dat, dek);
+    if (!decrypted) {
+        return false;
+    }
+    try {
+        const cb64 = decrypted.startsWith('"') && decrypted.endsWith('"') ? decrypted.slice(1, -1) : decrypted,
+            pid = JSON.parse(atob(cb64)).pid;
+        return pid ? {
+            "dat": cb64,
+            "id": pid
+        } : false;
+    } catch (e) {
+        return false;
+    }
+}
+
 // ============================================
 // SCRIPTHASH
 // ============================================
@@ -2300,6 +2357,12 @@ const CryptoUtils = {
     // === Encryption ===
     aes_enc,
     aes_dec,
+    pk_key,
+    pk_new_dek,
+    pk_wrap,
+    pk_unwrap,
+    pk_seal,
+    pk_decrypt,
 
     // === Validation ===
     address_to_scripthash,
