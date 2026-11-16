@@ -1,0 +1,260 @@
+/*
+ *  Glassy
+ *  Frosted panels floating over a slowly warping colour field.
+ */
+
+/* Keyframe Animations */
+@keyframes glassy-drift-a {
+    0% {
+        transform: translate3d(-4%, -3%, 0) rotate(0deg) scale(1, 1);
+    }
+
+    50% {
+        transform: translate3d(3%, 4%, 0) rotate(14deg) scale(1.18, 0.92);
+    }
+
+    100% {
+        transform: translate3d(5%, -4%, 0) rotate(-10deg) scale(0.94, 1.14);
+    }
+}
+
+@keyframes glassy-drift-b {
+    0% {
+        transform: translate3d(4%, 3%, 0) rotate(8deg) scale(1.1, 0.95);
+    }
+
+    50% {
+        transform: translate3d(-5%, -2%, 0) rotate(-12deg) scale(0.92, 1.16);
+    }
+
+    100% {
+        transform: translate3d(-2%, 5%, 0) rotate(18deg) scale(1.15, 1);
+    }
+}
+
+/* Body and base background */
+html:not(.inframe) {
+    background-color: #0a0f1f;
+}
+
+html:not(.inframe) body {
+    background: transparent;
+}
+
+body {
+    color: rgba(236, 240, 255, 0.86);
+}
+
+/* Warping colour field: two oversized layers drifting against each other.
+   Transform-only, so it stays on the compositor. */
+html:not(.inframe) body::before,
+html:not(.inframe) body::after {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 170vmax;
+    height: 170vmax;
+    margin: -85vmax 0 0 -85vmax;
+    pointer-events: none;
+    z-index: -1;
+    will-change: transform;
+}
+
+html:not(.inframe) body::before {
+    background:
+        radial-gradient(closest-side at 34% 38%, rgba(0, 190, 170, 0.55), rgba(0, 190, 170, 0) 100%),
+        radial-gradient(closest-side at 66% 60%, rgba(96, 84, 240, 0.55), rgba(96, 84, 240, 0) 100%);
+    background-size: 62% 62%, 70% 70%;
+    background-position: 22% 30%, 78% 72%;
+    background-repeat: no-repeat;
+    animation: glassy-drift-a 34s ease-in-out infinite alternate;
+}
+
+html:not(.inframe) body::after {
+    background:
+        radial-gradient(closest-side at 60% 36%, rgba(236, 72, 153, 0.30), rgba(236, 72, 153, 0) 100%),
+        radial-gradient(closest-side at 40% 64%, rgba(40, 130, 255, 0.42), rgba(40, 130, 255, 0) 100%);
+    background-size: 56% 56%, 66% 66%;
+    background-position: 74% 26%, 26% 76%;
+    background-repeat: no-repeat;
+    animation: glassy-drift-b 46s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    html:not(.inframe) body::before,
+    html:not(.inframe) body::after {
+        animation: none;
+    }
+}
+
+#home {
+    background-color: transparent;
+}
+
+#startscreen {
+    background-color: rgba(10, 15, 31, 0.55);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    backdrop-filter: blur(28px) saturate(160%);
+}
+
+/* Header and navigation background */
+header,
+#fixednav {
+    background-color: rgba(255, 255, 255, 0.07);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    backdrop-filter: blur(22px) saturate(170%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 8px 30px rgba(0, 0, 0, 0.22);
+}
+
+/* Heading styles */
+.heading {
+    padding-bottom: 1.3em;
+    color: #fff;
+}
+
+/* Glass panels.
+   No backdrop blur here on purpose: the field behind is already smooth, and
+   blurring full-height lists on every animation frame is wasted GPU time. */
+.currencylist,
+.content>.applist,
+.content>.requestlist {
+    width: calc(100% - 2em);
+    margin-left: 1em;
+    margin-right: 1em;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.045) 45%, rgba(255, 255, 255, 0.07));
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 22px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.05), 0 18px 40px rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+}
+
+.currencylist {
+    margin-left: auto;
+    margin-right: auto;
+    padding: 2em 0.5em 1em 0.5em;
+}
+
+.content>.applist:empty,
+.content>.requestlist:empty {
+    display: none;
+}
+
+.content>.applist:not(:has(li)),
+.content>.requestlist:not(:has(li)) {
+    display: none;
+}
+
+.content>.applist>li:last-child,
+.content>.requestlist>li:last-child {
+    border-bottom: none;
+}
+
+/* Request list item backgrounds */
+.requestlist>li.rqli,
+.requestlist>li .brmarker {
+    background-color: transparent;
+}
+
+.requestlist>li .brstatuspanel {
+    background-color: rgba(14, 20, 40, 0.86);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+}
+
+.requestlist>li.rqli:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.035);
+}
+
+.requestlist>li.requestoutgoing.visible_request {
+    background-color: rgba(90, 220, 150, 0.10);
+}
+
+.requestlist>li.requestoutgoing.visible_request .brstatuspanel {
+    background-color: rgba(18, 44, 38, 0.88);
+}
+
+.requestlist>li.requestoutgoing .brmarker {
+    background-color: rgba(90, 220, 150, 0.65);
+}
+
+.requestlist>li.requestlocal.visible_request {
+    background-color: rgba(90, 160, 255, 0.12);
+}
+
+.requestlist>li.requestlocal.visible_request .brstatuspanel {
+    background-color: rgba(18, 30, 58, 0.88);
+}
+
+.requestlist>li.requestlocal .brmarker {
+    background-color: rgba(90, 160, 255, 0.7);
+}
+
+.liwrap {
+    color: rgba(226, 232, 250, 0.72);
+}
+
+/* Dialogs: light frosted glass, dark text stays readable.
+   Fades to solid white at the bottom so the opaque action bar blends in. */
+.dialogstyle {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.92) 55%, #fff calc(100% - 4.5em));
+    -webkit-backdrop-filter: blur(26px) saturate(180%);
+    backdrop-filter: blur(26px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 30px 60px rgba(0, 0, 0, 0.45);
+}
+
+/* Full-screen overlays that base styles paint in the default slate */
+#pin_admin,
+#sd_panel,
+#lockscreen #phrasewrap,
+#optionspop.pin {
+    background-color: #0d1326;
+}
+
+#optionspop.fadebg {
+    background-color: rgba(255, 255, 255, 0);
+}
+
+#app_panel,
+#topnotify {
+    background-color: rgba(10, 15, 31, 0.6);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    backdrop-filter: blur(22px) saturate(170%);
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Link colors */
+#dialogbody h2:before,
+#toseed,
+#actions div,
+#dialog .customtrigger,
+#canceldialog,
+#backupcd,
+#backupactions .util_icon,
+.linkcolor,
+.selectarrows,
+.qrscanner,
+.ref {
+    color: #009e8e;
+}
+
+.page .linkcolor,
+.page .ref {
+    color: #2fd6c3;
+}
+
+.button,
+.alias {
+    background: linear-gradient(160deg, rgba(60, 225, 205, 0.85), rgba(0, 151, 136, 0.78));
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 10px 24px rgba(0, 120, 110, 0.35);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+.alias {
+    color: rgba(255, 255, 255, 0);
+}
