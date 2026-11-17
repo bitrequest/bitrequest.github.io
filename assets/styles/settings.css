@@ -869,20 +869,6 @@ body.seed_dialog #sd_panel {
     cursor: pointer;
 }
 
-#copyphrase {
-    font-size: 80%;
-    margin: 0.15em 0 0 0.2em;
-    padding: 0.3em 1em;
-    background-color: rgba(255, 255, 255, 0);
-    border: 2px solid #009788;
-    display: none;
-}
-
-#sd_panel.bipsaved #copyphrase,
-#sd_panel.bipsavedbu #copyphrase {
-    display: inline-block;
-}
-
 #reminder_seed_backup {
     display: none;
 }

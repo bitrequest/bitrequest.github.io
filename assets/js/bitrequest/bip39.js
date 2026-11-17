@@ -56,7 +56,7 @@ $(document).ready(function() {
     skip_verify();
 
     // ** UI & Information Display: **
-    copy_phrase();
+    block_phrase_copy();
     toggle_phrase_visibility();
     delete_phrase_trigger();
     phrase_info();
@@ -617,7 +617,6 @@ function bip39(dat) {
                     <div id='phrasewrap'>\
                         <div id='bip39phrase' contenteditable='" + can_edit + "' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'>" + seed_phrase + "</div>\
                         <div id='phrase_actions'>\
-                            <div id='copyphrase' class='button linkcolor'>" + tl("copy") + "</div>\
                             <div id='phrase_info' class='linkcolor' title='seed info'><span class='icon-info'></span></div>\
                         </div>\
                         <div id='phraseblur'></div>\
@@ -1774,24 +1773,10 @@ function derive_obj(key_source, key_data, coin_data, bip32_settings, add) {
 
 // ** UI & Information Display: **
 
-// Handles mnemonic phrase copy functionality with confirmation
-function copy_phrase() {
-    $(document).on("click", "#copyphrase", function() {
-        if (glob_let.hasbip && $("#phrase_cb").hasClass("hidephrase")) { // reveal first, that is where the PIN is asked
-            $("#showphrase").trigger("click");
-            return;
-        }
-        const phrase = get_mnemonic_phrase(),
-            is_valid = check_phrase(phrase),
-            phrase_label = tl("bip39_seedphrase");
-        if (is_valid) {
-            const confirm_copy = confirm(tl("copy") + " " + phrase_label + "?");
-            if (confirm_copy) {
-                copy_to_clipboard(phrase, phrase_label);
-            }
-        } else {
-            topnotify(is_valid);
-        }
+// The seedphrase never touches the clipboard
+function block_phrase_copy() {
+    $(document).on("copy cut", "#bip39phrase", function(e) {
+        e.preventDefault();
     });
 }
 
