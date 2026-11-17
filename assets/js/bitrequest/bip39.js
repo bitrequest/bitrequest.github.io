@@ -1777,6 +1777,8 @@ function derive_obj(key_source, key_data, coin_data, bip32_settings, add) {
 function block_phrase_copy() {
     $(document).on("copy cut", "#bip39phrase", function(e) {
         e.preventDefault();
+        play_audio("funk");
+        notify(tl("writedownsecretphrase"));
     });
 }
 
