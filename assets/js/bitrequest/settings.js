@@ -1339,10 +1339,18 @@ function decrypt_json_bu(json, meta) {
     if (pk_locked() && json.lock.startsWith("b39")) { // same-seed backups open with the seed
         pk_gate({
             "func": function() {
-                decrypt_json_bu(json, meta);
+                const json_decrypt = decrypt_json_bu(json, meta);
+                if (json_decrypt === "bail") {
+                    return;
+                }
+                if (json_decrypt) {
+                    continue_restore(json_decrypt, meta);
+                    return;
+                }
+                popnotify("error", tl("error") + " " + tl("restorefrombackup"));
             }
         });
-        return;
+        return "bail";
     }
     const lock = json.lock,
         type = (lock.startsWith("b39")) ? "b39" : (lock.startsWith("pn")) ? "pn" : "rd",
