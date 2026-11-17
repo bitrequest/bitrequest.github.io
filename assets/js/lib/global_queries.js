@@ -175,7 +175,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "audio_buffers": {},
 
         // --- Themes ---
-        "themes": ["aurora.css", "forest_canopy.css", "malignant_glare.css", "glassy.css", "oceanic_depth.css", "solar_flare.css", "terminal_entry.css", "twilight_grove.css"],
+        "themes": ["aurora.css", "forest_canopy.css", "glassy.css", "malignant_glare.css", "oceanic_depth.css", "solar_flare.css", "terminal_entry.css", "twilight_grove.css"],
 
         // --- Storage ---
         "stored_currencies": br_get_local("currencies", true),

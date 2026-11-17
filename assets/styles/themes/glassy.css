@@ -33,22 +33,19 @@
 }
 
 /* Body and base background */
-html:not(.inframe) {
+html {
     background-color: #0a0f1f;
 }
 
-html:not(.inframe) body {
-    background: transparent;
-}
-
 body {
+    background: transparent;
     color: rgba(236, 240, 255, 0.86);
 }
 
 /* Warping colour field: two oversized layers drifting against each other.
    Transform-only, so it stays on the compositor. */
-html:not(.inframe) body::before,
-html:not(.inframe) body::after {
+body::before,
+body::after {
     content: "";
     position: fixed;
     top: 50%;
@@ -61,7 +58,7 @@ html:not(.inframe) body::after {
     will-change: transform;
 }
 
-html:not(.inframe) body::before {
+body::before {
     background:
         radial-gradient(closest-side at 34% 38%, rgba(0, 190, 170, 0.55), rgba(0, 190, 170, 0) 100%),
         radial-gradient(closest-side at 66% 60%, rgba(96, 84, 240, 0.55), rgba(96, 84, 240, 0) 100%);
@@ -71,7 +68,7 @@ html:not(.inframe) body::before {
     animation: glassy-drift-a 34s ease-in-out infinite alternate;
 }
 
-html:not(.inframe) body::after {
+body::after {
     background:
         radial-gradient(closest-side at 60% 36%, rgba(236, 72, 153, 0.30), rgba(236, 72, 153, 0) 100%),
         radial-gradient(closest-side at 40% 64%, rgba(40, 130, 255, 0.42), rgba(40, 130, 255, 0) 100%);
@@ -83,8 +80,8 @@ html:not(.inframe) body::after {
 
 @media (prefers-reduced-motion: reduce) {
 
-    html:not(.inframe) body::before,
-    html:not(.inframe) body::after {
+    body::before,
+    body::after {
         animation: none;
     }
 }
@@ -196,14 +193,230 @@ header,
     color: rgba(226, 232, 250, 0.72);
 }
 
-/* Dialogs: light frosted glass, dark text stays readable.
-   Fades to solid white at the bottom so the opaque action bar blends in. */
-.dialogstyle {
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.92) 55%, #fff calc(100% - 4.5em));
-    -webkit-backdrop-filter: blur(26px) saturate(180%);
-    backdrop-filter: blur(26px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 30px 60px rgba(0, 0, 0, 0.45);
+/* Popup backdrops: light tint instead of 60% black; main stays blurred */
+#popup.active,
+#optionspop.active,
+#sharepopup.active {
+    background-color: rgba(8, 12, 28, 0.2);
+}
+
+/* Dialogs: same dark glass as the panels, with a real backdrop blur */
+#dialog {
+    background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05) 45%, rgba(255, 255, 255, 0.08)),
+        rgba(16, 22, 44, 0.55);
+    -webkit-backdrop-filter: blur(30px) saturate(170%);
+    backdrop-filter: blur(30px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.05), 0 30px 60px rgba(0, 0, 0, 0.4);
+}
+
+#dialogbody {
+    color: rgba(236, 240, 255, 0.9);
+}
+
+#dialogbody .popform h3 {
+    color: rgba(236, 240, 255, 0.75);
+}
+
+#dialogbody input {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 0.6em;
+}
+
+#dialogbody input:focus {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(47, 214, 195, 0.6);
+}
+
+#dialogbody #apikeyformbox input {
+    color: rgba(236, 240, 255, 0.6);
+}
+
+#popup input::-webkit-input-placeholder {
+    color: rgba(236, 240, 255, 0.35);
+}
+
+#popup input::-moz-placeholder {
+    color: rgba(236, 240, 255, 0.35);
+}
+
+#popup .selectarrows,
+#popup .qrscanner {
+    background: none;
+}
+
+#popup .selectbox .options {
+    background-color: rgba(18, 24, 46, 0.94);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+#popup .selectbox .options span,
+#popup .selectbox .options .opt_icon_box {
+    background-color: transparent;
+}
+
+#popup .selectbox .options span {
+    color: rgba(236, 240, 255, 0.85);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+#popup .selectbox .options>.optionwrap.show>span,
+#popup .selectbox .options>.optionwrap.show>.opt_icon_box {
+    background-color: rgba(47, 214, 195, 0.16);
+}
+
+#popup .selectbox .options .opt_icon_box .opt_icon,
+#dialogbody .optionwrap .cstat {
+    color: rgba(236, 240, 255, 0.55);
+}
+
+#rpc_input .c_stat {
+    background-color: rgba(18, 24, 46, 0.7);
+    color: rgba(236, 240, 255, 0.55);
+}
+
+#popup .cb_wrap .checkbox:before {
+    color: rgba(236, 240, 255, 0.6) !important;
+}
+
+#formbox_ul li,
+#dialogbody .conf_options li {
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+#formbox_ul>li:last-child {
+    border-bottom-color: transparent;
+}
+
+#ecsv_options>li>span {
+    color: rgba(236, 240, 255, 0.55);
+}
+
+#backupactions {
+    background-color: transparent;
+}
+
+/* Base relied on the opaque #backupactions to cover the default buttons */
+#dialog:has(#backupactions) #actions {
+    visibility: hidden;
+}
+
+#popup .switchpanel:not(.true) {
+    background-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 0 0 0.15em rgba(255, 255, 255, 0.22);
+}
+
+#proxy_info {
+    color: rgba(236, 240, 255, 0.6);
+}
+
+#proxy_info a {
+    color: #2fd6c3;
+}
+
+/* Payment card: both faces get the dialog glass.
+   Base backface-visibility already stops the hidden face from painting, so the
+   translucent faces never show each other. No backdrop-filter: it's unreliable
+   inside a preserve-3d flip, so the page behind is blurred harder instead. */
+#payment.active {
+    background-color: rgba(8, 12, 28, 0.2);
+}
+
+.blurmain_payment #mainwrap,
+.blurmain_payment #fixednav {
+    filter: blur(14px);
+}
+
+#request_front,
+#request_back {
+    background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05) 45%, rgba(255, 255, 255, 0.08)),
+        rgba(16, 22, 44, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.05), 0 30px 60px rgba(0, 0, 0, 0.4);
+    -webkit-backface-visibility: hidden;
+}
+
+/* QR keeps a white tile so it has a quiet zone and stays scannable */
+#request_front .qrcode {
+    background-color: #fff;
+    padding: 0.7em;
+    border-radius: 1em;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+#paymentdialogbox,
+#paymentdialogbox .mirrordiv>input,
+#shareccinputmirror input,
+#ccamountbox,
+#paymentdialogbox.showcc #currencynamebox,
+#paymentdialogbox.showcc #currencynamebox input,
+#backwraptop,
+#shareform label,
+#fallback_address #fb_addr,
+#paymentdialogbox .brstatuspanel p {
+    color: rgba(236, 240, 255, 0.6);
+}
+
+#amountbreak input,
+#sharetitle,
+#requestnamep,
+#paymentdialogbox .brstatuspanel h2 {
+    color: #fff;
+}
+
+#paymentaddress,
+#paymentaddress_lnd,
+#paymentdialogbox .brstatuspanel span.receivedcrypto,
+#statusbox {
+    color: rgba(236, 240, 255, 0.85);
+}
+
+#apisrc,
+#xratestats,
+#fallback_address,
+#paymentdialogbox .networks ul {
+    color: rgba(236, 240, 255, 0.45);
+}
+
+#paymentdialogbox input::placeholder {
+    color: rgba(236, 240, 255, 0.3);
+}
+
+#paymentdialogbox input::-webkit-input-placeholder {
+    color: rgba(236, 240, 255, 0.3);
+}
+
+#paymentdialogbox .linkcolor,
+#paymentdialogbox .poweredby a,
+#shareform input {
+    color: #2fd6c3;
+}
+
+#paymentdialogbox .actionbar>div {
+    border-bottom-color: rgba(47, 214, 195, 0.3);
+}
+
+/* Base painted the back status panel opaque to cover the form beneath it */
+#backwrapbottom .brstatuspanel {
+    background-color: transparent;
+}
+
+#paymentdialogbox.transacting #backwrapbottom>:not(.brstatuspanel) {
+    visibility: hidden;
+}
+
+#paymentdialogbox .time_panel {
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+#paymentdialogbox .time_bar {
+    background-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Full-screen overlays that base styles paint in the default slate */
@@ -227,13 +440,7 @@ header,
 }
 
 /* Link colors */
-#dialogbody h2:before,
 #toseed,
-#actions div,
-#dialog .customtrigger,
-#canceldialog,
-#backupcd,
-#backupactions .util_icon,
 .linkcolor,
 .selectarrows,
 .qrscanner,
@@ -241,6 +448,16 @@ header,
     color: #009e8e;
 }
 
+#dialogbody h2:before,
+#actions div,
+#dialog .customtrigger,
+#canceldialog,
+#backupcd,
+#backupactions .util_icon,
+#popup .linkcolor,
+#popup .selectarrows,
+#popup .qrscanner,
+#popup .ref,
 .page .linkcolor,
 .page .ref {
     color: #2fd6c3;
