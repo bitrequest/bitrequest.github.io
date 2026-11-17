@@ -548,7 +548,7 @@ function extract_error_details(error_obj, string) {
     if (errormessage) {
         if (string) {
             const err_string = (errorcode) ? errorcode + " : " : "";
-            return err_string + errormessage;
+            return escape_html(err_string + errormessage);
         }
         return error_details;
     }
@@ -656,7 +656,7 @@ function display_api_source(current_list, api_data) {
     const api_url = api_data.url,
         provider_name = api_data.name,
         api_source = (provider_name === "mempool.space" || provider_name === "xmr_node" || provider_name === "electrum" || provider_name === "nano") ? api_url : provider_name;
-    current_list.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + escape_attr(api_url) + "'>" + tl("source") + ": " + truncate_middle(api_source, 15, 18, 41) + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
+    current_list.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + escape_attr(api_url) + "'>" + tl("source") + ": " + escape_html(truncate_middle(api_source, 15, 18, 41)) + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }
 
 // ** Transaction Processing: **
@@ -668,7 +668,7 @@ function create_transaction_item(tx_details) {
     const crypto_value = tx_details.ccval,
         crypto_value_rounded = trimdecimals(crypto_value, 6),
         transaction_time = tx_details.transactiontime,
-        confirmations = tx_details.confirmations,
+        confirmations = Number(tx_details.confirmations) || 0,
         set_confirmations = tx_details.setconfirmations,
         crypto_symbol = tx_details.ccsymbol,
         formatted_crypto_symbol = crypto_symbol ? escape_html(String(crypto_symbol).toUpperCase()) : "",

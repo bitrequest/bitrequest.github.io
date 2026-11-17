@@ -109,7 +109,7 @@ function edit_rpcnode() {
             const current_lws = item_data.lws_selected,
                 lws_name = current_lws.name,
                 lws_url = current_lws.url,
-                lws_trunc = truncate_middle(lws_url),
+                lws_trunc = escape_attr(truncate_middle(lws_url)),
                 lws_html = "<div id='lws_toggle' class='linkcolor'>Monero-lws</div>\
                 <div id='lws_drawer'>\
                 <h3>Monero LWS <span id='lws_repo'><a href='https://github.com/vtnerd/monero-lws' target='_blank' class='linkcolor exit'> github <span class='icon-new-tab'></span></a></span></h3>\

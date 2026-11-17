@@ -470,6 +470,11 @@ function sync_drive_data(auth_state) {
     }
     const backup_id = br_get_local("backupfile_id");
     if (backup_id) {
+        const backup_blob = compile_backup_data("gd")?.blob;
+        if (!backup_blob) {
+            glob_let.pk_sync_queued = true;
+            return;
+        }
         br_set_session("gd_timer", now_utc());
         const request_data = {
             "api_url": glob_const.drivepath + "/upload/drive/v3/files/" + backup_id + "?uploadType=media&alt=json",
@@ -481,7 +486,7 @@ function sync_drive_data(auth_state) {
                 "headers": {
                     "Authorization": "Bearer " + access_token
                 },
-                "data": compile_backup_data("gd")?.blob
+                "data": backup_blob
             }
         };
         api_proxy(request_data).done(function(response) {
@@ -545,12 +550,14 @@ function create_drive_file(access_token) {
             request.setRequestHeader("Authorization", "Bearer " + final_token);
             request.responseType = "json";
             request.onload = function() {
-                const file_id = request.response.id;
+                const file_id = request.response?.id;
                 if (file_id) {
                     br_set_local("backupfile_id", file_id.toString());
                 }
             };
             request.send(form_data);
+        } else if (pk_locked()) {
+            glob_let.pk_sync_queued = true;
         }
     }
 }
@@ -611,7 +618,7 @@ function fetch_drive_files() {
                     created_date = short_date(file_meta.modified),
                     modified_date = short_date(to_ts(file.modifiedTime)),
                     delete_btn = (device_id === glob_const.deviceid) ? "<div class='purge_bu icon-bin'></div>" : "",
-                    backup_html = "<li data-gdbu_id='" + file.id + "' data-device-id='" + device_id + "' data-device='" + device_type + "'><div class='restorefile icon-" + device_type + "' title='" + device_type + " (Created: " + created_date + ")'>" + modified_date + "<span class='lmodified'> (" + (file.size / 1000).toFixed(0) + " KB)</div>" + delete_btn + "</li>";
+                    backup_html = "<li data-gdbu_id='" + escape_attr(file.id) + "' data-device-id='" + escape_attr(device_id) + "' data-device='" + escape_attr(device_type) + "'><div class='restorefile icon-" + escape_attr(device_type) + "' title='" + escape_attr(device_type) + " (Created: " + created_date + ")'>" + modified_date + "<span class='lmodified'> (" + (file.size / 1000).toFixed(0) + " KB)</div>" + delete_btn + "</li>";
                 backup_items.push(backup_html);
             });
             backup_list.prepend(backup_items.join("")).slideDown(300);

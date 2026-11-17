@@ -347,7 +347,15 @@ function br_set_local(pref, dat, str) {
 // Retrieves and optionally parses JSON data from localStorage with 'bitrequest_' prefix
 function br_get_local(pref, parse) {
     const stored_data = localStorage.getItem("bitrequest_" + pref);
-    return parse && stored_data !== null ? JSON.parse(stored_data) : stored_data;
+    if (parse && stored_data !== null) {
+        try {
+            return JSON.parse(stored_data);
+        } catch (e) {
+            console.warn("br_get_local: unparsable value for key '" + pref + "'");
+            return null;
+        }
+    }
+    return stored_data;
 }
 
 // Deletes item with 'bitrequest_' prefix from localStorage
@@ -368,7 +376,15 @@ function br_set_session(pref, dat, str) {
 // Retrieves and optionally parses JSON data from sessionStorage with 'bitrequest_' prefix
 function br_get_session(pref, parse) {
     const stored_data = sessionStorage.getItem("bitrequest_" + pref);
-    return parse && stored_data !== null ? JSON.parse(stored_data) : stored_data;
+    if (parse && stored_data !== null) {
+        try {
+            return JSON.parse(stored_data);
+        } catch (e) {
+            console.warn("br_get_session: unparsable value for key '" + pref + "'");
+            return null;
+        }
+    }
+    return stored_data;
 }
 
 // Deletes item with 'bitrequest_' prefix from sessionStorage
@@ -1351,7 +1367,7 @@ function scanmeta(val) {
 
 function decode_entities(str) {
     return str.replace(/&(#(x?)([0-9a-fA-F]+)|([a-zA-Z]+));/gi, function(match, num, hex, code_hex, code_name) {
-        if (num) {
+        if (code_hex) {
             return String.fromCharCode(parseInt(code_hex, hex ? 16 : 10));
         } else if (code_name) {
             const named = {
@@ -1376,6 +1392,7 @@ function decode_entities(str) {
                 "lsqb": "[",
                 "lt": "<",
                 "midast": "*",
+                "newline": "\n",
                 "num": "#",
                 "percnt": "%",
                 "period": ".",
@@ -1388,6 +1405,7 @@ function decode_entities(str) {
                 "rsqb": "]",
                 "semi": ";",
                 "sol": "/",
+                "tab": "\t",
                 "tilde": "~",
                 "verbar": "|"
             } [code_name.toLowerCase()];
@@ -1423,11 +1441,12 @@ function inj(val) {
         iterations++;
     }
     let entity_decoded = url_decoded;
-    if (/&(#|[\w]+);/i.test(url_decoded)) {
+    if (/&(#[xX]?[0-9a-fA-F]+|[a-zA-Z]+);/.test(url_decoded)) {
         entity_decoded = decode_entities(url_decoded);
     }
     const xss_pattern = /["'][\s\/]+[\w:-]+\s*=|<\s*[\/]?\s*(script|img|svg|iframe|object|details|embed|style|math|link|video|audio|form|input|button|marquee|isindex|body|meta|base|applet|param|frameset|frame)|[\s"'\/]on\w+\s*=|javascript:|vbscript:|data:text\/(html|javascript)|expression\(|href\s*=\s*["']?\s*javascript:|src\s*=\s*["']?\s*(javascript:|data:)|formaction\s*=\s*["']?\s*javascript:|action\s*=\s*["']?\s*javascript:|style\s*=.*(?:expression|url\(javascript:)/i;
-    if (xss_pattern.test(value) || xss_pattern.test(url_decoded) || xss_pattern.test(entity_decoded)) {
+    const compact_decoded = entity_decoded.replace(/[\t\n\r]/g, "");
+if (xss_pattern.test(value) || xss_pattern.test(url_decoded) || xss_pattern.test(entity_decoded) || xss_pattern.test(compact_decoded)) {
         inj_alert(value);
         return true;
     }
@@ -1444,7 +1463,7 @@ function inj(val) {
             try {
                 const base64_decoded = atob(match[2]);
                 let base64_entity_decoded = base64_decoded;
-                if (/&(#|[\w]+);/i.test(base64_decoded)) {
+                if (/&(#[xX]?[0-9a-fA-F]+|[a-zA-Z]+);/.test(base64_decoded)) {
                     base64_entity_decoded = decode_entities(base64_decoded);
                 }
                 if (xss_pattern.test(base64_decoded) || xss_pattern.test(base64_entity_decoded)) {

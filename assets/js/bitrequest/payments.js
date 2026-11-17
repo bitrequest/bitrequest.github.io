@@ -1335,7 +1335,7 @@ function render_currencypool(data, crypto_rate, crypto_api, fiat_api, cache_age_
         fiat_api === "currencylayer" ? "currencylayer.com" :
         fiat_api === "coinbase" ? "coinbase.com" :
         null,
-        crypto_rate_html = "<div data-currency='" + request.currencysymbol + "' data-value='' data-xrate='" + crypto_rate_euro + "' class='cpool ccpool' data-currencyname='" + request.payment + "'><span>" + crypto_api + ": <span class='ratesspan'>" + request.currencysymbol + "_" + request.uoa + ": " + (1 / (crypto_rate_euro / current_rate)).toFixed(2) + "</span></span></div><div class='cachetime'> (" + (cache_age_crypto / 60000).toFixed(1) + " of " + (glob_const.cacheperiodcrypto / 60000).toFixed(0) + " min. in cache)</div><br/><div class='mainrate'>" + fiat_api_url + ": </div>",
+        crypto_rate_html = "<div data-currency='" + request.currencysymbol + "' data-value='' data-xrate='" + crypto_rate_euro + "' class='cpool ccpool' data-currencyname='" + request.payment + "'><span>" + crypto_api + ": <span class='ratesspan'>" + request.currencysymbol + "_" + escape_html(request.uoa) + ": " + (1 / (crypto_rate_euro / current_rate)).toFixed(2) + "</span></span></div><div class='cachetime'> (" + (cache_age_crypto / 60000).toFixed(1) + " of " + (glob_const.cacheperiodcrypto / 60000).toFixed(0) + " min. in cache)</div><br/><div class='mainrate'>" + fiat_api_url + ": </div>",
         rate_html_list = [];
     exchange_rates_list.push({
         "currency": request.currencysymbol,
@@ -1347,7 +1347,7 @@ function render_currencypool(data, crypto_rate, crypto_api, fiat_api, cache_age_
         const parsed_rate = (rate / current_rate) / 1,
             rate_span_class = parsed_rate === 1 ? " hide" : "",
             currency_name = glob_let.symbolcache[currency.toUpperCase()],
-            rate_html = "<div data-currency='" + currency + "' data-value='' data-xrate='" + rate + "' class='cpool' data-currencyname='" + currency_name + "'><span class='ratesspan" + rate_span_class + "'>" + request.uoa + "_" + currency + ": " + parsed_rate.toFixed(2) + "</span></div>";
+            rate_html = "<div data-currency='" + currency + "' data-value='' data-xrate='" + rate + "' class='cpool' data-currencyname='" + currency_name + "'><span class='ratesspan" + rate_span_class + "'>" + escape_html(request.uoa) + "_" + currency + ": " + parsed_rate.toFixed(2) + "</span></div>";
         rate_html_list.push(rate_html);
         exchange_rates_list.push({
             currency,
@@ -1432,7 +1432,7 @@ function get_payment(ccrateeuro, ccapi) {
                         <span>" + amount_placeholder + "</span>\
                         <input value='" + amount_value + "' step='" + step + "' type='text' inputmode='decimal' placeholder='" + zero_text + "'" + readonly + "/>\
                     </span>\
-                    <span id='sharecurrency'>" + request.uoa + "</span>\
+                    <span id='sharecurrency'>" + escape_html(request.uoa) + "</span>\
                 </div>\
                 <div id='currencynamebox'>\
                     <span id='currencyname' data-currencyname='" + display_currency + "'>\
@@ -1516,7 +1516,7 @@ function get_payment(ccrateeuro, ccapi) {
         "</div>\
         <div class='qrwrap flex' id='main_qrwrap'>" + qr_html + lightning_qr + status_panel +
         "</div>\
-        <div id='popform' data-payment='" + request.payment + "' data-currency='" + request.uoa + "' data-address='" + escape_attr(request.address) + "' data-lcrate='" + fiat_rate + "'>\
+        <div id='popform' data-payment='" + request.payment + "' data-currency='" + escape_attr(request.uoa) + "' data-address='" + escape_attr(request.address) + "' data-lcrate='" + fiat_rate + "'>\
             <div id='rf_wrap'>\
                 <div id='amountbreak' class='inputbreak'>\
                     <span id='mainccinputmirror' class='ccmirror mirrordiv'>\
@@ -1527,7 +1527,7 @@ function get_payment(ccrateeuro, ccapi) {
                         <span>" + amount_placeholder + "</span>\
                         <input value='" + amount_value + "' data-xrate='" + exchange_rate + "' step='" + fiat_step + "' type='text' inputmode='decimal' placeholder='" + zero_text + "'" + readonly + ">\
                     </span>\
-                    <span id='pickcurrency' class='linkcolor'>" + request.uoa + "</span>\
+                    <span id='pickcurrency' class='linkcolor'>" + escape_html(request.uoa) + "</span>\
                 </div>\
                 <div id='ibsat' class='inputbreak'>\
                     <span id='satinputmirror' class='mirrordiv'>\

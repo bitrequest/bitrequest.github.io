@@ -3116,7 +3116,7 @@ function json_check_apikey(keylength, ref, payload, keyval, last_input) {
                         api_fail(ref, keyval);
                     } else {
                         notify(tl("apicallerror"));
-                        const content = "<h2 class='icon-blocked'>" + fail_msg + "</h2><p class='doselect'>" + data.message + "</p>";
+                        const content = "<h2 class='icon-blocked'>" + fail_msg + "</h2><p class='doselect'>" + escape_html(data.message) + "</p>";
                         popdialog(content, "canceldialog");
                     }
                     return;

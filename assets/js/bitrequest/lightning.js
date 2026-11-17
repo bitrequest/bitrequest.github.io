@@ -261,8 +261,8 @@ function lightning_option_li(is_live, node_info, selected, invoices, proxy_url) 
         implementation_icon = c_icons(implementation),
         lnurl_icon = has_lnurls ? "<div class='opt_icon icon-sphere' data-pe='none'></div>" : "",
         option = $("<div class='optionwrap" + status_class + selected_class + "' style='display:none' data-pe='none'>" +
-            "<span data-value='" + node_name + "' data-node_id='" + node_id + "'>" +
-            "<img src='" + implementation_icon + "' class='lnd_icon'/> <span class='cstat'>•</span> " + truncate_middle(node_name) + "</span>" +
+            "<span data-value='" + escape_attr(node_name) + "' data-node_id='" + node_id + "'>" +
+            "<img src='" + implementation_icon + "' class='lnd_icon'/> <span class='cstat'>•</span> " + escape_html(truncate_middle(node_name)) + "</span>" +
             "<div class='opt_icon_box' data-pe='none'>\
             <div class='opt_icon icon-bin' data-pe='none'></div>" + lnurl_icon +
             lock_icon + tor +
@@ -303,9 +303,9 @@ function lightning_option_li(is_live, node_info, selected, invoices, proxy_url) 
         missing_proxy = has_lnurls && !proxy_value,
         hide_class = selected === true ? " node_selected hide" : " hide",
         lnurls_class = has_lnurls ? " lnurlclass" : "",
-        node_display_name = missing_proxy ? "Proxy not found" : (has_lnurls ? "hidden by Proxy server" : "<span title='" + node_host + "'>" + truncate_middle(node_host)) + "</span>",
-        lnurl_markup = has_lnurls ? "<strong><img src='" + implementation_icon + "' class='lnd_icon' style='opacity:0'/> Proxy server: </strong>" + proxy_value + "</br/>" : "",
-        proxy_markup = has_lnurls ? "" : "<strong><img src='" + implementation_icon + "' class='lnd_icon' style='opacity:0'/> Proxy: </strong><span class='inline_pval'>" + proxy_value + "</span></br/>",
+        node_display_name = missing_proxy ? "Proxy not found" : (has_lnurls ? "hidden by Proxy server" : "<span title='" + escape_attr(node_host) + "'>" + escape_html(truncate_middle(node_host))) + "</span>",
+        lnurl_markup = has_lnurls ? "<strong><img src='" + implementation_icon + "' class='lnd_icon' style='opacity:0'/> Proxy server: </strong>" + escape_html(proxy_value) + "</br/>" : "",
+        proxy_markup = has_lnurls ? "" : "<strong><img src='" + implementation_icon + "' class='lnd_icon' style='opacity:0'/> Proxy: </strong><span class='inline_pval'>" + escape_html(proxy_value) + "</span></br/>",
         info_markup = $("<li class='noln_ref" + hide_class + lnurls_class + "' data-id='" + node_id + "' data-pid='" + proxy_id + "'>" +
             "<div class='d_trigger'><span class='ref'><span class='icon-info'></span>Info</span></div>" +
             "<div class='drawer2 infodrawer' style='display:block'>" +

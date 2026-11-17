@@ -212,7 +212,7 @@ function socket_info(socket_node, is_connected, is_polling) {
     const node_identifier = node_name || node_url,
         status_icon = is_connected ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
         connection_type = is_polling ? "polling" : "websocket",
-        status_text = connection_type + ": " + node_identifier + status_icon;
+        status_text = connection_type + ": " + escape_html(node_identifier) + status_icon;
     $("#current_socket").html(status_text);
     if (is_connected) {
         console.log("Connected: " + node_identifier);

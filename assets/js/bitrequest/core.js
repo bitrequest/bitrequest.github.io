@@ -247,7 +247,7 @@ function store_coindata_fallback() {
 // Filters Ethereum-based tokens (platform ID 1027) and maps to simplified token object structure
 function convert_coinlist(token_list, part) {
     try {
-        let new_list = token_list.filter(token => token.platform && token.platform.id === 1027).map(token => ({
+        let new_list = token_list.filter(token => token.platform && token.platform.id === 1027 && /^[a-z0-9-]+$/.test(token.slug) && /^[a-z0-9._-]{1,32}$/i.test(token.symbol) && /^0x[0-9a-fA-F]{40}$/.test(token.platform.token_address)).map(token => ({
             "name": token.slug,
             "symbol": token.symbol.toLowerCase(),
             "cmcid": token.id,
@@ -5144,7 +5144,7 @@ function append_request(rd) {
         is_insufficient = status === "insufficient",
         is_lightning_tx = txhash && txhash.slice(0, 9) === "lightning",
         is_hybrid = lightning && lightning.hybrid === true,
-        confirm_count = confirmations || 0,
+        confirm_count = Number(confirmations) || 0,
         title_truncated = requesttitle && requesttitle.length > 85 ?
         "<span title='" + escape_attr(requesttitle) + "'>" + escape_html(requesttitle.substring(0, 64)) + "...</span>" :
         (requesttitle ? escape_html(requesttitle) : requesttitle),
@@ -5159,7 +5159,7 @@ function append_request(rd) {
         is_outgoing = requesttype === "outgoing",
         tx_direction = is_incoming ? "sent" : "received",
         type_label = is_checkout ? "online purchase" : is_local ? "point of sale" : requesttype,
-        type_text = tl(type_label),
+        type_text = escape_html(tl(type_label)),
         type_icon_class = is_checkout ? " typeicon icon-cart" :
         is_local ? " icon-qrcode" :
         is_incoming ? " typeicon icon-arrow-down-right2" :
@@ -5230,7 +5230,7 @@ function append_request(rd) {
         "<div class='txli_conf' data-conf='0'><span>Unmonitored transaction</span></div>" :
         confirm_count > 0 ?
         "<div class='txli_conf'><div class='confbar'></div><span>" +
-        confirm_count + " / " + set_confirmations + " " +
+        confirm_count + " / " + escape_html(set_confirmations) + " " +
         tl("confirmations") + "</span></div>" :
         confirm_count === 0 ?
         "<div class='txli_conf' data-conf='0'><div class='confbar'></div>" +
@@ -5311,7 +5311,7 @@ function append_request(rd) {
             unit + "</li>\
                     <li class='meta_status' data-conf='" + confirm_count +
             "'><strong>" + tl("status") + ":</strong><span class='status'> " +
-            tl(status_text) + "</span> " + confirm_display + bolt_card + "</li>\
+            escape_html(tl(status_text)) + "</span> " + confirm_display + bolt_card + "</li>\
                     <li><strong>" + tl("type") + ":</strong> " + type_text +
             monitor_status + "</li>" +
             time_box +
