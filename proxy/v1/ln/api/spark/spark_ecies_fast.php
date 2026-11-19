@@ -4,7 +4,7 @@
  * Falls back to bcmath version if Node.js endpoint is unavailable.
  */
 
-define("SPARK_ECIES_ENDPOINT", TOR_PROXY . ":8030/spark-ecies");
+define("SPARK_ECIES_ENDPOINT", LIGHTNING_WS_CALLBACK . "/spark-ecies");
 define("SPARK_ECIES_TIMEOUT", 6);
 
 function spark_ecies_encrypt(string $plaintext_bytes, string $recipient_pubkey_hex): string|false {

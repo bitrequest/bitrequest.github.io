@@ -432,7 +432,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 							"rqtype" => $type_text
 						]);
 						$postheaders = ["post: " . $status];
-						curl_get(TOR_PROXY . ":8030/", $status, $postheaders);
+						curl_get(LIGHTNING_WS_CALLBACK . "/", $status, $postheaders);
 					}
 				}
 				$result = create_invoice($imp, $get_pid, $host, $key, $specified_amount, $memo, $type, null, $desc_hash, $p_expiry);
@@ -491,7 +491,7 @@ if (in_array($imp, ["lnd", "lnbits", "core-lightning", "nwc", "spark"])) {
 						}
 
 						$postheaders = ["post: " . $tx_content];
-						curl_get(TOR_PROXY . ":8030/", $tx_content, $postheaders);
+						curl_get(LIGHTNING_WS_CALLBACK . "/", $tx_content, $postheaders);
 
 						// Trigger callback if configured
 						if ($callback_url && strlen($callback_url) > 10) {

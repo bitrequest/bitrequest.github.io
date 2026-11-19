@@ -36,6 +36,11 @@ $keys = array(
 	alchemy: https://auth.alchemy.com/signup/
 */
 
+// Proxy with Tor support, used for .onion requests when this server has no Tor. https only, bare origin (no path)
+$tor_proxy_url = "https://www.bitrequest.app";
+// Your lightning websocket relay (https://github.com/bitrequest/lightningws), including port, no trailing slash
+$lightning_ws_callback = "https://www.bitrequest.app:8030";
+
 // enter lightning node keys here
 $lightning_setup = array(
 	"lnd" => array(

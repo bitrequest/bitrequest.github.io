@@ -5,7 +5,7 @@ include_once "nwc_native.php";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 // Override if your Node.js server runs on a different host/port
-define("NWC_NODE_FAST_ENDPOINT", TOR_PROXY . ":8030/nwc");
+define("NWC_NODE_FAST_ENDPOINT", LIGHTNING_WS_CALLBACK . "/nwc");
 define("NWC_TIMEOUT", 35); // seconds
 
 // ─── Core request ─────────────────────────────────────────────────────────────

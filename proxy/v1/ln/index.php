@@ -74,7 +74,7 @@ if ($pid && file_exists($path) || $pid === "offline") {
             if (file_put_contents($path, $status) !== false) {
                 // Notify payment server about the confirmed payment
                 $postheaders = ["post: " . $status];
-                curl_get(TOR_PROXY . ":8030/", $status, $postheaders);
+                curl_get(LIGHTNING_WS_CALLBACK . "/", $status, $postheaders);
             }
         }
     } catch (Exception $e) {

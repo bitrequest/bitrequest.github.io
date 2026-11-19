@@ -8,7 +8,8 @@ const CACHE_DURATIONS = [
 	"1d" => 86400,    // 1 day in seconds
 	"1h" => 3600      // 1 hour in seconds
 ];
-const TOR_PROXY = "https://www.bitrequest.app";
+define("TOR_PROXY", rtrim(($tor_proxy_url ?? "") ?: "https://www.bitrequest.app", "/"));
+define("LIGHTNING_WS_CALLBACK", rtrim(($lightning_ws_callback ?? "") ?: "https://www.bitrequest.app:8030", "/"));
 
 // Main API function that handles caching and retrieval of data based on specified parameters
 function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
