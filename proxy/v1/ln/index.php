@@ -12,7 +12,7 @@ $pid = isset($_GET["id"]) && is_string($_GET["id"]) ? safe_filename(substr($_GET
 $path = $pid ? "api/cache/tx/" . $pid : false;
 
 // Check if the payment file exists and process the payment
-if ($pid && file_exists($path)) {
+if ($pid && file_exists($path) || $pid === "offline") {
     
     // Determine payment type based on ID prefix
     $type = isset($_GET["id"]) && is_string($_GET["id"]) ? substr($_GET["id"], 0, 1) : false;

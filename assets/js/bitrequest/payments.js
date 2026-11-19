@@ -856,7 +856,7 @@ function lightning_setup() {
             node_key = selected_service.key,
             is_lnurl = !!selected_service.lnurl,
             saved_payment_id = br_get_session("lndnid") === String(node_id) ? br_get_session("lndpid") : null,
-            payment_id = saved_payment_id ? saved_payment_id : sha_sub(now_utc(), 10),
+            payment_id = glob_const.offline ? "offline" : saved_payment_id ? saved_payment_id : sha_sub(now_utc(), 10),
             lnd_config = {
                 "request": false,
                 "shared": false,
@@ -1587,6 +1587,7 @@ function get_payment(ccrateeuro, ccapi) {
     });
     const lightning_info = helper.lnd;
     if (lightning_info) {
+        if (glob_const.offline) return;
         if (!request.lightning_id) {
             const saved_pid = br_get_session("lndpid");
             if (!saved_pid || saved_pid != lightning_info.pid) {
